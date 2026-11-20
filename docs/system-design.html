@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System design · DataLeap</title>
+<meta name="description" content="Data engineering system design cases and concepts for staff-level interviews.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='7' height='6' rx='1.5' fill='%232a4d8f'/%3E%3Crect x='15' y='9' width='7' height='6' rx='1.5' fill='none' stroke='%232a4d8f' stroke-width='2'/%3E%3Cpath d='M9 12h6' stroke='%232a4d8f' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="sd">
+<header id="top"></header>
+<main class="wrap">
+<section>
+  <h1>System design for data engineers</h1>
+  <p class="lead">DE design rounds are about moving, storing and serving data at scale: streams, lakehouses, partitioning, exactly-once, backfills, cost. <span id="count"></span> design cases and concepts. One unit a day: practise one part of a case, watch one video, or summarise one concept.</p>
+</section>
+<section class="panel" aria-labelledby="sig-title">
+  <h2 id="sig-title">What a staff-level answer shows</h2>
+  <ul class="signals small">
+    <li>Pins down scope first: consumers, freshness SLA, correctness needs, scale.</li>
+    <li>Sizes it: events per second, TB per day, partitions, rough monthly cost.</li>
+    <li>Picks batch, stream or both, and says what is given up.</li>
+    <li>Explains how data stays correct: idempotent writes, dedup, late data, exactly-once where it matters.</li>
+    <li>Plans for failure: replays, backfills, bad deploys, a region going down.</li>
+    <li>Covers operability: SLOs, data quality checks, alerting, on-call.</li>
+    <li>Thinks platform: multi-tenant, data contracts, ownership, cost per team.</li>
+    <li>Shows a path from today's system to the target, not only the end state.</li>
+  </ul>
+</section>
+<div class="filters" role="search">
+  <input id="f-q" type="search" placeholder="Search cases and concepts" aria-label="Search">
+  <select id="f-topic" aria-label="Topic"></select>
+  <select id="f-status" aria-label="Status"></select>
+</div>
+<div id="list"></div>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

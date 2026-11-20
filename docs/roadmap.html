@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap · DataLeap</title>
+<meta name="description" content="A 24-week plan from scratch to staff data engineering offers.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='7' height='6' rx='1.5' fill='%232a4d8f'/%3E%3Crect x='15' y='9' width='7' height='6' rx='1.5' fill='none' stroke='%232a4d8f' stroke-width='2'/%3E%3Cpath d='M9 12h6' stroke='%232a4d8f' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="roadmap">
+<header id="top"></header>
+<main class="wrap">
+<section>
+  <h1>From scratch to offer in 24 weeks</h1>
+  <p class="lead">For a data engineer with 10+ years in services, targeting staff or senior DE roles at Uber, Google, Databricks, Visa and similar in 2027. About 10 hours a week alongside a full-time job: 75 minutes on weekdays, 2 to 3 hours on Saturday, Sunday for revision or rest.</p>
+</section>
+
+<section aria-labelledby="week-title">
+  <h2 id="week-title">The weekly routine</h2>
+  <div class="tablewrap"><table class="dtable">
+    <thead><tr><th>Day</th><th>DSA</th><th>System design</th></tr></thead>
+    <tbody>
+      <tr><td>Mon to Fri</td><td>1 question, 45 min, timed</td><td>1 unit, 30 min: one part of a case, one video or one concept summary</td></tr>
+      <tr><td>Saturday</td><td>2 timed questions back to back (mock conditions)</td><td>1 full case end to end in 60 min, then review against the staff signals</td></tr>
+      <tr><td>Sunday</td><td>Revision queue only</td><td>Revise pinned notes; or take a rest day</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section aria-labelledby="ph-title">
+  <h2 id="ph-title">Phases</h2>
+  <ol class="phases">
+    <li class="phase"><div class="when">Week 1<small>Baseline</small></div><div>
+      <ul><li>Two timed mediums from D1 and D4. Note where you stall.</li><li>One design case cold (Real-time trip and surge metrics). Record yourself.</li><li>Set your reminders and daily goal.</li></ul>
+      <p class="gate">Exit: you know your weak spots, written down as notes.</p></div></li>
+    <li class="phase"><div class="when">Weeks 2 to 7<small>Core patterns</small></div><div>
+      <ul><li>DSA: D1 to D6, the P1 topics. Python fluency: collections, heapq, generators, sorting with keys.</li><li>System design: distributed fundamentals (S1) and storage formats (S4). Read the first half of Designing Data-Intensive Applications alongside.</li></ul>
+      <p class="gate">Exit: 70% of P1 DSA items solved on your own; you can explain partitioning, replication and Parquet layout without notes.</p></div></li>
+    <li class="phase"><div class="when">Weeks 8 to 13<small>Depth</small></div><div>
+      <ul><li>DSA: D11 design-a-structure, D10 graphs, D8 binary search; keep revising P1.</li><li>System design: streaming (S3), batch and Spark (S2), modelling (S5), ingestion and CDC (S6). Practise each design case in parts.</li></ul>
+      <p class="gate">Exit: mediums in 25 minutes on 4 of 5 attempts; every S1 to S6 concept has a pinned summary note.</p></div></li>
+    <li class="phase"><div class="when">Weeks 14 to 19<small>Full designs</small></div><div>
+      <ul><li>Two full design cases a week, 60 minutes each, scored against the staff signals.</li><li>Estimation and cost (S12), data quality (S8), orchestration (S7), serving (S9).</li><li>DSA stays at one a day, mostly from the revision queue.</li></ul>
+      <p class="gate">Exit: 10 cases done end to end; you can size and cost a design in 5 minutes.</p></div></li>
+    <li class="phase"><div class="when">Weeks 20 to 22<small>Mocks</small></div><div>
+      <ul><li>Two mock interviews a week with peers or paid mock services: one coding, one design.</li><li>Company focus: read the target company's engineering blog and adjust (see Companies).</li></ul>
+      <p class="gate">Exit: two mocks in a row where you would hire yourself.</p></div></li>
+    <li class="phase"><div class="when">Weeks 23 to 24<small>Apply and interview</small></div><div>
+      <ul><li>Apply in batches so onsite loops land close together.</li><li>Keep the daily run going between loops, revision only.</li></ul></div></li>
+  </ol>
+</section>
+
+<section aria-labelledby="res-title">
+  <h2 id="res-title">Resources</h2>
+  <ul id="resources"></ul>
+  <p class="note">Watch for the interview shape at your target company: some loops add a separate SQL, data modelling or behavioural round. DataLeap covers DSA and system design only.</p>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('resources').innerHTML = window.DL_DATA.resources.map(function (r) { return '<li><a href="' + r.url + '" target="_blank" rel="noopener">' + r.name + '</a></li>'; }).join('');
+});
+</script>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
