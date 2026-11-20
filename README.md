@@ -6,22 +6,42 @@ DataLeap is not a practice platform. DSA questions link to NeetCode (free, with 
 
 ## Daily goal
 
-1 DSA question + 1 system design unit (one part of a design case, one video, one summary, or one concept). A day is complete when both have a session over the minimum time.
+System design first, DSA second. Every day: 1 system design unit (a concept, a video, a summary, or one part of a design case) and 1 DSA question. A day is complete when both have a session over the minimum time.
+
+## Habit ladder
+
+| Level | System design | DSA | Minimum | Unlocks after |
+| --- | --- | --- | --- | --- |
+| 1 Show up | 10 min | 10 min, Easy only | 5 min | 10 complete days |
+| 2 Build the habit | 20 min | 15 min, Easy and Medium | 10 min | 14 complete days |
+| 3 Go deeper | 30 min, design case parts | 25 min, Medium | 15 min | 28 complete days |
+| 4 Interview pace | 45 min, full cases + staff rubric | 30 min, Medium and Hard | 20 min | — |
+
+## Staying consistent
+
+- **My why** page: your daughter's name, one sentence on why, what changes for her, your family and you, and a letter to read on offer day.
+- A quote on every page and in every reminder, personalised with her name.
+- Streak milestones, level-ups, "never miss twice" after a missed day, and a late-evening rescue prompt.
+- Reminders: export to the phone calendar (fires even when the site is closed) and browser notifications while DataLeap is open. Install it to the home screen from Chrome for an app-like experience.
 
 ## Repository layout
 
 ```
 dataleap/
 ├── docs/                  GitHub Pages site (static prototype, works today)
-│   ├── index.html         Today: the daily run, timer, history grid, revision queue
+│   ├── index.html         Today: why strip, level, the daily run, timer, history grid, revision queue
 │   ├── dsa.html           DSA questions by topic
 │   ├── system-design.html Design cases and concepts by topic
 │   ├── roadmap.html       24-week plan from scratch to offer
 │   ├── companies.html     Where to go deeper for each target company
 │   ├── progress.html      Time reports, topic table, backup/restore
-│   ├── settings.html      Reminders and daily goal
+│   ├── why.html           My why: vision for her, family and you; letter for offer day
+│   ├── settings.html      Reminders, notifications, calendar export, habit ladder
+│   ├── sw.js              Service worker: notifications on Android, offline use
+│   ├── manifest.webmanifest  Install to home screen
 │   ├── .nojekyll          Serve files as-is (no Jekyll processing)
 │   └── assets/
+│       ├── icons/         App icons
 │       ├── css/main.css
 │       └── js/
 │           ├── data.js    All topics and questions (single source of truth, later the Django seed)

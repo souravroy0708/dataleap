@@ -3,68 +3,87 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reminders and goal · DataLeap</title>
-<meta name="description" content="Set your daily goal and reminder times.">
+<title>Reminders · DataLeap</title>
+<meta name="description" content="Reminders, notifications and the habit ladder.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='7' height='6' rx='1.5' fill='%232a4d8f'/%3E%3Crect x='15' y='9' width='7' height='6' rx='1.5' fill='none' stroke='%232a4d8f' stroke-width='2'/%3E%3Cpath d='M9 12h6' stroke='%232a4d8f' stroke-width='2'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/main.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2a4d8f">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
 </head>
 <body data-page="settings">
 <header id="top"></header>
 <main class="wrap">
 <section>
-  <h1>Reminders and daily goal</h1>
-  <p class="lead">Reminders give prep a fixed slot in a busy day. They stay quiet for anything already done.</p>
+  <h1>Reminders and habit ladder</h1>
+  <p class="lead">Reminders give prep a fixed slot in a busy day. They stay quiet once that part is done, and each one carries a line to keep you going.</p>
 </section>
+
+<section aria-labelledby="n-title">
+  <h2 id="n-title">Make sure they reach you</h2>
+  <div class="panel">
+    <p><b>1. Phone calendar (works even when DataLeap is closed).</b> Download the reminders as a calendar file and open it on your phone. Each reminder repeats on its days with an alert and a link back here. If Android does not open it, import it at calendar.google.com, then Settings, then Import.</p>
+    <p><button class="btn primary" id="ics">Add reminders to my phone calendar</button></p>
+    <p><b>2. Browser notifications (while DataLeap is open in a tab).</b> On Android, open the site in Chrome and choose "Add to Home screen" so it works like an app. <span id="permstate"></span></p>
+    <p class="actions"><button class="btn" id="perm" hidden>Turn on notifications</button><button class="btn" id="testnote" hidden>Send a test notification</button></p>
+    <p class="note">A website cannot wake your phone on a schedule without a push server, so use the calendar option for reminders you cannot miss. The Android app will schedule real alarms.</p>
+  </div>
+</section>
+
 <section aria-labelledby="r-title">
   <h2 id="r-title">Reminders</h2>
-  <p class="note">On this website, reminders show as browser notifications only while a DataLeap tab is open. The Android app will schedule real alarms that work with the app closed.</p>
-  <p class="small"><span id="permstate"></span> <button class="btn" id="perm" hidden>Turn on notifications</button></p>
   <div class="tablewrap" id="remlist"></div>
   <form id="remform" class="panel" style="margin-top:1rem">
     <h3>Add a reminder</h3>
     <div class="row">
       <div class="field" style="flex:0 0 130px"><label for="r-time">Time</label><input id="r-time" name="time" type="time" value="21:00" required></div>
-      <div class="field" style="flex:0 0 170px"><label for="r-focus">Focus</label><select id="r-focus" name="focus"><option value="either">Either</option><option value="dsa">DSA</option><option value="sd">System design</option></select></div>
-      <div class="field"><label for="r-msg">Message</label><input id="r-msg" name="msg" placeholder="DSA slot: one question"></div>
+      <div class="field" style="flex:0 0 170px"><label for="r-focus">Focus</label><select id="r-focus" name="focus"><option value="sd">System design</option><option value="dsa">DSA</option><option value="either">Either</option></select></div>
+      <div class="field"><label for="r-msg">Message</label><input id="r-msg" name="msg" placeholder="Ten minutes of system design"></div>
     </div>
     <fieldset class="field" style="border:0;padding:0;margin:0 0 .85rem"><legend class="small" style="font-weight:600;margin-bottom:.25rem">Days</legend>
       <div class="row" style="gap:.9rem">
-        <label style="font-weight:400;display:flex;gap:.3rem"><input type="checkbox" name="day" value="1" checked style="width:auto">Mon</label>
-        <label style="font-weight:400;display:flex;gap:.3rem"><input type="checkbox" name="day" value="2" checked style="width:auto">Tue</label>
-        <label style="font-weight:400;display:flex;gap:.3rem"><input type="checkbox" name="day" value="3" checked style="width:auto">Wed</label>
-        <label style="font-weight:400;display:flex;gap:.3rem"><input type="checkbox" name="day" value="4" checked style="width:auto">Thu</label>
-        <label style="font-weight:400;display:flex;gap:.3rem"><input type="checkbox" name="day" value="5" checked style="width:auto">Fri</label>
-        <label style="font-weight:400;display:flex;gap:.3rem"><input type="checkbox" name="day" value="6" style="width:auto">Sat</label>
-        <label style="font-weight:400;display:flex;gap:.3rem"><input type="checkbox" name="day" value="0" style="width:auto">Sun</label>
+        <label class="inline"><input type="checkbox" name="day" value="1" checked>Mon</label>
+        <label class="inline"><input type="checkbox" name="day" value="2" checked>Tue</label>
+        <label class="inline"><input type="checkbox" name="day" value="3" checked>Wed</label>
+        <label class="inline"><input type="checkbox" name="day" value="4" checked>Thu</label>
+        <label class="inline"><input type="checkbox" name="day" value="5" checked>Fri</label>
+        <label class="inline"><input type="checkbox" name="day" value="6">Sat</label>
+        <label class="inline"><input type="checkbox" name="day" value="0">Sun</label>
       </div></fieldset>
     <div class="row" style="gap:1.5rem;margin-bottom:.85rem">
-      <label style="font-weight:400;display:flex;gap:.4rem"><input type="checkbox" name="skip" checked style="width:auto">Skip when that part is already done</label>
-      <label style="font-weight:400;display:flex;gap:.4rem"><input type="checkbox" name="last" style="width:auto">Last call: only fire if the day is not complete</label>
+      <label class="inline"><input type="checkbox" name="skip" checked>Skip when that part is already done</label>
+      <label class="inline"><input type="checkbox" name="last">Last call: only if the day is not complete</label>
     </div>
     <button class="btn primary" type="submit">Add reminder</button>
   </form>
 </section>
-<section aria-labelledby="g-title">
-  <h2 id="g-title">Daily goal</h2>
-  <form id="goalform" class="panel">
+
+<section aria-labelledby="l-title">
+  <h2 id="l-title">Habit ladder</h2>
+  <p class="small">Start at level 1 even if it feels too easy. The point of the first weeks is the habit, not the hours.</p>
+  <div class="tablewrap" id="levels"></div>
+  <form id="ladderform" class="panel" style="margin-top:1rem">
     <div class="row">
-      <div class="field"><label for="g1">DSA minutes, weekdays</label><input id="g1" name="dsaWeekday" type="number" min="0"></div>
-      <div class="field"><label for="g2">System design minutes, weekdays</label><input id="g2" name="sdWeekday" type="number" min="0"></div>
-      <div class="field"><label for="g3">DSA minutes, weekends</label><input id="g3" name="dsaWeekend" type="number" min="0"></div>
-      <div class="field"><label for="g4">System design minutes, weekends</label><input id="g4" name="sdWeekend" type="number" min="0"></div>
+      <div class="field"><label for="l-mode">Targets</label><select id="l-mode" name="mode"><option value="auto">Habit ladder (levels up automatically)</option><option value="manual">Custom targets</option></select></div>
+      <div class="field"><label for="l-level">Current level</label><select id="l-level" name="level"><option value="1">1 Show up</option><option value="2">2 Build the habit</option><option value="3">3 Go deeper</option><option value="4">4 Interview pace</option></select></div>
     </div>
     <div class="row">
-      <div class="field"><label for="g5">Minimum minutes for a session to count</label><input id="g5" name="minSession" type="number" min="1"></div>
-      <div class="field"><label for="g6">Day starts at (hour, 0 to 23)</label><input id="g6" name="dayStart" type="number" min="0" max="23"></div>
-      <div class="field"><label for="g7">Rest days per week</label><input id="g7" name="restPerWeek" type="number" min="0" max="3"></div>
+      <div class="field"><label for="l-sd">Custom: system design min</label><input id="l-sd" name="msd" type="number" min="1"></div>
+      <div class="field"><label for="l-dsa">Custom: DSA min</label><input id="l-dsa" name="mdsa" type="number" min="1"></div>
+      <div class="field"><label for="l-min">Custom: minimum per session</label><input id="l-min" name="mmin" type="number" min="1"></div>
     </div>
-    <p class="small muted">A day is complete when both DSA and system design have at least one session over the minimum. With the day starting at 4, a 1 AM session counts for the day before.</p>
-    <button class="btn primary" type="submit">Save goal</button>
+    <div class="row">
+      <div class="field"><label for="l-wx">Weekend multiplier</label><input id="l-wx" name="weekendX" type="number" step="0.5" min="1" max="3"></div>
+      <div class="field"><label for="l-ds">Day starts at (hour)</label><input id="l-ds" name="dayStart" type="number" min="0" max="23"></div>
+      <div class="field"><label for="l-rest">Rest days per week</label><input id="l-rest" name="restPerWeek" type="number" min="0" max="3"></div>
+    </div>
+    <button class="btn primary" type="submit">Save</button>
   </form>
 </section>
+
 <section>
   <h2>Reset</h2>
   <p class="small">Deletes all progress, notes and settings stored in this browser.</p>

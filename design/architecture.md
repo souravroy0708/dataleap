@@ -5,7 +5,8 @@
 - GitHub Pages serves `docs/`. Plain HTML, CSS and JavaScript, no build step.
 - Content: `docs/assets/js/data.js`.
 - State: browser localStorage (`dataleap:v1`, timer in `dataleap:timer`). Export/import JSON from Progress.
-- Reminders: browser notifications, only while a DataLeap tab is open.
+- Reminders: browser notifications through the service worker (`sw.js`) while a DataLeap tab is open, plus an `.ics` export so the phone calendar fires them when the site is closed.
+- Installable as a PWA (`manifest.webmanifest`), works offline (network-first cache).
 
 ## Stage 2: Django backend + Android app
 

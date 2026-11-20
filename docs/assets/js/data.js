@@ -33,6 +33,7 @@
 
   q('D1', 'Two Sum', 'Easy', { lc: 'two-integer-sum' });
   q('D1', 'Contains Duplicate', 'Easy', { lc: 'duplicate-integer', angle: 'Duplicate detection on ingestion.' });
+  q('D1', 'Majority Element', 'Easy', { lc: 'majority-element', angle: 'Find the dominant value in a column.' });
   q('D1', 'Group Anagrams', 'Medium', { lc: 'anagram-groups', angle: 'Group-by on a derived key.' });
   q('D1', 'Product of Array Except Self', 'Medium', { lc: 'products-of-array-discluding-self' });
   q('D1', 'Longest Consecutive Sequence', 'Medium', { lc: 'longest-consecutive-sequence', angle: 'Longest streak of active days per user.' });
@@ -41,6 +42,7 @@
   q('D1', 'Group-by and aggregate a list of records without pandas', 'Easy', { text: 'Given rows as dicts, return sum, count and average of amount per (country, day). Follow-up: support several aggregate functions passed as arguments.' });
 
   q('D2', 'Valid Anagram', 'Easy', { lc: 'is-anagram' });
+  q('D2', 'Longest Common Prefix', 'Easy', { lc: 'longest-common-prefix', angle: 'Common prefix of object-store paths.' });
   q('D2', 'Longest Substring Without Repeating Characters', 'Medium', { lc: 'longest-substring-without-duplicates' });
   q('D2', 'Decode String', 'Medium', { lc: 'decode-string' });
   q('D2', 'Simplify Path', 'Medium', { lc: 'simplify-path', angle: 'Normalising object-store paths.' });
@@ -66,6 +68,8 @@
   q('D4', 'Peak concurrent rides from trip start and end events', 'Medium', { text: 'Given trips with start and end timestamps per city, return the peak number of concurrent trips per city and when it happened.' });
 
   q('D5', 'Kth Largest Element in an Array', 'Medium', { lc: 'kth-largest-element-in-an-array' });
+  q('D5', 'Merge Two Sorted Lists', 'Easy', { lc: 'merge-two-sorted-linked-lists', angle: 'Merging two sorted part files.' });
+  q('D5', 'Last Stone Weight', 'Easy', { lc: 'last-stone-weight', angle: 'Warm-up for heaps.' });
   q('D5', 'Top K Frequent Elements', 'Medium', { lc: 'top-k-elements-in-list' });
   q('D5', 'Kth Largest Element in a Stream', 'Easy', { lc: 'kth-largest-integer-in-a-stream', angle: 'Running top-K over a stream.' });
   q('D5', 'K Closest Points to Origin', 'Medium', { lc: 'k-closest-points-to-origin', angle: 'Nearest drivers.' });
@@ -108,6 +112,7 @@
   q('D8', 'Capacity To Ship Packages Within D Days', 'Medium', { lc: 'capacity-to-ship-packages-within-d-days', angle: 'Minimum cluster size to meet an SLA.' });
 
   q('D7', 'Valid Parentheses', 'Easy', { lc: 'validate-parentheses' });
+  q('D7', 'Baseball Game', 'Easy', { lc: 'baseball-game', angle: 'Stack warm-up: replaying an event log.' });
   q('D7', 'Min Stack', 'Medium', { lc: 'minimum-stack' });
   q('D7', 'Daily Temperatures', 'Medium', { lc: 'daily-temperatures' });
   q('D7', 'Evaluate Reverse Polish Notation', 'Medium', { lc: 'evaluate-reverse-polish-notation' });
@@ -268,8 +273,82 @@
   c('S11', 'Deleting data from immutable storage');
   c('S11', 'Row- and column-level access control');
 
+
+  // ---------- Habit ladder ----------
+  const levels = [
+    { n: 1, name: 'Show up', sd: 10, dsa: 10, min: 5, need: 10, dsaDiff: ['Easy'],
+      sdMode: 'concept', sdHow: 'Watch one short video or read about one concept for 10 minutes.', dsaHow: 'One Easy question. Reading the solution is fine at this level.' },
+    { n: 2, name: 'Build the habit', sd: 20, dsa: 15, min: 10, need: 14, dsaDiff: ['Easy', 'Medium'],
+      sdMode: 'concept', sdHow: 'Read or watch, then write a 5-line summary in your own words.', dsaHow: 'Easy or Medium. Try 15 minutes before any hint.' },
+    { n: 3, name: 'Go deeper', sd: 30, dsa: 25, min: 15, need: 28, dsaDiff: ['Medium', 'Easy'],
+      sdMode: 'case-part', sdHow: 'Practise one part of a design case, out loud, then note what you missed.', dsaHow: 'Medium, 25-minute limit, explain out loud.' },
+    { n: 4, name: 'Interview pace', sd: 45, dsa: 30, min: 20, need: 0, dsaDiff: ['Medium', 'Hard'],
+      sdMode: 'case-full', sdHow: 'Full design case in 45 to 60 minutes, then score it with the staff rubric.', dsaHow: 'Medium or Hard under interview conditions, no autocomplete.' }
+  ];
+  const sdCurriculum = ['S1', 'S4', 'S3', 'S2', 'S5', 'S6', 'S12', 'S8', 'S7', 'S9', 'S11'];
+  const rubric = ['Scoped it: consumers, freshness, correctness, scale', 'Sized it: events/s, TB/day, rough cost', 'Named trade-offs and what is given up', 'Correct under failure: idempotency, late data, replays, backfills', 'Operable: SLOs, data quality, alerting', 'Platform view: ownership, contracts, multi-team', 'Path from today to the target design'];
+
+  // ---------- Quotes (original lines; {name} = daughter's name from My why) ----------
+  const quotes = {
+    habit: [
+      'Small and daily beats big and someday.',
+      'Ten minutes today is worth more than three hours planned for Sunday.',
+      'You don\'t need motivation to start. You need the timer running.',
+      'The streak isn\'t the goal. The person who keeps it is.',
+      'Show up first. Get good second.',
+      'A missed day is an accident. Two is a pattern. Never miss twice.',
+      'Consistency is a skill, and you are practising it right now.',
+      'Make it easy to start and hard to skip.',
+      'Every complete day is a vote for the engineer you are becoming.'
+    ],
+    sd: [
+      'You have built these pipelines at work. Now say it out loud, with numbers.',
+      'Staff engineers are paid for trade-offs. Name what you are giving up.',
+      'Start with the question nobody asked: who reads this data, and how fresh must it be?',
+      'Exactly-once is a promise. Know exactly what it costs.',
+      'Draw the failure first. The happy path designs itself.',
+      'Size it before you build it: events per second, TB per day, money per month.',
+      'A design without a backfill plan is a design for a perfect world.',
+      'Interviewers remember the sharpest question, not the most boxes.',
+      'Years of production incidents are your unfair advantage. Use them in every answer.'
+    ],
+    dsa: [
+      'Easy problems build the reflex. Medium problems build the confidence. Both count.',
+      'Twenty-five minutes, out loud, no autocomplete. That is the real interview.',
+      'If you needed the video, it is not solved yet. It is scheduled for revision.',
+      'Name the pattern before you write a line.',
+      'Every hash map you write today is a dedup job you will explain tomorrow.',
+      'DSA is the gate, not the destination. Get through it calmly.'
+    ],
+    family: [
+      'One day {name} will ask how you did it. "Every day, a little" is a good answer to give her.',
+      '{name} is learning what effort looks like by watching you.',
+      'This is for {name}\'s school, her dreams, and every "yes" you want to say to her.',
+      'The offer letter is the milestone. A calmer, fuller life with {name} is the point.',
+      'Close the laptop on time tonight. {name} needs you more than the timer does.',
+      'You are building a future {name} will grow up inside.',
+      'Fifteen minutes now, so the years ahead have more room for {name}.'
+    ],
+    comeback: [
+      'Yesterday is logged. Today is open. Start with ten minutes.',
+      'No guilt. Just the next session.',
+      'Restarting is part of the skill. Start the timer.',
+      'The habit isn\'t broken. It is waiting for ten minutes.'
+    ]
+  };
+  const milestones = {
+    3: 'Three days in a row. The habit has started.',
+    7: 'One full week. Most people never get here.',
+    14: 'Two weeks. This is becoming who you are.',
+    21: 'Three weeks without missing. {name} has a very consistent father.',
+    30: 'Thirty days. A month of proof.',
+    50: 'Fifty days. Interviewers can feel this kind of preparation.',
+    75: 'Seventy-five days. You are not the same engineer you were.',
+    100: 'One hundred days. Whatever happens next, you built this.'
+  };
+
   window.DL_DATA = {
-    dsaTopics, sdTopics, items,
+    dsaTopics, sdTopics, items, levels, sdCurriculum, rubric, quotes, milestones,
     resources: [
       { name: 'NeetCode practice lists', url: 'https://neetcode.io/practice' },
       { name: 'NeetCode roadmap', url: 'https://neetcode.io/roadmap' },

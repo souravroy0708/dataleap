@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My why · DataLeap</title>
+<meta name="description" content="What changes for you and your family when you land the job.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='7' height='6' rx='1.5' fill='%232a4d8f'/%3E%3Crect x='15' y='9' width='7' height='6' rx='1.5' fill='none' stroke='%232a4d8f' stroke-width='2'/%3E%3Cpath d='M9 12h6' stroke='%232a4d8f' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2a4d8f">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+</head>
+<body data-page="why">
+<header id="top"></header>
+<main class="wrap">
+<section id="whyview"></section>
+<section aria-labelledby="edit-title">
+  <h2 id="edit-title">Write it in your words</h2>
+  <form id="whyform" class="panel">
+    <div class="row">
+      <div class="field"><label for="w-name">Daughter's name</label><input id="w-name" name="name" autocomplete="off"></div>
+      <div class="field"><label for="w-date">Offer by</label><input id="w-date" name="targetDate" type="date"></div>
+      <div class="field"><label for="w-hours">Prep hours goal</label><input id="w-hours" name="hoursGoal" type="number" min="10"></div>
+    </div>
+    <div class="field"><label for="w-why">My why, in one sentence</label><input id="w-why" name="why" placeholder="So she grows up with every door open, and a father who is home for dinner"></div>
+    <div class="row">
+      <div class="field"><label for="w-role">Target role</label><input id="w-role" name="role"></div>
+      <div class="field"><label for="w-co">Target companies</label><input id="w-co" name="companies"></div>
+    </div>
+    <div class="field"><label for="w-d">For her (one per line)</label><textarea id="w-d" name="v-daughter" rows="5"></textarea></div>
+    <div class="field"><label for="w-f">For our family (one per line)</label><textarea id="w-f" name="v-family" rows="4"></textarea></div>
+    <div class="field"><label for="w-m">For me (one per line)</label><textarea id="w-m" name="v-me" rows="4"></textarea></div>
+    <div class="field"><label for="w-l">A letter to her, to read on offer day</label><textarea id="w-l" name="letter" rows="6" placeholder="Write it now, while the work is still ahead of you."></textarea></div>
+    <button class="btn primary" type="submit">Save</button>
+    <p class="small muted" style="margin-top:.6rem">Her name appears in quotes and reminders. It is stored only in this browser.</p>
+  </form>
+</section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
