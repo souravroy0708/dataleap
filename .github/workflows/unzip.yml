@@ -1,0 +1,28 @@
+name: Unzip upload
+on:
+  push:
+    paths: ['*.zip']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip and commit
+        run: |
+          shopt -s nullglob dotglob
+          for z in *.zip; do
+            tmp=$(mktemp -d)
+            unzip -q -o "$z" -d "$tmp"
+            set -- "$tmp"/*
+            if [ $# -eq 1 ] && [ -d "$1" ]; then src="$1"; else src="$tmp"; fi
+            cp -r "$src"/. .
+            git rm -q "$z"
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Unpack uploaded zip" || echo "Nothing to commit"
+          git push
