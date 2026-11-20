@@ -136,7 +136,7 @@
       }
     }
   }
-  function celebrate(title, body) { setTimeout(() => toast(title + '. ' + body), 400); notify(title, body, 'index.html', 'dl-celebrate'); }
+  function celebrate(title, body) { setTimeout(() => { toast(title + '. ' + body); releaseBalloons(6, ['family', 'habit'], false); }, 400); notify(title, body, 'index.html', 'dl-celebrate'); }
 
   // ---------- status and revision ----------
   function setStatus(id, status) {
@@ -206,27 +206,94 @@
 
   // ---------- chrome ----------
   const NAV = [['index.html', 'Today'], ['system-design.html', 'System design'], ['dsa.html', 'DSA'], ['roadmap.html', 'Roadmap'], ['why.html', 'My why'], ['companies.html', 'Companies'], ['progress.html', 'Progress'], ['settings.html', 'Reminders']];
+  const MARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="8.5" width="7.5" height="7" rx="2" fill="#0F1235"/><rect x="14.5" y="8.5" width="7.5" height="7" rx="2" fill="none" stroke="#0F1235" stroke-width="2.2"/><path d="M9.5 12h5" stroke="#0F1235" stroke-width="2.2"/></svg>';
+  const BALLOON_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="9" rx="6.5" ry="7.5" fill="#0F1235"/><path d="M12 16.5l-1.4 2h2.8z" fill="#0F1235"/><path d="M12 18.5c-1 1.6 1 2.4 0 4" stroke="#0F1235" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="9.6" cy="6.4" rx="1.4" ry="2" fill="#FFC21A"/></svg>';
   function renderChrome() {
     const here = (location.pathname.split('/').pop() || 'index.html');
+    const links = NAV.map(([h, l]) => '<a href="' + h + '"' + (h === here ? ' aria-current="page"' : '') + '>' + l + '</a>').join('');
     const head = document.getElementById('top');
     if (head) {
-      head.className = 'topbar';
-      head.innerHTML = '<div class="inner"><a class="brand" href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="9" width="7" height="6" rx="1.5" fill="currentColor"/><rect x="15" y="9" width="7" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12h6" stroke="currentColor" stroke-width="2"/></svg>DataLeap</a><nav class="nav" aria-label="Main">' +
-        NAV.map(([h, l]) => '<a href="' + h + '"' + (h === here ? ' aria-current="page"' : '') + '>' + l + '</a>').join('') +
-        '</nav><a class="timer-chip" id="timerchip" href="index.html"></a></div>';
+      head.className = 'site-header';
+      head.innerHTML = '<div class="wrap header-row"><a class="brand" href="index.html"><span class="brand-mark">' + MARK + '</span><span class="brand-text"><b>DataLeap</b><span>Staff data engineering prep</span></span></a>' +
+        '<a class="timer-chip" id="timerchip" href="index.html"></a><nav class="nav-links" aria-label="Main">' + links + '</nav>' +
+        '<details class="menu"><summary aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary><nav class="menu-panel" aria-label="Main">' + links + '</nav></details></div>';
     }
-    const main = document.querySelector('main');
-    if (main) {
-      main.insertAdjacentHTML('afterbegin', '<aside class="quote" aria-label="Quote of the day"><p id="quote-text"></p><button class="btn quiet small" id="quote-next" type="button">Another</button></aside>');
-      const page = document.body.dataset.page;
-      document.getElementById('quote-text').textContent = quoteFor(page, 0);
-      document.getElementById('quote-next').onclick = () => { quoteShift++; document.getElementById('quote-text').textContent = quoteFor(page, quoteShift); };
+    const page = document.body.dataset.page;
+    const qt = document.getElementById('quote-text');
+    if (qt) {
+      qt.textContent = quoteFor(page, 0);
+      const qn = document.getElementById('quote-next');
+      if (qn) qn.onclick = () => { quoteShift++; qt.textContent = quoteFor(page, quoteShift); };
     }
     const foot = document.createElement('footer'); foot.className = 'site';
-    foot.innerHTML = 'Your progress is stored only in this browser. Back it up from <a href="progress.html">Progress</a>. Practice happens on NeetCode and the linked videos; DataLeap tracks time, status and notes.';
+    foot.innerHTML = '<div class="wrap">Your progress is stored only in this browser. Back it up from <a href="progress.html">Progress</a>. Practice happens on NeetCode and the linked videos; DataLeap keeps your time, status, notes and streak.</div>';
     document.body.appendChild(foot);
     const t = document.createElement('div'); t.className = 'toast'; t.id = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t);
-    document.body.insertAdjacentHTML('beforeend', '<dialog id="itemdlg" aria-labelledby="itemdlg-title"><div class="dlg" id="itemdlg-body"></div></dialog><dialog id="logdlg" aria-labelledby="logdlg-title"><form class="dlg" id="logform" method="dialog"></form></dialog>');
+    document.body.insertAdjacentHTML('beforeend', '<div class="sky" id="sky" aria-hidden="true"></div><div class="popwrap" id="popwrap" aria-live="polite"></div><button class="motivate" id="motivate" type="button">' + BALLOON_IC + '<span>Motivate me</span></button>' +
+      '<dialog id="itemdlg" aria-labelledby="itemdlg-title"><div class="dlg" id="itemdlg-body"></div></dialog><dialog id="logdlg" aria-labelledby="logdlg-title"><form class="dlg" id="logform" method="dialog"></form></dialog>');
+    document.getElementById('motivate').onclick = () => releaseBalloons(5, null, false);
+  }
+
+  // ---------- quote balloons ----------
+  const COLORS = ['#FFC21A', '#FF6B4A', '#8F99FF', '#2BB673', '#5B6CFF', '#FF9FB2'];
+  const LABELS = ['Tap', 'Pop', 'For her', 'Why', 'Now'];
+  const usedQ = new Set();
+  function freshQuote(cats) {
+    const all = cats.flatMap((c) => D.quotes[c]);
+    let pool = all.filter((q) => !usedQ.has(q)); if (!pool.length) { usedQ.clear(); pool = all; }
+    const q = pool[Math.floor(Math.random() * pool.length)]; usedQ.add(q); return personal(q);
+  }
+  function balloonCats() {
+    const page = document.body.dataset.page;
+    const base = page === 'sd' ? ['sd', 'family'] : page === 'dsa' ? ['dsa', 'family'] : ['habit', 'family', 'sd'];
+    return missedYesterday() ? ['comeback', 'family'] : base;
+  }
+  function showQuoteCard(text, color) {
+    const wrap = document.getElementById('popwrap'); if (!wrap) return;
+    const card = document.createElement('div'); card.className = 'qpop'; card.style.setProperty('--c', color || '#FFC21A');
+    card.innerHTML = '<p>' + esc(text) + '</p><small>' + (daughter() ? 'For ' + esc(daughter()) : 'Your why') + '</small>';
+    const close = () => { card.classList.add('out'); setTimeout(() => card.remove(), 300); };
+    card.onclick = close;
+    wrap.appendChild(card);
+    while (wrap.children.length > 3) wrap.firstChild.remove();
+    setTimeout(close, 6500);
+  }
+  function burst(x, y, color) {
+    const sky = document.getElementById('sky');
+    for (let i = 0; i < 14; i++) {
+      const sp = document.createElement('span'); sp.className = 'spark';
+      const a = (Math.PI * 2 * i) / 14, r = 50 + Math.random() * 50;
+      sp.style.left = x + 'px'; sp.style.top = y + 'px';
+      sp.style.background = i % 3 ? color : COLORS[(i + 2) % COLORS.length];
+      sp.style.setProperty('--dx', Math.cos(a) * r + 'px'); sp.style.setProperty('--dy', Math.sin(a) * r + 'px');
+      sky.appendChild(sp); setTimeout(() => sp.remove(), 750);
+    }
+  }
+  function releaseBalloons(n, cats, autoPop) {
+    cats = cats || balloonCats();
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const sky = document.getElementById('sky'); if (!sky) return;
+    if (reduce) { showQuoteCard(freshQuote(cats)); return; }
+    const w = window.innerWidth;
+    for (let i = 0; i < n; i++) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'balloon';
+      const color = COLORS[(i + Math.floor(Math.random() * 6)) % COLORS.length];
+      b.style.setProperty('--c', color);
+      b.style.left = Math.round(((i + 0.5) / n) * (w - 100) + (Math.random() * 40 - 20)) + 'px';
+      b.style.setProperty('--dur', (8 + Math.random() * 4).toFixed(1) + 's');
+      b.style.setProperty('--delay', (i * 0.35).toFixed(2) + 's');
+      b.setAttribute('aria-label', 'Pop for a quote');
+      b.innerHTML = '<span class="s"></span><span class="b"></span><span class="t">' + LABELS[i % LABELS.length] + '</span>';
+      const pop = () => {
+        if (b.dataset.popped) return; b.dataset.popped = '1';
+        const r = b.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2.4, color);
+        b.remove(); showQuoteCard(freshQuote(cats), color);
+      };
+      b.addEventListener('click', pop);
+      b.addEventListener('animationend', (e) => { if (e.animationName === 'rise') b.remove(); });
+      sky.appendChild(b);
+      if (autoPop && i === 0) setTimeout(pop, 1600);
+    }
   }
   let toastT;
   function toast(msg) { const t = document.getElementById('toast'); if (!t) return; t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 4200); }
@@ -360,7 +427,7 @@
     if (f.dataset.fromTimer) setT(null);
     document.getElementById('logdlg').close();
     const after = dayInfo(date).status;
-    if (after === 'ok' && before !== 'ok') toast('Today is complete. ' + randomQuote('family'));
+    if (after === 'ok' && before !== 'ok') { toast('Today is complete. Both tasks done.'); releaseBalloons(7, ['family'], true); }
     else toast('Logged ' + minutes + ' min.' + (minutes < minNow() ? ' Under the ' + minNow() + '-minute minimum, so it doesn\'t complete the task yet.' : ''));
     checkProgress(); tick(); refresh();
   }
@@ -424,24 +491,24 @@
   function whyStrip() {
     const p = S.profile; const n = daughter();
     const left = p.targetDate ? daysBetween(today(), p.targetDate) : null;
-    const hrs = Math.round(totalMinutes() / 6) / 10;
-    return '<div class="why">' +
-      '<div class="why-main">' + (n || p.why ? '<p class="why-for">' + (n ? 'For ' + esc(n) : 'My why') + '</p>' + (p.why ? '<p class="why-text">' + esc(p.why) + '</p>' : '') : '<p class="why-text"><a href="why.html">Write your why</a>: your daughter\'s name and one sentence on what this job changes for her.</p>') + '</div>' +
-      '<div class="why-stats">' + (left !== null && left >= 0 ? '<span><b>' + left + '</b> days to ' + esc(p.role) + ' offer</span>' : '') + '<span><b>' + hrs + '</b> of ' + p.hoursGoal + ' prep hours</span></div></div>';
+    const hrs = Math.round(totalMinutes() / 6) / 10; const sk = streak();
+    return (n ? '<p class="why-for">For ' + esc(n) + '</p>' : '<span class="kicker"><span class="dot"></span>Staff data engineer, 2027</span>') +
+      '<p class="why-text">' + (p.why ? esc(p.why) : '<a href="why.html">Write your why.</a> Her name, and what this job changes for her.') + '</p>' +
+      '<div class="stats-row"><div class="stat hl"><b>' + sk + '</b><span>day streak</span></div>' +
+      (left !== null && left >= 0 ? '<div class="stat"><b>' + left + '</b><span>days to the offer</span></div>' : '<div class="stat"><b>—</b><span>set an offer date</span></div>') +
+      '<div class="stat"><b>' + hrs + '</b><span>of ' + p.hoursGoal + ' prep hours</span></div><div class="stat"><b>L' + L().n + '</b><span>' + (S.settings.levelMode === 'manual' ? 'custom targets' : esc(L().name.toLowerCase())) + '</span></div></div>';
   }
   function levelCard() {
-    const lv = L(); const manual = S.settings.levelMode === 'manual';
-    if (manual) return '<p class="levelline small"><b>Custom targets.</b> <a href="settings.html">Switch back to the habit ladder</a></p>';
-    if (lv.n === 4) return '<p class="levelline small"><b>Level 4, ' + lv.name + '.</b> Full interview pace. Keep the streak and keep scoring cases.</p>';
-    const done = completeSince(S.settings.levelSince);
-    const pct = Math.min(100, Math.round((done / lv.need) * 100));
-    return '<div class="levelline"><span class="small"><b>Level ' + lv.n + ', ' + lv.name + '.</b> ' + done + ' of ' + lv.need + ' complete days to unlock level ' + (lv.n + 1) + ' (' + D.levels[lv.n].name.toLowerCase() + ').</span><div class="bar slim" role="img" aria-label="' + pct + ' percent to next level"><i style="width:' + pct + '%"></i></div></div>';
+    const lv = L();
+    if (S.settings.levelMode === 'manual') return '<div class="lvl"><p><b>Custom targets.</b> <a href="settings.html">Back to the habit ladder</a></p></div>';
+    if (lv.n === 4) return '<div class="lvl"><p><b>Level 4, interview pace.</b> Keep the streak, keep scoring cases.</p></div>';
+    const done = completeSince(S.settings.levelSince); const pct = Math.min(100, Math.round((done / lv.need) * 100));
+    return '<div class="lvl"><p><b>' + done + ' of ' + lv.need + ' complete days</b> to unlock level ' + (lv.n + 1) + ', ' + D.levels[lv.n].name.toLowerCase() + '.</p><div class="bar" role="img" aria-label="' + pct + ' percent to next level"><i style="width:' + pct + '%"></i></div></div>';
   }
 
   function renderHome() {
     const t = today(); const info = dayInfo(t); const tg = targets(t); const s = streak();
     document.getElementById('today-date').textContent = niceDate(t);
-    document.getElementById('streak').textContent = s ? s + '-day streak' : 'Day one starts now';
     document.getElementById('why').innerHTML = whyStrip() + levelCard();
     const late = new Date().getHours() >= 21 && info.status !== 'ok' && !S.rest.includes(t);
     let banner = '';
@@ -460,6 +527,7 @@
   }
   function initHome() {
     refresh = renderHome; renderHome();
+    if (S.burstDay !== today()) { S.burstDay = today(); save(); setTimeout(() => releaseBalloons(5, null, false), 900); }
     const q = new URLSearchParams(location.search).get('start');
     if (q === 'sd' || q === 'dsa') {
       history.replaceState(null, '', location.pathname);
@@ -550,7 +618,7 @@
     const list = (arr) => '<ul>' + arr.filter(Boolean).map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>';
     document.getElementById('whyview').innerHTML =
       '<h1>' + (p.why ? esc(p.why) : 'Why I am doing this') + '</h1>' +
-      '<p class="lead">' + esc(p.role) + ' at ' + esc(p.companies) + (p.targetDate ? '. Offer by ' + esc(niceDate(p.targetDate)) + (left !== null && left >= 0 ? ', ' + left + ' days from now' : '') : '') + '.</p>' +
+      '<p class="lede">' + esc(p.role) + ' at ' + esc(p.companies) + (p.targetDate ? '. Offer by ' + esc(niceDate(p.targetDate)) + (left !== null && left >= 0 ? ', ' + left + ' days from now' : '') : '') + '.</p>' +
       '<div class="vision"><section><h2>For ' + esc(n) + '</h2>' + list(v.daughter) + '</section><section><h2>For our family</h2>' + list(v.family) + '</section><section><h2>For me</h2>' + list(v.me) + '</section></div>' +
       (p.letter ? '<section class="letter"><h2>A letter to ' + esc(n) + ', to read on offer day</h2><p>' + esc(p.letter).replace(/\n/g, '<br>') + '</p></section>' : '') +
       '<p class="note">Read this when you feel like skipping. Then start the timer for ' + minNow() + ' minutes. That is all today needs.</p>';

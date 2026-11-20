@@ -2,78 +2,69 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roadmap · DataLeap</title>
-<meta name="description" content="From a 10-minute habit to staff data engineering offers in 2027.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='7' height='6' rx='1.5' fill='%232a4d8f'/%3E%3Crect x='15' y='9' width='7' height='6' rx='1.5' fill='none' stroke='%232a4d8f' stroke-width='2'/%3E%3Cpath d='M9 12h6' stroke='%232a4d8f' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/main.css">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2a4d8f">
+<meta name="description" content="From a ten-minute habit to a staff data engineering offer in 2027.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
 <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body data-page="roadmap">
 <header id="top"></header>
-<main class="wrap">
-<section>
-  <h1>From ten minutes a day to a staff offer</h1>
-  <p class="lead">System design first, DSA second. Start so small you cannot fail, earn each level with complete days, and arrive at interview pace with the habit already built. Plan on about 24 weeks at full pace, alongside a full-time job.</p>
-</section>
-
-<section aria-labelledby="ph-title">
-  <h2 id="ph-title">The plan</h2>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>The plan</span>
+<h1>From ten minutes a day to a staff offer</h1>
+<p class="lede">System design first, DSA second. Start so small you cannot fail, earn every level with complete days, and arrive at interview pace with the habit already built. <strong>About 24 weeks at full pace</strong>, alongside a full-time job.</p>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <div class="sec-head"><h2>The plan</h2></div>
   <ol class="phases">
     <li class="phase"><div class="when">Weeks 1 to 2<small>Level 1, show up</small></div><div>
-      <ul><li>10 minutes of system design, 10 minutes of DSA. That is the whole day.</li><li>System design: short videos on distributed systems basics (S1): partitioning, replication, CAP.</li><li>DSA: Easy questions only. Reading the solution is allowed.</li><li>Write <a href="why.html">your why</a> and set reminders on the phone calendar.</li></ul>
+      <ul><li>10 minutes of system design and 10 of DSA. That is the whole day.</li><li>System design: distributed systems basics (S1): partitioning, replication, CAP.</li><li>DSA: Easy questions only, all tied to data work. Reading the solution is allowed.</li><li>Write <a href="why.html">your why</a> and put reminders on your phone calendar.</li></ul>
       <p class="gate">Unlocks level 2 after 10 complete days.</p></div></li>
     <li class="phase"><div class="when">Weeks 3 to 4<small>Level 2, build the habit</small></div><div>
-      <ul><li>20 minutes of system design, 15 of DSA.</li><li>System design: storage and formats (S4), then streaming (S3). Write a 5-line summary of every concept in your own words.</li><li>DSA: Easy into Medium, arrays, strings, sliding window, intervals.</li></ul>
+      <ul><li>20 minutes of system design, 15 of DSA.</li><li>System design: storage and formats (S4), then streaming (S3). A 5-line summary of every concept, in your own words.</li><li>DSA: Easy into Medium on hashing, parsing, windows and intervals.</li></ul>
       <p class="gate">Unlocks level 3 after 14 complete days.</p></div></li>
     <li class="phase"><div class="when">Weeks 5 to 8<small>Level 3, go deeper</small></div><div>
-      <ul><li>30 minutes of system design, 25 of DSA.</li><li>System design: design cases one part a day: requirements, estimates, architecture, data model, processing, failures, data quality, trade-offs. About one case a week.</li><li>Concepts continue: Spark and batch (S2), modelling (S5), CDC (S6).</li><li>DSA: Medium, 25-minute limit, out loud. Heaps, design-a-structure, data processing problems.</li></ul>
+      <ul><li>30 minutes of system design, 25 of DSA.</li><li>Design cases one part a day: requirements, estimates, architecture, data model, processing, failures, data quality, trade-offs. About one case a week.</li><li>Concepts continue: Spark (S2), modelling (S5), CDC (S6), platform and staff judgement (S13).</li><li>DSA: Medium, 25-minute limit, out loud. Heaps, design-a-structure, data processing problems.</li></ul>
       <p class="gate">Unlocks level 4 after 28 complete days.</p></div></li>
     <li class="phase"><div class="when">Weeks 9 to 20<small>Level 4, interview pace</small></div><div>
-      <ul><li>45 minutes of system design, 30 of DSA on weekdays, more at weekends.</li><li>Two full design cases a week, 45 to 60 minutes, scored with the staff rubric. Drill your lowest score the next week.</li><li>Estimation and cost (S12), data quality (S8), orchestration (S7), serving (S9).</li><li>From week 14: one mock interview a week, alternating design and coding.</li></ul>
+      <ul><li>45 minutes of system design and 30 of DSA on weekdays; more at weekends.</li><li>Two full design cases a week, 45 to 60 minutes each, scored with the staff rubric. Drill the lowest score the next week.</li><li>Estimation and cost (S12), data quality (S8), orchestration (S7), serving (S9).</li><li>From week 14: one mock interview a week, alternating design and coding.</li></ul>
       <p class="gate">Ready when the last five rubric scores average 10 or more out of 14 and Mediums take under 25 minutes.</p></div></li>
     <li class="phase"><div class="when">Weeks 21 to 24<small>Apply and interview</small></div><div>
       <ul><li>Two mocks a week. Apply in batches so onsite loops land close together.</li><li>Keep the daily run going between loops, at level 2 pace if you need the energy elsewhere.</li></ul></div></li>
   </ol>
-</section>
-
-<section aria-labelledby="crack-title">
-  <h2 id="crack-title">What I would do to crack a staff DE loop</h2>
-  <ol>
-    <li><b>Turn your experience into design stories.</b> Write up the 5 or 6 biggest systems you have built using the same 8-part case template, with real numbers, real incidents and what you would change. Staff interviews probe depth, and your years in production are the depth.</li>
-    <li><b>Own the first 8 minutes.</b> Ask about consumers, freshness, correctness and scale, then put numbers on the board before drawing a single box.</li>
-    <li><b>Say trade-offs out loud.</b> For every choice, name the alternative and what you give up. This is what separates staff from senior.</li>
-    <li><b>Practise speaking, not just reading.</b> Record one full design a week on your phone and watch 5 minutes of it.</li>
-    <li><b>Score, then drill the weakest point.</b> The rubric on every design case shows where you lose marks.</li>
-    <li><b>Treat DSA as a gate.</b> Mediums in Python in 25 minutes, data engineering problems, the revision queue. No need to chase Hard unless the target is Google.</li>
-    <li><b>Get real mocks.</b> Peers at product companies and paid mock platforms, from week 14.</li>
-    <li><b>Protect sleep and family time.</b> A burnt-out week breaks more streaks than a busy one.</li>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="sec-head"><h2>What I would do to crack a staff DE loop</h2></div>
+  <ol class="crack">
+    <li><b>Turn your experience into design stories</b>Write up the 5 or 6 biggest systems you have built in the 8-part case template, with real numbers, real incidents and what you would change. Your years in production are the depth staff interviews look for.</li>
+    <li><b>Own the first eight minutes</b>Consumers, freshness, correctness, scale. Put numbers on the board before drawing a single box.</li>
+    <li><b>Say every trade-off out loud</b>For each choice, name the alternative and what you give up. This is what separates staff from senior.</li>
+    <li><b>Practise speaking, not just reading</b>Record one full design a week on your phone and watch five minutes of it.</li>
+    <li><b>Score, then drill the weakest point</b>The rubric on every design case shows exactly where you lose marks.</li>
+    <li><b>Treat DSA as a gate</b>Mediums in Python in 25 minutes, data-shaped problems, the revision queue. Chase Hard only for Google.</li>
+    <li><b>Get real mocks from week 14</b>Peers at product companies and paid mock platforms. Real pressure, real feedback.</li>
+    <li><b>Protect sleep and family time</b>A burnt-out week breaks more streaks than a busy one.</li>
   </ol>
-</section>
-
-<section aria-labelledby="week-title">
-  <h2 id="week-title">A week at level 4</h2>
-  <div class="tablewrap"><table class="dtable">
-    <thead><tr><th>Day</th><th>System design</th><th>DSA</th></tr></thead>
-    <tbody>
-      <tr><td>Mon to Thu</td><td>45 min: one concept or one case part</td><td>30 min: one Medium, timed</td></tr>
+</div></section>
+<section class="sec"><div class="wrap cols">
+  <div class="card"><h2>A week at level 4</h2>
+    <div class="tablewrap"><table class="dtable"><thead><tr><th>Day</th><th>System design</th><th>DSA</th></tr></thead><tbody>
+      <tr><td>Mon to Thu</td><td>45 min: a concept or a case part</td><td>30 min: one Medium, timed</td></tr>
       <tr><td>Friday</td><td>45 min: one full case, scored</td><td>Revision queue</td></tr>
-      <tr><td>Saturday</td><td>One full case or a mock interview</td><td>Two timed questions back to back</td></tr>
-      <tr><td>Sunday</td><td>Read pinned notes, 20 min</td><td>Rest day if you need it</td></tr>
-    </tbody>
-  </table></div>
-</section>
-
-<section aria-labelledby="res-title">
-  <h2 id="res-title">Resources</h2>
-  <ul id="resources"></ul>
-  <p class="note">Some loops add a separate SQL, data modelling or behavioural round. DataLeap covers system design and DSA only.</p>
-</section>
+      <tr><td>Saturday</td><td>A full case or a mock interview</td><td>Two timed questions</td></tr>
+      <tr><td>Sunday</td><td>Pinned notes, 20 min</td><td>Rest day if needed</td></tr>
+    </tbody></table></div></div>
+  <div class="card"><h2>Resources</h2><ul id="resources"></ul>
+    <p class="note">Some loops add a separate SQL, data modelling or behavioural round. DataLeap covers system design and DSA only.</p></div>
+</div></section>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('resources').innerHTML = window.DL_DATA.resources.map(function (r) { return '<li><a href="' + r.url + '" target="_blank" rel="noopener">' + r.name + '</a></li>'; }).join('');

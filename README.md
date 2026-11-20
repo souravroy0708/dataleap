@@ -1,6 +1,6 @@
 # DataLeap
 
-Daily prep tracker for **data engineering DSA and system design** interviews at top product companies (Uber, Google, Databricks, Visa and similar), aimed at engineers with 10+ years of experience targeting senior and staff roles.
+Daily prep tracker for **staff-level data engineering system design and DSA** interviews at top product companies (Uber, Google, Databricks, Visa and similar), aimed at engineers with 10+ years of experience targeting senior and staff roles.
 
 DataLeap is not a practice platform. DSA questions link to NeetCode (free, with video solutions); system design items link to videos, articles or Exponent; DataLeap tracks the time you spend each day, the status of every question, your notes, and when to revise.
 
@@ -21,6 +21,7 @@ System design first, DSA second. Every day: 1 system design unit (a concept, a v
 
 - **My why** page: your daughter's name, one sentence on why, what changes for her, your family and you, and a letter to read on offer day.
 - A quote on every page and in every reminder, personalised with her name.
+- Quote balloons: they float up on your first visit each day, when you complete a day or level up, and whenever you tap **Motivate me**. Pop one to burst it into a quote card.
 - Streak milestones, level-ups, "never miss twice" after a missed day, and a late-evening rescue prompt.
 - Reminders: export to the phone calendar (fires even when the site is closed) and browser notifications while DataLeap is open. Install it to the home screen from Chrome for an app-like experience.
 
@@ -41,6 +42,7 @@ dataleap/
 │   ├── manifest.webmanifest  Install to home screen
 │   ├── .nojekyll          Serve files as-is (no Jekyll processing)
 │   └── assets/
+│       ├── fonts/         Anek Latin + Mukta, self-hosted (OFL licences included)
 │       ├── icons/         App icons
 │       ├── css/main.css
 │       └── js/
@@ -73,3 +75,7 @@ The static site stores progress in the browser's localStorage. Export a backup f
 ## Adding questions
 
 Edit `docs/assets/js/data.js`. Add a title, topic code and link, or short question text in your own words. Do not copy problem statements from other platforms.
+
+## Design
+
+Same design language as Bas 1 Minute and Kharcha Check: ink + haldi, Anek Latin + Mukta, self-hosted fonts, no third-party scripts or trackers.

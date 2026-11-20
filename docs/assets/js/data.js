@@ -18,8 +18,8 @@
     { code: 'D10', name: 'Graphs and DAGs', priority: 2, why: 'Pipeline dependencies, identity resolution, cycles.' },
     { code: 'D8', name: 'Binary search', priority: 2, why: 'Search in sorted data and capacity planning style questions.' },
     { code: 'D7', name: 'Stacks and queues', priority: 2, why: 'Parsing expressions, monotonic patterns.' },
-    { code: 'D9', name: 'Trees and tries', priority: 2, why: 'Hierarchies, prefix lookups, serialisation.' },
-    { code: 'D12', name: 'Dynamic programming basics', priority: 3, why: 'Rare in DE loops; know the classic few.' }
+    { code: 'D9', name: 'Hierarchies and tries', priority: 2, why: 'Category trees, org charts, prefix lookups, serialisation.' },
+    { code: 'D12', name: 'Matching with dynamic programming', priority: 3, why: 'Rare in DE loops. Only the record-matching kind.' }
   ];
 
   function q(topic, title, diff, o) {
@@ -31,51 +31,44 @@
     });
   }
 
-  q('D1', 'Two Sum', 'Easy', { lc: 'two-integer-sum' });
+  q('D1', 'Two Sum', 'Easy', { lc: 'two-integer-sum', angle: 'A hash join in miniature: build on one side, probe with the other.' });
   q('D1', 'Contains Duplicate', 'Easy', { lc: 'duplicate-integer', angle: 'Duplicate detection on ingestion.' });
   q('D1', 'Majority Element', 'Easy', { lc: 'majority-element', angle: 'Find the dominant value in a column.' });
   q('D1', 'Group Anagrams', 'Medium', { lc: 'anagram-groups', angle: 'Group-by on a derived key.' });
-  q('D1', 'Product of Array Except Self', 'Medium', { lc: 'products-of-array-discluding-self' });
   q('D1', 'Longest Consecutive Sequence', 'Medium', { lc: 'longest-consecutive-sequence', angle: 'Longest streak of active days per user.' });
   q('D1', 'Subarray Sum Equals K', 'Medium', { lc: 'subarray-sum-equals-k', angle: 'Prefix sums, the basis of running totals.' });
   q('D1', 'Deduplicate events by event_id, keeping the latest version', 'Medium', { text: 'Given a list of event dicts with event_id, updated_at and payload, return one event per id, the latest by updated_at. Follow-up: input does not fit in memory.' });
   q('D1', 'Group-by and aggregate a list of records without pandas', 'Easy', { text: 'Given rows as dicts, return sum, count and average of amount per (country, day). Follow-up: support several aggregate functions passed as arguments.' });
 
-  q('D2', 'Valid Anagram', 'Easy', { lc: 'is-anagram' });
   q('D2', 'Longest Common Prefix', 'Easy', { lc: 'longest-common-prefix', angle: 'Common prefix of object-store paths.' });
-  q('D2', 'Longest Substring Without Repeating Characters', 'Medium', { lc: 'longest-substring-without-duplicates' });
-  q('D2', 'Decode String', 'Medium', { lc: 'decode-string' });
+  q('D2', 'Decode String', 'Medium', { lc: 'decode-string', angle: 'Expanding nested, templated paths and configs.' });
   q('D2', 'Simplify Path', 'Medium', { lc: 'simplify-path', angle: 'Normalising object-store paths.' });
   q('D2', 'String Compression', 'Medium', { lc: 'string-compression', angle: 'Run-length encoding, used by columnar formats.' });
   q('D2', 'Parse access logs and report p95 latency per endpoint', 'Medium', { text: 'Each line holds timestamp, method, path, status and latency_ms. Return p95 latency and error rate per path. Follow-up: stream a 50 GB file.' });
   q('D2', 'Validate CSV rows and quarantine bad records', 'Medium', { text: 'Parse rows against a schema (types, required fields). Return good rows and a list of bad rows with the reason. Handle quoted commas.' });
 
-  q('D3', 'Best Time to Buy and Sell Stock', 'Easy', { lc: 'buy-and-sell-crypto' });
-  q('D3', '3Sum', 'Medium', { lc: 'three-integer-sum' });
-  q('D3', 'Container With Most Water', 'Medium', { lc: 'max-water-container' });
-  q('D3', 'Longest Repeating Character Replacement', 'Medium', { lc: 'longest-repeating-substring-with-replacement' });
-  q('D3', 'Minimum Window Substring', 'Hard', { lc: 'minimum-window-with-characters' });
+  q('D3', 'Best Time to Buy and Sell Stock', 'Easy', { lc: 'buy-and-sell-crypto', angle: 'Single pass over a metric stream, keeping the running minimum.' });
+  q('D3', 'Minimum Window Substring', 'Hard', { lc: 'minimum-window-with-characters', angle: 'Shortest time window that contains every required event type.' });
   q('D3', 'Sliding Window Maximum', 'Hard', { lc: 'sliding-window-maximum', angle: 'Rolling max over a metric stream.' });
   q('D3', 'Rolling 7-day active users from daily login events', 'Medium', { text: 'Given (user_id, date) login rows, return for each date the count of distinct users active in the trailing 7 days.' });
 
-  q('D4', 'Merge Intervals', 'Medium', { lc: 'merge-intervals' });
-  q('D4', 'Insert Interval', 'Medium', { lc: 'insert-new-interval' });
-  q('D4', 'Non-overlapping Intervals', 'Medium', { lc: 'non-overlapping-intervals' });
+  q('D4', 'Merge Intervals', 'Medium', { lc: 'merge-intervals', angle: 'Merging overlapping user sessions or booking windows.' });
+  q('D4', 'Insert Interval', 'Medium', { lc: 'insert-new-interval', angle: 'Placing a late-arriving session into already sorted sessions.' });
+  q('D4', 'Non-overlapping Intervals', 'Medium', { lc: 'non-overlapping-intervals', angle: 'Fewest jobs to drop so no two runs overlap on one cluster.' });
   q('D4', 'Meeting Rooms II', 'Medium', { lc: 'meeting-schedule-ii', angle: 'Peak concurrency.' });
-  q('D4', 'Interval List Intersections', 'Medium', { lc: 'interval-list-intersections' });
+  q('D4', 'Interval List Intersections', 'Medium', { lc: 'interval-list-intersections', angle: 'When were a driver and a rider both active? Overlap of two timelines.' });
   q('D4', 'Car Pooling', 'Medium', { lc: 'car-pooling', angle: 'Capacity over time from start/end events.' });
   q('D4', 'Sessionise a clickstream with a 30-minute inactivity gap', 'Medium', { text: 'Given (user_id, ts) events, unsorted, assign a session_id per user where a gap over 30 minutes starts a new session. Return session count and average length per user.' });
   q('D4', 'Peak concurrent rides from trip start and end events', 'Medium', { text: 'Given trips with start and end timestamps per city, return the peak number of concurrent trips per city and when it happened.' });
 
-  q('D5', 'Kth Largest Element in an Array', 'Medium', { lc: 'kth-largest-element-in-an-array' });
+  q('D5', 'Kth Largest Element in an Array', 'Medium', { lc: 'kth-largest-element-in-an-array', angle: 'Percentile thresholds without a full sort.' });
   q('D5', 'Merge Two Sorted Lists', 'Easy', { lc: 'merge-two-sorted-linked-lists', angle: 'Merging two sorted part files.' });
-  q('D5', 'Last Stone Weight', 'Easy', { lc: 'last-stone-weight', angle: 'Warm-up for heaps.' });
-  q('D5', 'Top K Frequent Elements', 'Medium', { lc: 'top-k-elements-in-list' });
+  q('D5', 'Top K Frequent Elements', 'Medium', { lc: 'top-k-elements-in-list', angle: 'Top-K products or hot keys by count.' });
   q('D5', 'Kth Largest Element in a Stream', 'Easy', { lc: 'kth-largest-integer-in-a-stream', angle: 'Running top-K over a stream.' });
   q('D5', 'K Closest Points to Origin', 'Medium', { lc: 'k-closest-points-to-origin', angle: 'Nearest drivers.' });
-  q('D5', 'Task Scheduler', 'Medium', { lc: 'task-scheduling' });
+  q('D5', 'Task Scheduler', 'Medium', { lc: 'task-scheduling', angle: 'Scheduling jobs with cooldowns, like rate-limited API pulls.' });
   q('D5', 'Merge k Sorted Lists', 'Hard', { lc: 'merge-k-sorted-linked-lists', angle: 'Merging sorted part files.' });
-  q('D5', 'Find Median from Data Stream', 'Hard', { lc: 'find-median-in-a-data-stream' });
+  q('D5', 'Find Median from Data Stream', 'Hard', { lc: 'find-median-in-a-data-stream', angle: 'Streaming median latency with two heaps.' });
   q('D5', 'Top-K products from a file larger than memory', 'Medium', { text: 'A 200 GB file of order lines does not fit in RAM. Return the 100 most sold products. Discuss hashing into partitions, then a heap per partition.' });
 
   q('D6', 'Flatten a nested JSON record into dot-separated keys', 'Medium', { text: 'Turn {"a":{"b":1,"c":[1,2]}} into {"a.b":1,"a.c.0":1,"a.c.1":2}. Follow-up: unflatten, and cap the depth.' });
@@ -85,50 +78,48 @@
   q('D6', 'Reservoir sampling of a stream', 'Medium', { text: 'Keep a uniform random sample of k events from a stream of unknown length.' });
   q('D6', 'Bloom filter for already-seen event ids', 'Medium', { text: 'Implement add and might_contain with k hash functions. Explain false positive rate versus size.' });
   q('D6', 'Approximate distinct count (HyperLogLog idea)', 'Hard', { text: 'Explain and sketch a simplified HyperLogLog. When is approximate distinct count acceptable in a metrics pipeline?' });
+  q('D6', 'Tumbling-window aggregator with a watermark', 'Hard', { text: 'Events arrive out of order with event_time. Emit per-minute counts once the watermark (max event_time minus 2 minutes) passes the window end. Late events go to a side output.' });
+  q('D6', 'SCD type 2 upsert in plain Python', 'Medium', { text: 'Given current dimension rows and a batch of changes, close changed rows (valid_to, is_current) and insert new versions. Re-running the same batch must change nothing.' });
+  q('D6', 'Detect schema drift between two batches of JSON records', 'Medium', { text: 'Report added, removed and type-changed fields, including nested ones. Decide which changes are backward compatible.' });
+  q('D6', 'Hash partitioner with skew detection', 'Medium', { text: 'Assign records to N partitions by key, report the skew ratio, and salt the hot keys so no partition exceeds 2x the average.' });
+  q('D6', 'Approximate p50 and p95 with a fixed-size histogram', 'Medium', { text: 'Stream latencies into fixed buckets and answer percentile queries in O(buckets). Explain the error bound.' });
 
-  q('D11', 'LRU Cache', 'Medium', { lc: 'lru-cache' });
-  q('D11', 'LFU Cache', 'Hard', { lc: 'lfu-cache' });
-  q('D11', 'Insert Delete GetRandom O(1)', 'Medium', { lc: 'insert-delete-getrandom-o1' });
+  q('D11', 'LRU Cache', 'Medium', { lc: 'lru-cache', angle: 'Caching dimension lookups inside a streaming job.' });
+  q('D11', 'LFU Cache', 'Hard', { lc: 'lfu-cache', angle: 'Keeping hot keys in memory under a fixed budget.' });
+  q('D11', 'Insert Delete GetRandom O(1)', 'Medium', { lc: 'insert-delete-getrandom-o1', angle: 'Uniform sampling from a live set of active keys.' });
   q('D11', 'Time Based Key-Value Store', 'Medium', { lc: 'time-based-key-value-store', angle: 'Point-in-time lookups, as in SCD2 and feature stores.' });
   q('D11', 'Design Twitter', 'Medium', { lc: 'design-twitter-feed', angle: 'Merging K sorted timelines with a heap.' });
   q('D11', 'Sliding-window rate limiter per API key', 'Medium', { text: 'allow(key, ts) returns True if the key made fewer than N calls in the last W seconds. Variant: a hit counter for the last 5 minutes. Compare fixed window, sliding log and sliding counter.' });
   q('D11', 'Consistent hashing ring with virtual nodes', 'Medium', { text: 'Implement add_node, remove_node and get_node(key). Show how many keys move when a node is added.' });
   q('D11', 'In-memory key-value store with TTL and snapshots', 'Medium', { text: 'set, get, delete with optional TTL; snapshot() returns an id; get_at(key, snapshot_id).' });
 
-  q('D10', 'Number of Islands', 'Medium', { lc: 'count-number-of-islands' });
+  q('D10', 'Number of Islands', 'Medium', { lc: 'count-number-of-islands', angle: 'Connected demand zones on a geo grid.' });
   q('D10', 'Course Schedule', 'Medium', { lc: 'course-schedule', angle: 'Cycle detection in a pipeline DAG.' });
   q('D10', 'Course Schedule II', 'Medium', { lc: 'course-schedule-ii', angle: 'Topological run order of tasks.' });
   q('D10', 'Accounts Merge', 'Medium', { lc: 'accounts-merge', angle: 'Identity resolution across sources.' });
   q('D10', 'Evaluate Division', 'Medium', { lc: 'evaluate-division', angle: 'Currency conversion graph.' });
-  q('D10', 'Network Delay Time', 'Medium', { lc: 'network-delay-time' });
+  q('D10', 'Network Delay Time', 'Medium', { lc: 'network-delay-time', angle: 'How long until data reaches every downstream table?' });
   q('D10', 'Redundant Connection', 'Medium', { lc: 'redundant-connection', angle: 'Union-find.' });
   q('D10', 'Alien Dictionary', 'Hard', { lc: 'foreign-dictionary', angle: 'Ordering from partial evidence (topological sort).' });
   q('D10', 'Critical path of a pipeline DAG', 'Medium', { text: 'Given tasks with durations and dependencies, return the earliest finish time of the whole DAG and the critical path. Detect cycles.' });
 
-  q('D8', 'Binary Search', 'Easy', { lc: 'binary-search' });
-  q('D8', 'Search in Rotated Sorted Array', 'Medium', { lc: 'find-target-in-rotated-sorted-array' });
-  q('D8', 'Find Minimum in Rotated Sorted Array', 'Medium', { lc: 'find-minimum-in-rotated-sorted-array' });
+  q('D8', 'Binary Search', 'Easy', { lc: 'binary-search', angle: 'Finding a key inside a sorted file or partition.' });
   q('D8', 'Koko Eating Bananas', 'Medium', { lc: 'eating-bananas', angle: 'Binary search on the answer.' });
   q('D8', 'Capacity To Ship Packages Within D Days', 'Medium', { lc: 'capacity-to-ship-packages-within-d-days', angle: 'Minimum cluster size to meet an SLA.' });
 
-  q('D7', 'Valid Parentheses', 'Easy', { lc: 'validate-parentheses' });
+  q('D7', 'Valid Parentheses', 'Easy', { lc: 'validate-parentheses', angle: 'Checking nested JSON or expression brackets are balanced.' });
   q('D7', 'Baseball Game', 'Easy', { lc: 'baseball-game', angle: 'Stack warm-up: replaying an event log.' });
-  q('D7', 'Min Stack', 'Medium', { lc: 'minimum-stack' });
-  q('D7', 'Daily Temperatures', 'Medium', { lc: 'daily-temperatures' });
-  q('D7', 'Evaluate Reverse Polish Notation', 'Medium', { lc: 'evaluate-reverse-polish-notation' });
+  q('D7', 'Daily Temperatures', 'Medium', { lc: 'daily-temperatures', angle: 'Next spike in a metric time series.' });
+  q('D7', 'Evaluate Reverse Polish Notation', 'Medium', { lc: 'evaluate-reverse-polish-notation', angle: 'The core of a tiny filter-expression engine.' });
   q('D7', 'Basic Calculator II', 'Medium', { lc: 'basic-calculator-ii', angle: 'Evaluating filter expressions.' });
 
-  q('D9', 'Binary Tree Level Order Traversal', 'Medium', { lc: 'level-order-traversal-of-binary-tree' });
-  q('D9', 'Lowest Common Ancestor of a Binary Tree', 'Medium', { lc: 'lowest-common-ancestor-of-a-binary-tree' });
-  q('D9', 'Validate Binary Search Tree', 'Medium', { lc: 'valid-binary-search-tree' });
-  q('D9', 'Serialize and Deserialize Binary Tree', 'Hard', { lc: 'serialize-and-deserialize-binary-tree' });
-  q('D9', 'Implement Trie (Prefix Tree)', 'Medium', { lc: 'implement-prefix-tree' });
-  q('D9', 'Design Add and Search Words Data Structure', 'Medium', { lc: 'design-word-search-data-structure' });
+  q('D9', 'Binary Tree Level Order Traversal', 'Medium', { lc: 'level-order-traversal-of-binary-tree', angle: 'Walking a hierarchy level by level: org charts, category trees.' });
+  q('D9', 'Lowest Common Ancestor of a Binary Tree', 'Medium', { lc: 'lowest-common-ancestor-of-a-binary-tree', angle: 'Nearest shared parent category for two products.' });
+  q('D9', 'Serialize and Deserialize Binary Tree', 'Hard', { lc: 'serialize-and-deserialize-binary-tree', angle: 'Serialising nested records for storage and transport.' });
+  q('D9', 'Implement Trie (Prefix Tree)', 'Medium', { lc: 'implement-prefix-tree', angle: 'Prefix lookups on object paths and keys.' });
+  q('D9', 'Design Add and Search Words Data Structure', 'Medium', { lc: 'design-word-search-data-structure', angle: 'Wildcard matching on table and column names.' });
 
-  q('D12', 'Climbing Stairs', 'Easy', { lc: 'climbing-stairs' });
-  q('D12', 'Coin Change', 'Medium', { lc: 'coin-change' });
-  q('D12', 'Word Break', 'Medium', { lc: 'word-break' });
-  q('D12', 'Longest Increasing Subsequence', 'Medium', { lc: 'longest-increasing-subsequence' });
+  q('D12', 'Word Break', 'Medium', { lc: 'word-break', angle: 'Splitting concatenated fields back into known tokens.' });
   q('D12', 'Edit Distance', 'Medium', { lc: 'edit-distance', angle: 'Fuzzy matching of records.' });
 
   // ---------- System design ----------
@@ -140,6 +131,7 @@
     { code: 'S4', name: 'Storage, formats and lakehouse', priority: 1, why: 'Where and how data is laid out decides cost and speed.' },
     { code: 'S5', name: 'Data modelling', priority: 1, why: 'Grain, SCDs and metrics consistency.' },
     { code: 'S6', name: 'Ingestion and CDC', priority: 1, why: 'Getting data in correctly, including backfills.' },
+    { code: 'S13', name: 'Platform and staff judgement', priority: 1, why: 'What separates staff from senior: ownership, migrations, SLOs, cost.' },
     { code: 'S12', name: 'Estimation and cost', priority: 2, why: 'Staff candidates are expected to size and cost a design.' },
     { code: 'S8', name: 'Data quality and observability', priority: 2, why: 'Contracts, checks and lineage at platform scale.' },
     { code: 'S7', name: 'Orchestration', priority: 2, why: 'Idempotent tasks, dependencies, SLAs.' },
@@ -253,6 +245,12 @@
   c('S6', 'Backfills without double counting');
   c('S6', 'Deduplication at ingestion versus at read');
 
+  c('S13', 'SLOs for data: freshness, completeness and correctness');
+  c('S13', 'Self-serve data platform: multi-tenancy, quotas and isolation');
+  c('S13', 'Central platform versus data mesh: who owns what');
+  c('S13', 'Leading a cross-team migration: sequencing, parity checks, cut-over');
+  c('S13', 'Cost governance: chargeback, budgets and per-team cost visibility');
+  c('S13', 'Writing a design doc that gets approved: options, trade-offs, decision');
   c('S12', 'Back-of-envelope: events per day to TB per year', { text: 'Practise: 2 billion events a day at 1 KB, compressed 5x, kept 13 months.' });
   c('S12', 'Storage tiering and lifecycle policies');
   c('S12', 'Cost per query and how to cut it');
@@ -285,62 +283,69 @@
     { n: 4, name: 'Interview pace', sd: 45, dsa: 30, min: 20, need: 0, dsaDiff: ['Medium', 'Hard'],
       sdMode: 'case-full', sdHow: 'Full design case in 45 to 60 minutes, then score it with the staff rubric.', dsaHow: 'Medium or Hard under interview conditions, no autocomplete.' }
   ];
-  const sdCurriculum = ['S1', 'S4', 'S3', 'S2', 'S5', 'S6', 'S12', 'S8', 'S7', 'S9', 'S11'];
+  const sdCurriculum = ['S1', 'S4', 'S3', 'S2', 'S5', 'S6', 'S13', 'S12', 'S8', 'S7', 'S9', 'S11'];
   const rubric = ['Scoped it: consumers, freshness, correctness, scale', 'Sized it: events/s, TB/day, rough cost', 'Named trade-offs and what is given up', 'Correct under failure: idempotency, late data, replays, backfills', 'Operable: SLOs, data quality, alerting', 'Platform view: ownership, contracts, multi-team', 'Path from today to the target design'];
 
   // ---------- Quotes (original lines; {name} = daughter's name from My why) ----------
   const quotes = {
     habit: [
-      'Small and daily beats big and someday.',
-      'Ten minutes today is worth more than three hours planned for Sunday.',
-      'You don\'t need motivation to start. You need the timer running.',
-      'The streak isn\'t the goal. The person who keeps it is.',
-      'Show up first. Get good second.',
-      'A missed day is an accident. Two is a pattern. Never miss twice.',
-      'Consistency is a skill, and you are practising it right now.',
-      'Make it easy to start and hard to skip.',
-      'Every complete day is a vote for the engineer you are becoming.'
+      'The scroll will still be there tomorrow. This chance might not.',
+      'One year from now you will wish you had started today. So start.',
+      'The 2027 offer is decided by what you do tonight.',
+      'Phone down. Timer on. Ten minutes wins the day.',
+      'Busy is not a reason. It is a calendar problem. Fix the calendar.',
+      'Nobody is coming to hand you this job. You walk in prepared, or you do not walk in.',
+      'The engineer who gets the offer kept going on the days he did not feel like it.',
+      'Motivation leaves. Systems stay. Start the timer.',
+      'You have waited long enough for the right time. This is it.',
+      'Every wasted evening is a vote for staying where you are.',
+      'Small today, unstoppable in a year.',
+      'Comfort is expensive. It costs you the life you could have had.'
     ],
     sd: [
-      'You have built these pipelines at work. Now say it out loud, with numbers.',
-      'Staff engineers are paid for trade-offs. Name what you are giving up.',
-      'Start with the question nobody asked: who reads this data, and how fresh must it be?',
-      'Exactly-once is a promise. Know exactly what it costs.',
-      'Draw the failure first. The happy path designs itself.',
-      'Size it before you build it: events per second, TB per day, money per month.',
-      'A design without a backfill plan is a design for a perfect world.',
-      'Interviewers remember the sharpest question, not the most boxes.',
-      'Years of production incidents are your unfair advantage. Use them in every answer.'
+      'Staff engineers are not paid to know tools. They are paid to make the right call when nothing is certain.',
+      'Your years of production fires are your edge. Turn every one into a design story.',
+      'At staff level the question is not "can you build it?" It is "should we, and what breaks at 10x?"',
+      'Numbers first. A design without estimates is an opinion.',
+      'Every trade-off you say out loud is worth more than a box you draw.',
+      'Idempotent, replayable, observable. Say all three in every design.',
+      'Exactly-once is a promise. Know what it costs before you make it.',
+      'Design for the day the backfill runs, the region dies and the schema changes. All at once.',
+      'Seniors answer the question. Staff engineers fix the question first.',
+      'Own the first eight minutes: consumers, freshness, correctness, scale.'
     ],
     dsa: [
-      'Easy problems build the reflex. Medium problems build the confidence. Both count.',
-      'Twenty-five minutes, out loud, no autocomplete. That is the real interview.',
-      'If you needed the video, it is not solved yet. It is scheduled for revision.',
+      'DSA is the gate. Walk through it calmly, then let system design win the room.',
+      '25 minutes. Python. Out loud. Repeat until it is boring.',
+      'If you needed the solution, it is not solved. It is scheduled.',
       'Name the pattern before you write a line.',
-      'Every hash map you write today is a dedup job you will explain tomorrow.',
-      'DSA is the gate, not the destination. Get through it calmly.'
+      'Every dedup you code today is an incident you can explain tomorrow.',
+      'Easy builds the reflex. Medium builds the nerve. Both count today.'
     ],
     family: [
-      'One day {name} will ask how you did it. "Every day, a little" is a good answer to give her.',
-      '{name} is learning what effort looks like by watching you.',
-      'This is for {name}\'s school, her dreams, and every "yes" you want to say to her.',
-      'The offer letter is the milestone. A calmer, fuller life with {name} is the point.',
-      'Close the laptop on time tonight. {name} needs you more than the timer does.',
-      'You are building a future {name} will grow up inside.',
-      'Fifteen minutes now, so the years ahead have more room for {name}.'
+      '{name} will never know about the nights you studied. She will only know the life you gave her.',
+      'She is only small once. Build the future now, so you can be there for all of it later.',
+      'Every concept you master today is a school fee you will never have to worry about.',
+      '{name} deserves a father who did not settle. Be him today.',
+      'Her first school, her first trip, her biggest dream. Start paying for them with this hour.',
+      'You are not studying for an interview. You are building the life {name} grows up in.',
+      '{name} is watching how you handle hard things. Show her.',
+      'One day {name} will ask how you did it. Make today part of the answer.',
+      'The offer letter is the milestone. A better life for {name} is the point.',
+      'Close the laptop on time tonight. {name} needs you more than the timer does.'
     ],
     comeback: [
-      'Yesterday is logged. Today is open. Start with ten minutes.',
-      'No guilt. Just the next session.',
-      'Restarting is part of the skill. Start the timer.',
-      'The habit isn\'t broken. It is waiting for ten minutes.'
+      'You missed yesterday. Do not let it become two. Ten minutes, now.',
+      'Falling off is not failure. Staying off is.',
+      'The streak broke. Your reason did not. Start again.',
+      'No guilt. No drama. Just the next session.'
     ]
   };
   const milestones = {
     3: 'Three days in a row. The habit has started.',
     7: 'One full week. Most people never get here.',
     14: 'Two weeks. This is becoming who you are.',
-    21: 'Three weeks without missing. {name} has a very consistent father.',
+    21: 'Three weeks without missing. {name} has a father who keeps his word.',
     30: 'Thirty days. A month of proof.',
     50: 'Fifty days. Interviewers can feel this kind of preparation.',
     75: 'Seventy-five days. You are not the same engineer you were.',

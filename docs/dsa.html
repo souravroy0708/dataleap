@@ -2,33 +2,36 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DSA · DataLeap</title>
-<meta name="description" content="Data engineering DSA questions by topic, linked to NeetCode.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='7' height='6' rx='1.5' fill='%232a4d8f'/%3E%3Crect x='15' y='9' width='7' height='6' rx='1.5' fill='none' stroke='%232a4d8f' stroke-width='2'/%3E%3Cpath d='M9 12h6' stroke='%232a4d8f' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/main.css">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2a4d8f">
+<meta name="description" content="DSA for data engineers: every question tied to real data work, linked to NeetCode.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
 <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body data-page="dsa">
 <header id="top"></header>
-<main class="wrap">
-<section>
-  <h1>DSA for data engineers</h1>
-  <p class="lead">The gate you must clear, not the destination. <span id="count"></span> questions picked for data engineering loops, not general software engineering: dedupe, sessions, top-K, joins, files larger than memory. Today suggests Easy questions first and moves to Medium as you level up.</p>
-  <p class="small muted">Solve on <a href="https://neetcode.io/practice" target="_blank" rel="noopener">NeetCode</a> in Python. It is free and most problems have a video solution: solve first, watch after. Questions marked "Question only" are data engineering problems with no public link: write the solution in your own editor.</p>
-</section>
-<div class="filters" role="search">
-  <input id="f-q" type="search" placeholder="Search questions" aria-label="Search questions">
-  <select id="f-topic" aria-label="Topic"></select>
-  <select id="f-status" aria-label="Status"></select>
-  <select id="f-diff" aria-label="Difficulty"><option value="">Any difficulty</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
-</div>
-<div id="list"></div>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>Secondary focus</span>
+<h1>DSA for data engineers</h1>
+<p class="lede">The gate you must clear, not the destination. <strong><span id="count"></span> questions</strong>, each tied to real data work: dedupe, sessions, top-K, joins, watermarks, files larger than memory. No puzzle-only problems. Solve on <a href="https://neetcode.io/practice" target="_blank" rel="noopener">NeetCode</a> in Python; solve first, watch after.</p>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <div class="filters" role="search">
+    <input id="f-q" type="search" placeholder="Search questions" aria-label="Search questions">
+    <select id="f-topic" aria-label="Topic"></select>
+    <select id="f-status" aria-label="Status"></select>
+    <select id="f-diff" aria-label="Difficulty"><option value="">Any difficulty</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
+  </div>
+  <div id="list"></div>
+  <p class="note">"Question only" items are data engineering problems with no public page. Write the solution in your own editor and log the time here.</p>
+</div></section>
 </main>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/app.js"></script>

@@ -2,56 +2,44 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Today · DataLeap</title>
-<meta name="description" content="Daily system design and DSA prep tracker for staff data engineering interviews.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='7' height='6' rx='1.5' fill='%232a4d8f'/%3E%3Crect x='15' y='9' width='7' height='6' rx='1.5' fill='none' stroke='%232a4d8f' stroke-width='2'/%3E%3Cpath d='M9 12h6' stroke='%232a4d8f' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/main.css">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2a4d8f">
+<meta name="description" content="Daily system design and DSA practice for staff data engineering interviews.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
 <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body data-page="home">
 <header id="top"></header>
-<main class="wrap">
-<section aria-labelledby="today-title">
-  <div id="why"></div>
-  <div class="today-head">
-    <div>
-      <h1 id="today-title">Today's run</h1>
-      <p class="muted" id="today-date"></p>
-    </div>
-    <p class="streak" id="streak"></p>
-  </div>
+<section class="hero"><div class="wrap">
+<div id="why"></div>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <div class="run-head"><h2>Today's run</h2><p id="today-date"></p></div>
   <div id="banner"></div>
   <div class="run" id="run"></div>
   <div class="timerbar" id="timerbar" aria-live="polite"></div>
-</section>
-
-<section aria-labelledby="hist-title">
-  <h2 id="hist-title">Last 12 weeks</h2>
-  <div id="grid"></div>
-</section>
-
-<section class="cols">
-  <div class="panel">
-    <h2>Due for revision</h2>
-    <ul class="duelist" id="due"></ul>
-  </div>
-  <div class="panel">
-    <h2>How a day works</h2>
-    <ol class="small" style="padding-left:1.2rem;margin:0">
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Last 12 weeks</h2></div><div id="grid"></div></div>
+</div></section>
+<section class="sec"><div class="wrap cols">
+  <div class="panel"><h2>Due for revision</h2><ul class="duelist" id="due"></ul></div>
+  <div class="panel"><h2>How a day works</h2>
+    <ol style="padding-left:1.2rem;margin:0">
       <li>A reminder fires. Tap it and the timer starts on today's system design item.</li>
       <li>Watch, read or practise on the linked page. For DSA, solve on NeetCode.</li>
       <li>Come back, tap <b>Stop and log</b>, set the status and write one note.</li>
-      <li>The day completes when both tasks pass the minimum. Complete days unlock the next level.</li>
-      <li>Missed a day? Never miss twice. The minimum version still counts.</li>
-    </ol>
-  </div>
-</section>
+      <li>Both tasks past the minimum completes the day. Complete days unlock the next level.</li>
+      <li>Missed a day? Never miss twice. The minimum still counts.</li>
+    </ol></div>
+</div></section>
 </main>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/app.js"></script>
