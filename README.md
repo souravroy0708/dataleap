@@ -52,7 +52,7 @@ dataleap/
 │           └── app.js     Storage, timer, dialogs, page logic
 ├── design/                Product and technical design documents
 ├── backend/               Django + DRF API and web app (planned)
-└── android/               Kotlin + Jetpack Compose app (planned)
+└── android/               Android app: native alarms, notifications and timer around the same UI (see android/README.md)
 ```
 
 ## Host on GitHub Pages
@@ -89,3 +89,7 @@ Same design language as Bas 1 Minute and Kharcha Check: ink + haldi, Anek Latin 
 Upload only `dataleap.zip` to the repo root. The unzip workflow unpacks **any** zip it finds there, so a course zip uploaded by mistake would end up public.
 
 To add lessons later, append entries to `docs/assets/js/library.js` (title, link, module, priority).
+
+## Android app
+
+Install on your phone from `https://souravroy0708.github.io/dataleap/download/dataleap.apk` (Reminders page → Download the Android app). Build and signing instructions are in `android/README.md`.

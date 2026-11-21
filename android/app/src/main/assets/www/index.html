@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Today · DataLeap</title>
+<meta name="description" content="Daily system design and DSA practice for staff data engineering interviews.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="home">
+<header id="top"></header>
+<section class="hero"><div class="wrap">
+<div id="why"></div>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <div class="run-head"><h2>Today's run</h2><p id="today-date"></p></div>
+  <div id="banner"></div>
+  <div class="run" id="run"></div>
+  <div class="timerbar" id="timerbar" aria-live="polite"></div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Last 12 weeks</h2></div><div id="grid"></div></div>
+</div></section>
+<section class="sec"><div class="wrap cols">
+  <div class="panel"><h2>Due for revision</h2><ul class="duelist" id="due"></ul></div>
+  <div class="panel"><h2>How a day works</h2>
+    <ol style="padding-left:1.2rem;margin:0">
+      <li>A reminder fires. Tap it and the timer starts on today's system design item.</li>
+      <li>Watch, read or practise on the linked page. For DSA, solve on NeetCode.</li>
+      <li>Come back, tap <b>Stop and log</b>, set the status and write one note.</li>
+      <li>Both tasks past the minimum completes the day. Complete days unlock the next level.</li>
+      <li>Missed a day? Never miss twice. The minimum still counts.</li>
+    </ol></div>
+</div></section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/library.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

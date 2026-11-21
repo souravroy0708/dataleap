@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>System design · DataLeap</title>
+<meta name="description" content="Staff-level data engineering system design cases and concepts.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="sd">
+<header id="top"></header>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>Primary focus</span>
+<h1>System design for staff data engineers</h1>
+<p class="lede">The round that decides staff offers. <strong><span id="count"></span> design cases and concepts</strong>, all about moving, storing and serving data at scale. Levels 1 and 2 build the concepts in order; from level 3 you practise cases one part at a time, then whole cases scored with the staff rubric.</p>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <div class="panel" style="margin-bottom:24px"><h2>What a staff-level answer shows</h2>
+  <ul class="signals">
+    <li>Pins down scope first: consumers, freshness SLA, correctness needs, scale.</li>
+    <li>Sizes it: events per second, TB per day, partitions, rough monthly cost.</li>
+    <li>Picks batch, stream or both, and says what is given up.</li>
+    <li>Explains how data stays correct: idempotent writes, dedup, late data, exactly-once where it matters.</li>
+    <li>Plans for failure: replays, backfills, bad deploys, a region going down.</li>
+    <li>Covers operability: data SLOs, quality checks, alerting, on-call.</li>
+    <li>Thinks platform: multi-tenant, data contracts, ownership, cost per team.</li>
+    <li>Shows the path from today's system to the target, not only the end state.</li>
+  </ul></div>
+  <div class="panel libcard" style="margin-bottom:24px"><p><b>Your Aced course lives in the Library.</b> 115 data engineering and system design lessons, ranked for a staff DE loop. Today alternates between those lessons and the topics below.</p><a class="btn primary" href="library.html">Open the Library</a></div>
+  <div class="filters" role="search">
+    <input id="f-q" type="search" placeholder="Search cases and concepts" aria-label="Search">
+    <select id="f-topic" aria-label="Topic"></select>
+    <select id="f-status" aria-label="Status"></select>
+  </div>
+  <div id="list"></div>
+</div></section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/library.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

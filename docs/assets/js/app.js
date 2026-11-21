@@ -2,12 +2,14 @@
    Export from Progress to back up; the Django + Android version replaces this storage with the API. */
 (function () {
   const D = window.DL_DATA;
+  const BR = window.AndroidBridge || null; // present inside the Android app
   const LIB = window.DL_LIB || { groups: [], lessons: [] };
   const LIB_PRIO = { L1: 1, L2: 1, L3: 1, L4: 1, L5: 1, L6: 2, L7: 3 };
   const TIER = { must: 'Must do', useful: 'Useful', skip: 'Skip unless time', sql: 'SQL round' };
   LIB.lessons.forEach((l) => D.items.push({
     id: l.id, track: l.g === 'L7' ? 'sql' : 'sd', topic: l.g, title: l.t, type: l.kind === 'case' ? 'libcase' : 'lesson', lib: true, tier: l.tier,
-    links: [{ p: 'Aced', url: l.u }].concat(l.sol ? [{ p: 'Solution', url: l.u + '?tab=solution' }] : []),
+    links: (LIB.offline ? [{ p: 'Offline copy', url: LIB.offline + l.id.slice(2) + '.html' }].concat(l.sol ? [{ p: 'Offline solution', url: LIB.offline + l.id.slice(2) + '--solution.html' }] : []) : [])
+      .concat([{ p: 'Aced', url: l.u }]).concat(l.sol ? [{ p: 'Solution', url: l.u + '?tab=solution' }] : []),
     text: l.why ? 'Why it matters for staff DE: ' + l.why : ''
   }));
   const KEY = 'dataleap:v1';
@@ -39,7 +41,7 @@
     items: {},
     sessions: [],
     rest: [],
-    settings: { levelMode: 'auto', level: 1, levelSince: ymd(new Date(Date.now() - 4 * 3600e3)), manual: { sd: 30, dsa: 25, min: 10 }, weekendX: 1.5, dayStart: 4, restPerWeek: 1 },
+    settings: { levelMode: 'auto', level: 1, levelSince: ymd(new Date(Date.now() - 4 * 3600e3)), manual: { sd: 30, dsa: 25, min: 10 }, weekendX: 1.5, dayStart: 4, restPerWeek: 1, motiv: { on: true, count: 4, start: '06:00', end: '14:00', weekly: true } },
     profile: {
       name: '', why: '', role: 'Staff Data Engineer', companies: 'Google, Uber, Visa', targetDate: '2027-09-30', hoursGoal: 250,
       vision: {
@@ -64,13 +66,15 @@
     const s = Object.assign(d, raw);
     s.settings = Object.assign(defaults().settings, raw.settings || {});
     s.settings.manual = Object.assign(defaults().settings.manual, (raw.settings || {}).manual || {});
+    s.settings.motiv = Object.assign(defaults().settings.motiv, (raw.settings || {}).motiv || {});
     s.profile = Object.assign(defaults().profile, raw.profile || {});
     s.profile.vision = Object.assign(defaults().profile.vision, (raw.profile || {}).vision || {});
     s.hit = s.hit || {}; s.fired = s.fired || {};
     return s;
   }
   let S = load();
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Could not save: browser storage is full or blocked.'); } };
+  let syncT;
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Could not save: storage is full or blocked.'); } if (BR) { clearTimeout(syncT); syncT = setTimeout(syncNative, 250); } };
   const st = (id) => S.items[id] || { status: 'not_started', notes: [], next: null, solvedCount: 0, pinned: null };
 
   // ---------- dates and text ----------
@@ -247,7 +251,7 @@
       if (qn) qn.onclick = () => { quoteShift++; qt.textContent = quoteFor(page, quoteShift); };
     }
     const foot = document.createElement('footer'); foot.className = 'site';
-    foot.innerHTML = '<div class="wrap">Your progress is stored only in this browser. Back it up from <a href="progress.html">Progress</a>. Practice happens on NeetCode and the linked videos; DataLeap keeps your time, status, notes and streak.</div>';
+    foot.innerHTML = '<div class="wrap">Your progress is stored only ' + (BR ? 'on this phone' : 'in this browser') + '. Back it up from <a href="progress.html">Progress</a>. Practice happens on NeetCode and the linked videos; DataLeap keeps your time, status, notes and streak.</div>';
     document.body.appendChild(foot);
     const t = document.createElement('div'); t.className = 'toast'; t.id = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t);
     document.body.insertAdjacentHTML('beforeend', '<div class="sky" id="sky" aria-hidden="true"></div><div class="popwrap" id="popwrap" aria-live="polite"></div><button class="motivate" id="motivate" type="button">' + BALLOON_IC + '<span>Motivate me</span></button>' +
@@ -321,10 +325,11 @@
 
   // ---------- notifications (Android Chrome needs the service worker) ----------
   let swReg = null;
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  if (!BR && 'serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').then((r) => { swReg = r; }).catch(() => {});
   }
   function notify(title, body, url, tag) {
+    if (BR) { try { BR.notify(title, body); return true; } catch (e) { return false; } }
     if (!('Notification' in window) || Notification.permission !== 'granted') return false;
     const opts = { body, tag: tag || 'dataleap', icon: 'assets/icons/icon-192.png', badge: 'assets/icons/icon-192.png', data: { url: url || 'index.html' } };
     if (swReg && swReg.showNotification) { swReg.showNotification(title, opts); return true; }
@@ -333,7 +338,16 @@
 
   // ---------- timer ----------
   const getT = () => { try { return JSON.parse(localStorage.getItem(TKEY) || 'null'); } catch (e) { return null; } };
-  const setT = (t) => { if (t) localStorage.setItem(TKEY, JSON.stringify(t)); else localStorage.removeItem(TKEY); };
+  const setT = (t) => {
+    if (t) localStorage.setItem(TKEY, JSON.stringify(t)); else localStorage.removeItem(TKEY);
+    if (!BR) return;
+    try {
+      if (!t) { BR.timerStopped(); return; }
+      const it = byId[t.itemId]; const title = (it ? it.title : '') + (t.part ? ' (' + t.part + ')' : '');
+      if (t.paused) BR.timerPaused(t.track, title);
+      else { const eff = t.start - t.acc; BR.timerStarted(t.track, title, eff, t.told ? 0 : eff + t.goalMs); }
+    } catch (e) {}
+  };
   const elapsed = (t) => (t ? t.acc + (t.paused ? 0 : Date.now() - t.start) : 0);
   const clock = (ms) => { const s = Math.floor(ms / 1000); return (s >= 3600 ? Math.floor(s / 3600) + ':' : '') + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); };
   function startTimer(track, itemId, opts) {
@@ -343,7 +357,7 @@
     const goalMs = Math.max(minNow(), tg - (track === 'dsa' ? info.dsa : info.sd)) * 60000;
     setT({ track, itemId: itemId || null, start: Date.now(), acc: 0, paused: false, goalMs, told: false, part: opts.part || '' });
     const it = byId[itemId];
-    if (it && it.links[0] && !opts.noOpen) window.open(it.links[0].url, '_blank', 'noopener');
+    if (it && it.links[0] && !opts.noOpen) { if (BR) BR.openExternal(it.links[0].url); else window.open(it.links[0].url, '_blank', 'noopener'); }
     tick(); refresh();
     toast('Timer started' + (it ? ' for ' + it.title : '') + '. Target ' + Math.round(goalMs / 60000) + ' min.');
   }
@@ -384,7 +398,7 @@
     const partsDone = (it.type === 'case' || (it.type === 'libcase' && it.track === 'sd')) ? new Set(S.sessions.filter((x) => x.itemId === id && x.part).map((x) => x.part)) : null;
     body.innerHTML =
       '<div class="dlg-head"><div><p class="muted small" style="margin:0">' + esc(tp.code + ' ' + tp.name) + (it.diff ? ', <span class="diff ' + it.diff + '">' + it.diff + '</span>' : '') + (it.type === 'case' ? ', design case' : it.type === 'concept' ? ', concept' : it.lib ? ', ' + TIER[it.tier].toLowerCase() : '') + '</p><h2 id="itemdlg-title">' + esc(it.title) + '</h2></div><button class="btn quiet" data-close aria-label="Close">Close</button></div>' +
-      '<div class="links">' + it.links.map((l) => '<a class="btn" href="' + esc(l.url) + '" target="_blank" rel="noopener">Open on ' + esc(l.p) + '</a>').join('') + (it.premium ? '<span class="chip">Premium</span>' : '') + videoLink + '</div>' +
+      '<div class="links">' + it.links.map((l, i) => '<a class="btn' + (i === 0 ? ' primary' : '') + '" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + (/^Offline/.test(l.p) ? 'Open ' + esc(l.p.toLowerCase()) : 'Open on ' + esc(l.p)) + '</a>').join('') + (it.premium ? '<span class="chip">Premium</span>' : '') + videoLink + '</div>' +
       ((it.text || it.followUps || it.angle) ? '<div class="prompt">' + (it.text ? '<p style="margin:0">' + esc(it.text) + '</p>' : '') + (it.angle ? '<p class="muted small" style="margin:.3rem 0 0">Data engineering angle: ' + esc(it.angle) + '</p>' : '') +
         (it.followUps ? '<p style="margin:.6rem 0 0"><b>Interviewer follow-ups</b></p><ul>' + it.followUps.map((f) => '<li>' + esc(f) + '</li>').join('') + '</ul>' : '') + '</div>' : '') +
       (partsDone ? '<p class="small"><b>Parts practised:</b> ' + PARTS.map((p) => '<span class="chip ' + (partsDone.has(p) ? 'st-done' : '') + '">' + p + '</span>').join(' ') + '</p>' : '') +
@@ -619,7 +633,7 @@
       out += '<section class="topic"><div class="topic-head"><h2><span class="code">' + t.code + '</span>' + esc(t.name) + '</h2><div class="topic-meta"><span>' + done + ' of ' + its.length + ' done</span><span>' + fmtH(its.reduce((a, i) => a + minutesFor(i.id), 0)) + '</span></div></div>' +
         '<div class="bar" style="margin:10px 0 6px" role="img" aria-label="' + pct + ' percent done"><i style="width:' + pct + '%"></i></div><table class="qtable"><tbody>' +
         rows.map((i) => { const s = st(i.id); return '<tr><td class="t"><button class="linkish" data-open="' + i.id + '">' + esc(i.title) + '</button>' + (i.text ? '<span class="angle">' + esc(i.text.replace('Why it matters for staff DE: ', '')) + '</span>' : '') + '</td>' +
-          '<td class="hide-sm"><span class="tier tier-' + i.tier + '">' + TIER[i.tier] + '</span></td><td class="src">' + i.links.map((l) => '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + (l.p === 'Aced' ? 'Open' : esc(l.p)) + '</a>').join(' · ') + '</td>' +
+          '<td class="hide-sm"><span class="tier tier-' + i.tier + '">' + TIER[i.tier] + '</span></td><td class="src">' + i.links.map((l) => '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + (l.p === 'Aced' ? (LIB.offline ? 'Aced' : 'Open') : l.p === 'Offline copy' ? 'Offline' : esc(l.p)) + '</a>').join(' · ') + '</td>' +
           '<td><span class="chip st-' + s.status + '">' + STATUS_LABEL[s.status] + '</span>' + (isDue(i.id) ? ' <span class="chip due">Due</span>' : '') + '</td></tr>'; }).join('') + '</tbody></table></section>';
     });
     document.getElementById('list').innerHTML = out || '<p class="muted">No lessons match these filters.</p>';
@@ -660,7 +674,7 @@
   function initProgress() {
     refresh = renderProgress; renderProgress();
     document.addEventListener('click', (e) => { const b = e.target.closest('[data-delsess]'); if (b && confirm('Delete this session?')) { S.sessions = S.sessions.filter((s) => s.id !== b.dataset.delsess); save(); renderProgress(); } });
-    document.getElementById('export').onclick = () => { const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dataleap-backup-' + today() + '.json'; a.click(); };
+    document.getElementById('export').onclick = () => { if (BR) { if (!BR.saveFile('dataleap-backup-' + today() + '.json', 'application/json', JSON.stringify(S, null, 2))) toast('Could not save the backup.'); return; } const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dataleap-backup-' + today() + '.json'; a.click(); };
     document.getElementById('import').onchange = (e) => {
       const file = e.target.files[0]; if (!file) return; const r = new FileReader();
       r.onload = () => { try { const d = JSON.parse(r.result); if (!d.sessions || !d.items) throw 0; localStorage.setItem(KEY, JSON.stringify(d)); S = load(); save(); renderProgress(); toast('Backup restored'); } catch (err) { toast('That file is not a DataLeap backup.'); } };
@@ -734,16 +748,45 @@
       S.reminders.push({ id: 'r' + Date.now(), time: rf.elements.time.value, days, focus: rf.elements.focus.value, msg: rf.elements.msg.value.trim() || 'Time to prep', skip: rf.elements.skip.checked, last: rf.elements.last.checked, on: true });
       save(); renderRem(); rf.reset(); toast('Reminder added');
     };
+    if (BR) {
+      const np = document.getElementById('notifpanel');
+      const drawNative = () => {
+        const on = BR.notificationsEnabled(); const ex = BR.exactAlarms();
+        np.innerHTML = '<h2>Reminders on this phone</h2><p>Your reminders are real Android alarms. They fire on time even when DataLeap is closed, skip themselves once that part of the day is done, and come back after a restart.</p>' +
+          '<ul class="nativestat"><li><span class="chip ' + (on ? 'st-done' : 'st-not_solved') + '">' + (on ? 'On' : 'Off') + '</span> Notifications' + (on ? '' : ' <button class="btn small" id="n-open" type="button">Turn on</button>') + '</li>' +
+          '<li><span class="chip ' + (ex ? 'st-done' : 'st-with_help') + '">' + (ex ? 'On' : 'Off') + '</span> Exact timing' + (ex ? '' : ' <button class="btn small" id="x-open" type="button">Allow</button> <span class="small muted">Without it, reminders may arrive a few minutes late.</span>') + '</li></ul>' +
+          '<p class="actions"><button class="btn primary" id="n-test" type="button">Send a test reminder</button></p>' +
+          '<h3 style="margin-top:18px">Morning motivation</h3><p class="small">Besides your reminders, DataLeap sends a few motivating lines at different times each day, so the day starts with your why. They stop once the day is complete. On Sunday evening you also get a summary of your week.</p>' +
+          '<form id="motivform"><div class="row"><div class="field" style="flex:0 0 auto"><label class="inline"><input type="checkbox" name="on"' + (S.settings.motiv.on ? ' checked' : '') + '> On</label></div>' +
+          '<div class="field"><label for="mo-count">How many a day</label><select id="mo-count" name="count"><option value="3"' + (S.settings.motiv.count == 3 ? ' selected' : '') + '>3</option><option value="4"' + (S.settings.motiv.count == 4 ? ' selected' : '') + '>4</option></select></div>' +
+          '<div class="field"><label for="mo-start">From</label><input id="mo-start" name="start" type="time" value="' + S.settings.motiv.start + '"></div>' +
+          '<div class="field"><label for="mo-end">Until</label><input id="mo-end" name="end" type="time" value="' + S.settings.motiv.end + '"></div></div>' +
+          '<label class="inline" style="margin-bottom:12px"><input type="checkbox" name="weekly"' + (S.settings.motiv.weekly ? ' checked' : '') + '> Weekly summary on Sunday at 7 pm</label><br><button class="btn" type="submit">Save</button></form>';
+        const o = document.getElementById('n-open'); if (o) o.onclick = () => BR.openNotificationSettings();
+        const x = document.getElementById('x-open'); if (x) x.onclick = () => BR.openExactAlarmSettings();
+        document.getElementById('n-test').onclick = () => { BR.testNotification(); toast('Test reminder sent'); };
+        document.getElementById('motivform').onsubmit = (e) => {
+          e.preventDefault(); const f = e.target;
+          let st = f.elements.start.value || '06:00', en = f.elements.end.value || '14:00';
+          if (en <= st) { toast('"Until" must be later than "From".'); return; }
+          S.settings.motiv = { on: f.elements.on.checked, count: +f.elements.count.value, start: st, end: en, weekly: f.elements.weekly.checked };
+          save(); syncNative(); toast(S.settings.motiv.on ? 'Saved. ' + S.settings.motiv.count + ' a day between ' + st + ' and ' + en + '.' : 'Morning motivation is off.');
+        };
+      };
+      drawNative(); window.dlSettingsRedraw = drawNative;
+    }
     const pb = document.getElementById('perm'); const ps = document.getElementById('permstate'); const tb = document.getElementById('testnote');
     const showPerm = () => {
       const has = 'Notification' in window;
       ps.textContent = !has ? 'This browser does not support notifications. Use the calendar option.' : Notification.permission === 'granted' ? 'Notifications are on.' : Notification.permission === 'denied' ? 'Notifications are blocked. Allow them in the browser\'s site settings for this site.' : 'Notifications are off.';
       pb.hidden = !has || Notification.permission !== 'default'; tb.hidden = !has || Notification.permission !== 'granted';
     };
-    pb.onclick = () => Notification.requestPermission().then(showPerm);
-    tb.onclick = () => { if (!notify('DataLeap', 'Test reminder. ' + randomQuote('family'), 'index.html', 'dl-test')) toast('Could not show a notification in this browser.'); };
-    showPerm();
-    document.getElementById('ics').onclick = () => {
+    if (pb) pb.onclick = () => Notification.requestPermission().then(showPerm);
+    if (tb) tb.onclick = () => { if (!notify('DataLeap', 'Test reminder. ' + randomQuote('family'), 'index.html', 'dl-test')) toast('Could not show a notification in this browser.'); };
+    if (pb && ps && tb) showPerm();
+    const icsBtn = document.getElementById('ics');
+    if (icsBtn) icsBtn.onclick = () => {
+      if (BR) { BR.saveFile('dataleap-reminders.ics', 'text/calendar', icsFor(S.reminders)); return; }
       const blob = new Blob([icsFor(S.reminders)], { type: 'text/calendar' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dataleap-reminders.ics'; a.click();
       toast('Calendar file downloaded. Open it to add the reminders.');
@@ -770,6 +813,7 @@
 
   // ---------- reminders (fire while any DataLeap tab is open) ----------
   function checkReminders() {
+    if (BR) return; // the Android app schedules real alarms instead
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     const now = new Date(); const hm = pad(now.getHours()) + ':' + pad(now.getMinutes());
     const t = today(); const info = dayInfo(t);
@@ -784,6 +828,24 @@
       const body = r.msg + (sug ? '\nToday: ' + sug.item.title : '') + '\n' + randomQuote(missedYesterday() ? 'comeback' : (now.getHours() >= 20 ? 'family' : track));
       notify(r.last ? 'Last call' : 'DataLeap', body, 'index.html?start=' + track, 'dl-rem-' + r.id);
     });
+  }
+
+  // ---------- Android bridge sync ----------
+  let lastRem = '', lastQ = '', lastMo = '';
+  function syncNative() {
+    if (!BR) return;
+    try {
+      const t = today(); const i = dayInfo(t); const sd = suggest('sd'); const ds = suggest('dsa');
+      const wkStart = addDays(t, -((dow(t) + 6) % 7)); let weekMin = 0, weekComplete = 0;
+      S.sessions.forEach((x) => { if (x.date >= wkStart && x.date <= t) weekMin += x.minutes; });
+      for (let d = wkStart; d <= t; d = addDays(d, 1)) if (dayInfo(d).status === 'ok') weekComplete++;
+      BR.setDayState(JSON.stringify({ date: t, sdDone: i.sdDone, dsaDone: i.dsaDone, status: i.status, rest: S.rest.includes(t), missedYesterday: missedYesterday(),
+        sdNext: sd ? sd.item.title : '', dsaNext: ds ? ds.item.title : '', dayStart: S.settings.dayStart, min: minNow(), name: daughter(), weekMin, weekComplete, streak: streak() }));
+      const mo = JSON.stringify(S.settings.motiv); if (mo !== lastMo) { lastMo = mo; if (BR.setMotivation) BR.setMotivation(mo); }
+      const r = JSON.stringify(S.reminders); if (r !== lastRem) { lastRem = r; BR.setReminders(r); }
+      const qo = {}; Object.keys(D.quotes).forEach((k) => { qo[k] = D.quotes[k].map(personal); });
+      const q = JSON.stringify(qo); if (q !== lastQ) { lastQ = q; BR.setQuotes(q); }
+    } catch (e) {}
   }
 
   // ---------- boot ----------
@@ -802,4 +864,6 @@
   setInterval(checkReminders, 20000);
   checkReminders();
   window.addEventListener('storage', () => { S = load(); refresh(); tick(); });
+  window.dlResume = () => { S = load(); refresh(); tick(); checkProgress(); syncNative(); if (window.dlSettingsRedraw) window.dlSettingsRedraw(); };
+  syncNative();
 })();

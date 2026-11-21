@@ -348,3 +348,5 @@ footer.site a{color:var(--haldi)}
 .libcard{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .libcard p{margin:0}
 @media (max-width:1180px){.nav-links{gap:16px}.nav-links a{font-size:15px}}
+.nativestat{list-style:none;padding:0;margin:0 0 12px}
+.nativestat li{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--pline)}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reminders · DataLeap</title>
+<meta name="description" content="Reminders, notifications and the habit ladder.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="settings">
+<header id="top"></header>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>No zero days</span>
+<h1>Reminders and habit ladder</h1>
+<p class="lede">Reminders give prep a fixed slot in a busy day. They stay quiet once that part is done, and every one carries a line to keep you going.</p>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <div class="panel" id="notifpanel">
+    <h2>Make sure they reach you</h2>
+    <p><b>1. Phone calendar, works even when DataLeap is closed.</b> Download the reminders as a calendar file and open it on your phone. Each one repeats on its days with an alert and a link back here. If Android does not open it, import it at calendar.google.com, then Settings, then Import.</p>
+    <p><button class="btn primary" id="ics" type="button">Add reminders to my phone calendar</button></p>
+    <p><b>2. Browser notifications, while DataLeap is open.</b> On Android, open the site in Chrome and choose "Add to Home screen" so it works like an app. <span id="permstate"></span></p>
+    <p class="actions"><button class="btn" id="perm" type="button" hidden>Turn on notifications</button><button class="btn" id="testnote" type="button" hidden>Send a test notification</button></p>
+    <p><b>3. The DataLeap Android app, best option.</b> Real alarms that fire with the app closed, a live timer in the notification shade, and the same screens. <a class="btn haldi small" href="https://github.com/souravroy0708/dataleap/releases/latest/download/DataLeap.apk">Download the Android app</a> <a class="small" href="download/dataleap.apk" download>backup link</a></p>
+    <p class="note">A website cannot wake your phone on a schedule without a push server. The app or the calendar file can.</p>
+  </div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Reminders</h2></div><div class="tablewrap" id="remlist"></div></div>
+  <form id="remform" class="panel" style="margin-top:16px">
+    <h3>Add a reminder</h3>
+    <div class="row">
+      <div class="field" style="flex:0 0 140px"><label for="r-time">Time</label><input id="r-time" name="time" type="time" value="21:00" required></div>
+      <div class="field" style="flex:0 0 190px"><label for="r-focus">Focus</label><select id="r-focus" name="focus"><option value="sd">System design</option><option value="dsa">DSA</option><option value="either">Either</option></select></div>
+      <div class="field"><label for="r-msg">Message</label><input id="r-msg" name="msg" placeholder="Ten minutes of system design"></div>
+    </div>
+    <fieldset class="field" style="border:0;padding:0;margin:0 0 14px"><legend style="font-weight:700;font-size:14px;margin-bottom:6px">Days</legend>
+      <div class="row" style="gap:16px">
+        <label class="inline"><input type="checkbox" name="day" value="1" checked>Mon</label>
+        <label class="inline"><input type="checkbox" name="day" value="2" checked>Tue</label>
+        <label class="inline"><input type="checkbox" name="day" value="3" checked>Wed</label>
+        <label class="inline"><input type="checkbox" name="day" value="4" checked>Thu</label>
+        <label class="inline"><input type="checkbox" name="day" value="5" checked>Fri</label>
+        <label class="inline"><input type="checkbox" name="day" value="6">Sat</label>
+        <label class="inline"><input type="checkbox" name="day" value="0">Sun</label>
+      </div></fieldset>
+    <div class="row" style="gap:24px;margin-bottom:14px">
+      <label class="inline"><input type="checkbox" name="skip" checked>Skip when that part is already done</label>
+      <label class="inline"><input type="checkbox" name="last">Last call: only if the day is not complete</label>
+    </div>
+    <button class="btn primary" type="submit">Add reminder</button>
+  </form>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Habit ladder</h2><p class="muted">Start at level 1 even if it feels too easy. The first weeks are for the habit, not the hours.</p></div><div class="tablewrap" id="levels"></div></div>
+  <form id="ladderform" class="panel" style="margin-top:16px">
+    <div class="row">
+      <div class="field"><label for="l-mode">Targets</label><select id="l-mode" name="mode"><option value="auto">Habit ladder (levels up automatically)</option><option value="manual">Custom targets</option></select></div>
+      <div class="field"><label for="l-level">Current level</label><select id="l-level" name="level"><option value="1">1 Show up</option><option value="2">2 Build the habit</option><option value="3">3 Go deeper</option><option value="4">4 Interview pace</option></select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="l-sd">Custom: system design min</label><input id="l-sd" name="msd" type="number" min="1"></div>
+      <div class="field"><label for="l-dsa">Custom: DSA min</label><input id="l-dsa" name="mdsa" type="number" min="1"></div>
+      <div class="field"><label for="l-min">Custom: minimum per session</label><input id="l-min" name="mmin" type="number" min="1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="l-wx">Weekend multiplier</label><input id="l-wx" name="weekendX" type="number" step="0.5" min="1" max="3"></div>
+      <div class="field"><label for="l-ds">Day starts at (hour)</label><input id="l-ds" name="dayStart" type="number" min="0" max="23"></div>
+      <div class="field"><label for="l-rest">Rest days per week</label><input id="l-rest" name="restPerWeek" type="number" min="0" max="3"></div>
+    </div>
+    <button class="btn primary" type="submit">Save</button>
+  </form>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="panel"><h2>Reset</h2><p>Deletes all progress, notes and settings stored in this browser.</p><button class="btn" id="reset" type="button">Delete all data</button></div>
+</div></section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/library.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

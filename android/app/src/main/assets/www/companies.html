@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Companies · DataLeap</title>
+<meta name="description" content="Where to go deeper for Google, Uber, Visa and Databricks.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="companies">
+<header id="top"></header>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>Targets</span>
+<h1>Where to go deeper, by company</h1>
+<p class="lede">The core plan is the same everywhere. These notes say where each target pushes harder at staff level.</p>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <p class="note" style="margin-top:0">Based on how these companies describe their data stacks publicly and on common patterns in candidate reports. Loops change by team and level: read recent reports for your exact role before the onsite.</p>
+  <div class="company"><h2>Google</h2><div>
+    <p>Coding rigour close to software engineering loops, and designs at very large scale. The Dataflow/Beam model (event time, windows, watermarks) came from Google.</p>
+    <p><b>Go deeper on:</b> Hard questions in P1 DSA topics, graphs, design-a-structure; S3 windows and watermarks. Cases: Ad-click aggregation, Clickstream analytics, Trending top-K.</p></div></div>
+  <div class="company"><h2>Uber</h2><div>
+    <p>Real-time data at very large scale. Uber built Apache Hudi and writes publicly about Kafka, Flink, Pinot and Presto.</p>
+    <p><b>Go deeper on:</b> S3 stream processing, S9 real-time OLAP, late and out-of-order events, geospatial bucketing. Cases: Real-time trip and surge metrics, Streaming join of orders and payments, Feature store, CDC into a lakehouse.</p></div></div>
+  <div class="company"><h2>Visa</h2><div>
+    <p>Payments data: correctness, reconciliation, security and compliance come before speed.</p>
+    <p><b>Go deeper on:</b> exactly-once and reconciliation, S11 governance and PII, auditability, S13 data SLOs. Cases: Payments transaction data platform, Real-time fraud feature pipeline, GDPR deletion, Customer 360.</p></div></div>
+  <div class="company"><h2>Databricks</h2><div>
+    <p>The Spark and Delta Lake company. Coding bars are often reported as higher than typical DE loops.</p>
+    <p><b>Go deeper on:</b> S2 Spark internals, S4 table formats and the Delta transaction log; harder DSA. Cases: Transaction log for a lakehouse table format, CDC into a lakehouse, Hadoop to lakehouse migration.</p></div></div>
+</div></section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/library.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

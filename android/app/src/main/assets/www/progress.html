@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Progress · DataLeap</title>
+<meta name="description" content="Your time on system design and DSA, by day, week and topic.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="progress">
+<header id="top"></header>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>The receipts</span>
+<h1>Progress</h1>
+<div class="kpis" id="kpis"></div>
+<div id="split" style="margin-top:18px"></div>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Last 16 weeks</h2></div><div id="grid"></div></div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>By topic</h2></div><div class="tablewrap" id="topics"></div></div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Recent sessions</h2></div><div class="tablewrap" id="sessions"></div></div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="panel"><h2>Back up your data</h2>
+  <p>Progress lives only in this browser. Export a backup every week, and import it on another device or browser.</p>
+  <div class="actions"><button class="btn primary" id="export">Export backup</button><label class="btn" for="import" style="margin:0">Import backup</label><input id="import" type="file" accept="application/json" hidden></div></div>
+</div></section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/library.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
