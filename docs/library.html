@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Library · DataLeap</title>
+<meta name="description" content="Your Aced data engineering and system design course, ranked for a staff data engineering loop.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="lib">
+<header id="top"></header>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>Your course</span>
+<h1>Library</h1>
+<p class="lede">Every lesson from your Aced (formerly Exponent) data engineering and system design courses, <strong>ranked for a staff data engineering loop</strong>. Open a lesson on aced.io, then log the time here: it counts towards today's system design.</p>
+<div class="stats-row" id="libstats"></div>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <div class="filters" role="search">
+    <input id="f-q" type="search" placeholder="Search lessons" aria-label="Search lessons">
+    <select id="f-group" aria-label="Module"></select>
+    <select id="f-tier" aria-label="Priority"><option value="core">Must do and useful</option><option value="must">Must do only</option><option value="all">Everything</option><option value="sql">SQL round only</option></select>
+    <select id="f-status" aria-label="Status"></select>
+  </div>
+  <div id="list"></div>
+  <div class="panel" style="margin-top:8px"><h2>How to use the course</h2>
+    <ol style="padding-left:1.2rem;margin:0">
+      <li><b>Data engineering first.</b> L1 to L3 are the core: the interview loop, pipeline design and data modelling. Do every lesson.</li>
+      <li><b>System design: concepts and craft, not consumer apps.</b> L4 and the must-do lessons in L5 and L6 cover what a staff DE loop probes. Lessons marked "Skip unless time" are general software design (chat apps, video streaming, games).</li>
+      <li><b>Design cases: attempt first, then open the lesson.</b> 45 to 60 minutes on your own, score it with the rubric, then compare with the course answer.</li>
+      <li><b>SQL is a separate round.</b> L7 is listed for completeness; time logged there does not count towards the daily goal.</li>
+    </ol>
+    <p class="note">Lesson content stays on aced.io, behind your login. Keep the saved offline copies private: GitHub Pages sites are public, and those pages are paid course material that also carry your account details.</p>
+  </div>
+</div></section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/library.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -358,7 +358,7 @@
       { name: 'NeetCode practice lists', url: 'https://neetcode.io/practice' },
       { name: 'NeetCode roadmap', url: 'https://neetcode.io/roadmap' },
       { name: 'NeetCode on YouTube (free video solutions)', url: 'https://www.youtube.com/@NeetCode' },
-      { name: 'Exponent (system design courses and mock interviews)', url: 'https://www.tryexponent.com/' },
+      { name: 'Aced, formerly Exponent (your course)', url: 'https://www.aced.io/' },
       { name: 'Designing Data-Intensive Applications (book site)', url: 'https://dataintensive.net/' },
       { name: 'Uber Engineering blog', url: 'https://www.uber.com/blog/engineering/' },
       { name: 'Databricks blog', url: 'https://www.databricks.com/blog' }

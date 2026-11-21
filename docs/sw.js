@@ -1,7 +1,7 @@
 /* DataLeap service worker: shows notifications (required on Android Chrome) and keeps the app usable offline. */
-const CACHE = 'dataleap-v3';
-const CORE = ['./', 'index.html', 'system-design.html', 'dsa.html', 'roadmap.html', 'why.html', 'companies.html', 'progress.html', 'settings.html',
-  'assets/css/main.css', 'assets/fonts/anek-latin.woff2', 'assets/fonts/mukta-regular.woff2', 'assets/fonts/mukta-medium.woff2', 'assets/fonts/mukta-bold.woff2', 'assets/js/data.js', 'assets/js/app.js', 'assets/icons/icon-192.png', 'manifest.webmanifest'];
+const CACHE = 'dataleap-v4';
+const CORE = ['./', 'index.html', 'system-design.html', 'dsa.html', 'library.html', 'roadmap.html', 'why.html', 'companies.html', 'progress.html', 'settings.html',
+  'assets/css/main.css', 'assets/fonts/anek-latin.woff2', 'assets/fonts/mukta-regular.woff2', 'assets/fonts/mukta-medium.woff2', 'assets/fonts/mukta-bold.woff2', 'assets/js/data.js', 'assets/js/library.js', 'assets/js/app.js', 'assets/icons/icon-192.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));

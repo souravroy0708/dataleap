@@ -2,24 +2,35 @@
    Export from Progress to back up; the Django + Android version replaces this storage with the API. */
 (function () {
   const D = window.DL_DATA;
+  const LIB = window.DL_LIB || { groups: [], lessons: [] };
+  const LIB_PRIO = { L1: 1, L2: 1, L3: 1, L4: 1, L5: 1, L6: 2, L7: 3 };
+  const TIER = { must: 'Must do', useful: 'Useful', skip: 'Skip unless time', sql: 'SQL round' };
+  LIB.lessons.forEach((l) => D.items.push({
+    id: l.id, track: l.g === 'L7' ? 'sql' : 'sd', topic: l.g, title: l.t, type: l.kind === 'case' ? 'libcase' : 'lesson', lib: true, tier: l.tier,
+    links: [{ p: 'Aced', url: l.u }].concat(l.sol ? [{ p: 'Solution', url: l.u + '?tab=solution' }] : []),
+    text: l.why ? 'Why it matters for staff DE: ' + l.why : ''
+  }));
   const KEY = 'dataleap:v1';
   const TKEY = 'dataleap:timer';
   const byId = Object.fromEntries(D.items.map((i) => [i.id, i]));
-  const topics = [...D.sdTopics.map((t) => ({ ...t, track: 'sd' })), ...D.dsaTopics.map((t) => ({ ...t, track: 'dsa' }))];
+  const libTopics = LIB.groups.map((g) => ({ code: g.code, name: g.name, priority: LIB_PRIO[g.code] || 2, why: '', track: g.code === 'L7' ? 'sql' : 'sd', lib: true }));
+  const topics = [...D.sdTopics.map((t) => ({ ...t, track: 'sd' })), ...D.dsaTopics.map((t) => ({ ...t, track: 'dsa' })), ...libTopics];
   const topicBy = Object.fromEntries(topics.map((t) => [t.code, t]));
 
   const STATUS = {
     dsa: [['not_started', 'Not started'], ['not_solved', 'Not solved'], ['with_help', 'Solved with help'], ['solved', 'Solved on my own'], ['revise', 'Revise'], ['mastered', 'Mastered']],
     sd: [['not_started', 'Not started'], ['in_progress', 'In progress'], ['done', 'Done'], ['revise', 'Revise'], ['mastered', 'Mastered']]
   };
+  STATUS.sql = STATUS.sd;
   const STATUS_LABEL = Object.fromEntries([...STATUS.dsa, ...STATUS.sd]);
   const ACTIVITY = {
     dsa: [['solve', 'Solve'], ['revise', 'Revise']],
-    sd: [['practise', 'Practise a part'], ['full', 'Full case, timed'], ['watch', 'Watch a video'], ['summarise', 'Summarise'], ['read', 'Read a concept'], ['revise', 'Revise']]
+    sd: [['practise', 'Practise a part'], ['full', 'Full case, timed'], ['watch', 'Watch a video'], ['summarise', 'Summarise'], ['read', 'Read a concept'], ['lesson', 'Course lesson'], ['revise', 'Revise']],
+    sql: [['read', 'Read the lesson'], ['practise', 'Practise queries'], ['revise', 'Revise']]
   };
   const PARTS = ['Requirements', 'Scale estimates', 'High-level architecture', 'Storage and data model', 'Processing (batch/stream)', 'Failures and backfills', 'Data quality', 'Trade-offs'];
   const NOTE_TYPES = ['Approach', 'Mistake', 'Key insight', 'Summary', 'Interview follow-up'];
-  const TRACK = { sd: 'System design', dsa: 'DSA' };
+  const TRACK = { sd: 'System design', dsa: 'DSA', sql: 'SQL' };
 
   // ---------- storage ----------
   const pad = (n) => String(n).padStart(2, '0');
@@ -185,15 +196,25 @@
       return null;
     };
     const cases = () => D.items.find((i) => i.type === 'case' && st(i.id).status === 'in_progress') || D.items.find((i) => i.type === 'case' && st(i.id).status === 'not_started');
-    if (lv.sdMode === 'concept') { const c = concepts() || cases(); return c ? { item: c, why: 'Next concept', how: lv.sdHow } : null; }
-    const c = cases() || concepts();
+    const fromLib = (pred) => { const ls = D.items.filter((i) => i.lib && i.track === 'sd' && i.tier === 'must' && pred(i)); return ls.find((i) => st(i.id).status === 'in_progress') || ls.find((i) => st(i.id).status === 'not_started'); };
+    const odd = daysBetween('2026-01-01', today()) % 2 === 1;
+    if (lv.sdMode === 'concept') {
+      const c = concepts(); const l = fromLib((i) => i.type === 'lesson' || i.topic === 'L2');
+      const pick = (odd && c) ? c : (l || c || cases());
+      if (!pick) return null;
+      return pick.lib ? { item: pick, why: 'Course lesson', how: 'Open it on Aced and study it for ' + targets(today()).sd + ' minutes, then write a 5-line summary here.' } : { item: pick, why: 'Next concept', how: lv.sdHow };
+    }
+    const k = cases(); const lk = fromLib((i) => i.type === 'libcase');
+    const c = (odd && lk) ? lk : (k || lk || concepts());
     if (!c) return null;
-    const part = c.type === 'case' && lv.sdMode === 'case-part' ? nextPart(c.id) : null;
-    return { item: c, why: c.type === 'case' ? 'Design case' : 'Next concept', how: part ? 'Today\'s part: ' + part + '. ' + lv.sdHow : lv.sdHow, part };
+    const isCase = c.type === 'case' || c.type === 'libcase';
+    const part = isCase && lv.sdMode === 'case-part' ? nextPart(c.id) : null;
+    const how = c.lib ? (part ? 'Try the ' + part.toLowerCase() + ' part yourself first, then compare with the lesson on Aced.' : 'Attempt it in 45 to 60 minutes before opening the lesson, then score it with the rubric.') : (part ? 'Today\'s part: ' + part + '. ' + lv.sdHow : lv.sdHow);
+    return { item: c, why: c.lib ? 'Course design case' : isCase ? 'Design case' : 'Next concept', how, part };
   }
 
   // ---------- quotes ----------
-  const PAGE_QUOTES = { home: ['habit', 'family'], sd: ['sd'], dsa: ['dsa'], roadmap: ['habit', 'sd'], why: ['family'], progress: ['habit'], settings: ['habit'], companies: ['sd'] };
+  const PAGE_QUOTES = { home: ['habit', 'family'], lib: ['habit', 'sd'], sd: ['sd'], dsa: ['dsa'], roadmap: ['habit', 'sd'], why: ['family'], progress: ['habit'], settings: ['habit'], companies: ['sd'] };
   let quoteShift = 0;
   function quoteFor(page, shift) {
     let cats = PAGE_QUOTES[page] || ['habit'];
@@ -205,7 +226,7 @@
   function randomQuote(cat) { const l = D.quotes[cat]; return personal(l[Math.floor(Math.random() * l.length)]); }
 
   // ---------- chrome ----------
-  const NAV = [['index.html', 'Today'], ['system-design.html', 'System design'], ['dsa.html', 'DSA'], ['roadmap.html', 'Roadmap'], ['why.html', 'My why'], ['companies.html', 'Companies'], ['progress.html', 'Progress'], ['settings.html', 'Reminders']];
+  const NAV = [['index.html', 'Today'], ['system-design.html', 'System design'], ['dsa.html', 'DSA'], ['library.html', 'Library'], ['roadmap.html', 'Roadmap'], ['why.html', 'My why'], ['companies.html', 'Companies'], ['progress.html', 'Progress'], ['settings.html', 'Reminders']];
   const MARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="8.5" width="7.5" height="7" rx="2" fill="#0F1235"/><rect x="14.5" y="8.5" width="7.5" height="7" rx="2" fill="none" stroke="#0F1235" stroke-width="2.2"/><path d="M9.5 12h5" stroke="#0F1235" stroke-width="2.2"/></svg>';
   const BALLOON_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="9" rx="6.5" ry="7.5" fill="#0F1235"/><path d="M12 16.5l-1.4 2h2.8z" fill="#0F1235"/><path d="M12 18.5c-1 1.6 1 2.4 0 4" stroke="#0F1235" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="9.6" cy="6.4" rx="1.4" ry="2" fill="#FFC21A"/></svg>';
   function renderChrome() {
@@ -359,17 +380,17 @@
     const notes = (s.notes || []).slice().sort((a, b) => (b.id === s.pinned) - (a.id === s.pinned) || b.at - a.at);
     const scores = s.scores || [];
     const body = document.getElementById('itemdlg-body');
-    const videoLink = it.track === 'sd' ? '<a class="btn" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=' + encodeURIComponent(it.title + ' data engineering system design') + '">Find a video</a>' : '';
-    const partsDone = it.type === 'case' ? new Set(S.sessions.filter((x) => x.itemId === id && x.part).map((x) => x.part)) : null;
+    const videoLink = it.track === 'sd' && !it.lib ? '<a class="btn" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=' + encodeURIComponent(it.title + ' data engineering system design') + '">Find a video</a>' : '';
+    const partsDone = (it.type === 'case' || (it.type === 'libcase' && it.track === 'sd')) ? new Set(S.sessions.filter((x) => x.itemId === id && x.part).map((x) => x.part)) : null;
     body.innerHTML =
-      '<div class="dlg-head"><div><p class="muted small" style="margin:0">' + esc(tp.code + ' ' + tp.name) + (it.diff ? ', <span class="diff ' + it.diff + '">' + it.diff + '</span>' : '') + (it.type === 'case' ? ', design case' : it.type === 'concept' ? ', concept' : '') + '</p><h2 id="itemdlg-title">' + esc(it.title) + '</h2></div><button class="btn quiet" data-close aria-label="Close">Close</button></div>' +
+      '<div class="dlg-head"><div><p class="muted small" style="margin:0">' + esc(tp.code + ' ' + tp.name) + (it.diff ? ', <span class="diff ' + it.diff + '">' + it.diff + '</span>' : '') + (it.type === 'case' ? ', design case' : it.type === 'concept' ? ', concept' : it.lib ? ', ' + TIER[it.tier].toLowerCase() : '') + '</p><h2 id="itemdlg-title">' + esc(it.title) + '</h2></div><button class="btn quiet" data-close aria-label="Close">Close</button></div>' +
       '<div class="links">' + it.links.map((l) => '<a class="btn" href="' + esc(l.url) + '" target="_blank" rel="noopener">Open on ' + esc(l.p) + '</a>').join('') + (it.premium ? '<span class="chip">Premium</span>' : '') + videoLink + '</div>' +
       ((it.text || it.followUps || it.angle) ? '<div class="prompt">' + (it.text ? '<p style="margin:0">' + esc(it.text) + '</p>' : '') + (it.angle ? '<p class="muted small" style="margin:.3rem 0 0">Data engineering angle: ' + esc(it.angle) + '</p>' : '') +
         (it.followUps ? '<p style="margin:.6rem 0 0"><b>Interviewer follow-ups</b></p><ul>' + it.followUps.map((f) => '<li>' + esc(f) + '</li>').join('') + '</ul>' : '') + '</div>' : '') +
       (partsDone ? '<p class="small"><b>Parts practised:</b> ' + PARTS.map((p) => '<span class="chip ' + (partsDone.has(p) ? 'st-done' : '') + '">' + p + '</span>').join(' ') + '</p>' : '') +
       '<div class="stats"><span>Time spent <b>' + fmtH(minutesFor(id)) + '</b></span><span>Sessions <b>' + S.sessions.filter((x) => x.itemId === id).length + '</b></span><span>Next review <b>' + (s.next || 'none') + '</b></span>' + (scores.length ? '<span>Last score <b>' + scores[scores.length - 1].total + '/14</b></span><span>Best <b>' + Math.max(...scores.map((x) => x.total)) + '/14</b></span>' : '') + '</div>' +
       '<div class="row"><div class="field"><label for="dlg-status">Status</label><select id="dlg-status">' + opts + '</select></div><div class="field" style="flex:0 0 auto"><button class="btn primary" data-start-item="' + id + '">Start timer</button></div><div class="field" style="flex:0 0 auto"><button class="btn" data-log-item="' + id + '">Log time</button></div></div>' +
-      (it.type === 'case' ? '<details class="rubricbox"' + (scores.length ? '' : ' open') + '><summary><b>Score a full attempt with the staff rubric</b></summary><form id="rubricform">' + D.rubric.map((r, i) => '<div class="rubric-row"><span>' + esc(r) + '</span><select name="r' + i + '" aria-label="' + esc(r) + '"><option value="0">0 Missed</option><option value="1">1 Partly</option><option value="2">2 Clearly</option></select></div>').join('') + '<button class="btn" type="submit">Save score</button><span class="small muted"> 10 or more out of 14 is interview-ready.</span></form></details>' : '') +
+      ((it.type === 'case' || (it.type === 'libcase' && it.track === 'sd')) ? '<details class="rubricbox"' + (scores.length ? '' : ' open') + '><summary><b>Score a full attempt with the staff rubric</b></summary><form id="rubricform">' + D.rubric.map((r, i) => '<div class="rubric-row"><span>' + esc(r) + '</span><select name="r' + i + '" aria-label="' + esc(r) + '"><option value="0">0 Missed</option><option value="1">1 Partly</option><option value="2">2 Clearly</option></select></div>').join('') + '<button class="btn" type="submit">Save score</button><span class="small muted"> 10 or more out of 14 is interview-ready.</span></form></details>' : '') +
       '<h3 style="margin-top:1rem">Notes</h3><form id="noteform"><div class="row"><div class="field" style="flex:0 0 180px"><label for="note-type">Type</label><select id="note-type">' + NOTE_TYPES.map((n) => '<option>' + n + '</option>').join('') + '</select></div></div><div class="field"><label for="note-body">Note</label><textarea id="note-body" placeholder="Approach, mistake, the one thing to remember next time"></textarea></div><button class="btn" type="submit">Add note</button></form>' +
       '<ul class="notes">' + (notes.length ? notes.map((n) => '<li class="' + (n.id === s.pinned ? 'pinned' : '') + '"><div class="meta"><span>' + esc(n.type) + '</span><span>' + new Date(n.at).toLocaleString() + '</span>' + (n.id === s.pinned ? '<span>Key note</span>' : '<button class="linkish small" data-pin="' + n.id + '">Pin as key note</button>') + '<button class="linkish small" data-delnote="' + n.id + '">Delete</button></div><div class="body">' + esc(n.body) + '</div></li>').join('') : '<li class="muted small" style="border:0;padding-left:0">No notes yet. After each attempt, write the approach and the one mistake you made.</li>') + '</ul>';
     const dlg = document.getElementById('itemdlg'); dlg.dataset.id = id;
@@ -392,13 +413,14 @@
 
   // ---------- log dialog ----------
   function itemOptions(track, sel) {
-    return '<option value="">No specific item</option>' + (track === 'dsa' ? D.dsaTopics : D.sdTopics).map((t) => '<optgroup label="' + esc(t.code + ' ' + t.name) + '">' + D.items.filter((i) => i.topic === t.code).map((i) => '<option value="' + i.id + '"' + (i.id === sel ? ' selected' : '') + '>' + esc(i.title) + '</option>').join('') + '</optgroup>').join('');
+    const tl = track === 'dsa' ? D.dsaTopics : track === 'sql' ? libTopics.filter((t) => t.track === 'sql') : [...D.sdTopics, ...libTopics.filter((t) => t.track === 'sd')];
+    return '<option value="">No specific item</option>' + tl.map((t) => '<optgroup label="' + esc(t.code + ' ' + t.name) + '">' + D.items.filter((i) => i.topic === t.code).map((i) => '<option value="' + i.id + '"' + (i.id === sel ? ' selected' : '') + '>' + esc(i.title) + '</option>').join('') + '</optgroup>').join('');
   }
   function openLog(o) {
     const f = document.getElementById('logform'); const track = o.track || 'sd'; const it = byId[o.itemId]; const cur = it ? st(it.id).status : 'not_started';
-    const defAct = track === 'sd' ? (it && it.type === 'case' ? (L().sdMode === 'case-full' ? 'full' : 'practise') : (L().n === 1 ? 'watch' : 'summarise')) : 'solve';
-    f.innerHTML = '<div class="dlg-head"><h2 id="logdlg-title">Log ' + TRACK[track].toLowerCase().replace('dsa', 'DSA') + ' time</h2><button class="btn quiet" type="button" data-close aria-label="Close">Close</button></div>' +
-      '<div class="row"><div class="field"><label for="lg-track">Track</label><select id="lg-track"><option value="sd"' + (track === 'sd' ? ' selected' : '') + '>System design</option><option value="dsa"' + (track === 'dsa' ? ' selected' : '') + '>DSA</option></select></div><div class="field"><label for="lg-min">Minutes</label><input id="lg-min" type="number" min="1" max="600" value="' + (o.minutes || 15) + '" required></div><div class="field"><label for="lg-date">Study day</label><input id="lg-date" type="date" value="' + today() + '"></div></div>' +
+    const defAct = track === 'sql' ? 'read' : track === 'sd' && it && it.lib && it.type === 'lesson' ? 'lesson' : track === 'sd' ? (it && (it.type === 'case' || it.type === 'libcase') ? (L().sdMode === 'case-full' ? 'full' : 'practise') : (L().n === 1 ? 'watch' : 'summarise')) : 'solve';
+    f.innerHTML = '<div class="dlg-head"><h2 id="logdlg-title">Log ' + (track === 'sd' ? 'system design' : TRACK[track]) + ' time</h2><button class="btn quiet" type="button" data-close aria-label="Close">Close</button></div>' +
+      '<div class="row"><div class="field"><label for="lg-track">Track</label><select id="lg-track"><option value="sd"' + (track === 'sd' ? ' selected' : '') + '>System design</option><option value="dsa"' + (track === 'dsa' ? ' selected' : '') + '>DSA</option><option value="sql"' + (track === 'sql' ? ' selected' : '') + '>SQL (does not count towards the day)</option></select></div><div class="field"><label for="lg-min">Minutes</label><input id="lg-min" type="number" min="1" max="600" value="' + (o.minutes || 15) + '" required></div><div class="field"><label for="lg-date">Study day</label><input id="lg-date" type="date" value="' + today() + '"></div></div>' +
       '<div class="field"><label for="lg-item">Question or topic</label><select id="lg-item">' + itemOptions(track, o.itemId) + '</select></div>' +
       '<div class="row"><div class="field"><label for="lg-act">What you did</label><select id="lg-act">' + ACTIVITY[track].map(([v, l]) => '<option value="' + v + '"' + (v === defAct ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div><div class="field"><label for="lg-status">Status after this session</label><select id="lg-status">' + STATUS[track].map(([v, l]) => '<option value="' + v + '"' + (v === (cur === 'not_started' ? (track === 'dsa' ? 'solved' : 'in_progress') : cur) ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div></div>' +
       (track === 'sd' ? '<div class="field"><label for="lg-part">Design part (for design cases)</label><select id="lg-part"><option value="">Not a design case part</option>' + PARTS.map((p) => '<option' + (p === o.part ? ' selected' : '') + '>' + p + '</option>').join('') + '</select></div>' : '') +
@@ -574,6 +596,41 @@
     refresh = () => renderList(track); renderList(track);
   }
 
+  function renderLib() {
+    const f = { q: document.getElementById('f-q').value.toLowerCase(), g: document.getElementById('f-group').value, tier: document.getElementById('f-tier').value, status: document.getElementById('f-status').value };
+    const showTier = (t) => f.tier === 'all' || (f.tier === 'core' && (t === 'must' || t === 'useful')) || f.tier === t;
+    const all = D.items.filter((i) => i.lib);
+    const must = all.filter((i) => i.tier === 'must'); const mustDone = must.filter((i) => ['done', 'mastered'].includes(st(i.id).status)).length;
+    const libMin = all.reduce((a, i) => a + minutesFor(i.id), 0);
+    document.getElementById('libstats').innerHTML = '<div class="stat hl"><b>' + mustDone + '/' + must.length + '</b><span>must-do lessons done</span></div><div class="stat"><b>' + all.filter((i) => st(i.id).status !== 'not_started').length + '</b><span>lessons started</span></div><div class="stat"><b>' + all.filter((i) => isDue(i.id)).length + '</b><span>due for revision</span></div><div class="stat"><b>' + fmtH(libMin) + '</b><span>time in the course</span></div>';
+    let out = '';
+    libTopics.forEach((t) => {
+      if (f.g && f.g !== t.code) return;
+      const its = all.filter((i) => i.topic === t.code);
+      const rows = its.filter((i) => {
+        if (!showTier(i.tier)) return false;
+        if (f.q && !(i.title + ' ' + i.text).toLowerCase().includes(f.q)) return false;
+        if (f.status === 'due') return isDue(i.id);
+        if (f.status && st(i.id).status !== f.status) return false;
+        return true;
+      });
+      if (!rows.length) return;
+      const done = its.filter((i) => ['done', 'mastered'].includes(st(i.id).status)).length; const pct = Math.round((done / its.length) * 100);
+      out += '<section class="topic"><div class="topic-head"><h2><span class="code">' + t.code + '</span>' + esc(t.name) + '</h2><div class="topic-meta"><span>' + done + ' of ' + its.length + ' done</span><span>' + fmtH(its.reduce((a, i) => a + minutesFor(i.id), 0)) + '</span></div></div>' +
+        '<div class="bar" style="margin:10px 0 6px" role="img" aria-label="' + pct + ' percent done"><i style="width:' + pct + '%"></i></div><table class="qtable"><tbody>' +
+        rows.map((i) => { const s = st(i.id); return '<tr><td class="t"><button class="linkish" data-open="' + i.id + '">' + esc(i.title) + '</button>' + (i.text ? '<span class="angle">' + esc(i.text.replace('Why it matters for staff DE: ', '')) + '</span>' : '') + '</td>' +
+          '<td class="hide-sm"><span class="tier tier-' + i.tier + '">' + TIER[i.tier] + '</span></td><td class="src">' + i.links.map((l) => '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + (l.p === 'Aced' ? 'Open' : esc(l.p)) + '</a>').join(' · ') + '</td>' +
+          '<td><span class="chip st-' + s.status + '">' + STATUS_LABEL[s.status] + '</span>' + (isDue(i.id) ? ' <span class="chip due">Due</span>' : '') + '</td></tr>'; }).join('') + '</tbody></table></section>';
+    });
+    document.getElementById('list').innerHTML = out || '<p class="muted">No lessons match these filters.</p>';
+  }
+  function initLib() {
+    document.getElementById('f-group').innerHTML = '<option value="">All modules</option>' + libTopics.map((t) => '<option value="' + t.code + '">' + t.code + ' ' + esc(t.name) + '</option>').join('');
+    document.getElementById('f-status').innerHTML = '<option value="">Any status</option><option value="due">Due for revision</option>' + STATUS.sd.map(([v, l]) => '<option value="' + v + '">' + l + '</option>').join('');
+    ['f-q', 'f-group', 'f-tier', 'f-status'].forEach((id) => document.getElementById(id).addEventListener('input', renderLib));
+    refresh = renderLib; renderLib();
+  }
+
   function renderProgress() {
     const t = today();
     const range = (from) => S.sessions.filter((s) => s.date >= from && s.date <= t);
@@ -739,6 +796,7 @@
   else if (page === 'progress') initProgress();
   else if (page === 'settings') initSettings();
   else if (page === 'why') initWhy();
+  else if (page === 'lib') initLib();
   tick();
   setInterval(tick, 1000);
   setInterval(checkReminders, 20000);

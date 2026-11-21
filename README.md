@@ -33,6 +33,7 @@ dataleap/
 │   ├── index.html         Today: why strip, level, the daily run, timer, history grid, revision queue
 │   ├── dsa.html           DSA questions by topic
 │   ├── system-design.html Design cases and concepts by topic
+│   ├── library.html       Your Aced course: 146 lessons indexed and ranked for staff DE, with status, notes and time
 │   ├── roadmap.html       24-week plan from scratch to offer
 │   ├── companies.html     Where to go deeper for each target company
 │   ├── progress.html      Time reports, topic table, backup/restore
@@ -47,6 +48,7 @@ dataleap/
 │       ├── css/main.css
 │       └── js/
 │           ├── data.js    All topics and questions (single source of truth, later the Django seed)
+│           ├── library.js Course index: lesson titles, aced.io links, module, priority (no lesson content)
 │           └── app.js     Storage, timer, dialogs, page logic
 ├── design/                Product and technical design documents
 ├── backend/               Django + DRF API and web app (planned)
@@ -79,3 +81,11 @@ Edit `docs/assets/js/data.js`. Add a title, topic code and link, or short questi
 ## Design
 
 Same design language as Bas 1 Minute and Kharcha Check: ink + haldi, Anek Latin + Mukta, self-hosted fonts, no third-party scripts or trackers.
+
+## Library and course material
+
+`library.html` indexes your Aced (formerly Exponent) lessons by title and links to each one on aced.io. Lesson content is **not** in this repo, on purpose: it is paid course material, and GitHub Pages sites are public. Keep your saved offline copies (the `*-Ex` folders) on your own device or private drive.
+
+Upload only `dataleap.zip` to the repo root. The unzip workflow unpacks **any** zip it finds there, so a course zip uploaded by mistake would end up public.
+
+To add lessons later, append entries to `docs/assets/js/library.js` (title, link, module, priority).

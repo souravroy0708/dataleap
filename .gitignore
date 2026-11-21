@@ -9,3 +9,8 @@ android/.gradle/
 android/build/
 android/app/build/
 local.properties
+
+# Saved course pages: keep private, never publish
+*-Ex/
+*-Ex.zip
+private/
