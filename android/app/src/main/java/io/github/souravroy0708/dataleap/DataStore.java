@@ -17,10 +17,11 @@ import java.util.Locale;
  * DataLeap's database on the phone (SQLite, app-private storage). Nothing is sent anywhere.
  *  - state:     the latest copy of everything (sessions, notes, statuses, retros, plan, settings)
  *  - snapshots: one copy per day for the last 30 days, so any day can be restored
+ *  - kv:        small live values, such as the running timer
  */
 final class DataStore extends SQLiteOpenHelper {
     private static final String NAME = "dataleap.db";
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
     private static final int KEEP_DAYS = 30;
     private static DataStore instance;
 
@@ -35,11 +36,34 @@ final class DataStore extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE state (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL, updated INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE snapshots (day TEXT PRIMARY KEY, json TEXT NOT NULL, created INTEGER NOT NULL)");
+        db.execSQL("CREATE TABLE kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldV, int newV) {
-        // Future schema changes go here as explicit migrations. Never drop user data.
+        // Explicit migrations only. Never drop user data.
+        if (oldV < 2) db.execSQL("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)");
+    }
+
+    synchronized String kvGet(String k) {
+        Cursor c = getReadableDatabase().rawQuery("SELECT v FROM kv WHERE k = ?", new String[]{k});
+        try { return c.moveToFirst() ? c.getString(0) : ""; } finally { c.close(); }
+    }
+
+    synchronized void kvSet(String k, String v) {
+        ContentValues cv = new ContentValues();
+        cv.put("k", k); cv.put("v", v);
+        getWritableDatabase().insertWithOnConflict("kv", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    synchronized void kvDel(String k) { getWritableDatabase().delete("kv", "k = ?", new String[]{k}); }
+
+    /** "Delete all data": empties every table. */
+    synchronized void reset() {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete("state", null, null);
+        db.delete("snapshots", null, null);
+        db.delete("kv", null, null);
     }
 
     synchronized void save(String json) {

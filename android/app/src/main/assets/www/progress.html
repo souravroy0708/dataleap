@@ -47,8 +47,14 @@
   <div class="card"><div class="sec-head"><h2>Recent sessions</h2></div><div class="tablewrap" id="sessions"></div></div>
 </div></section>
 <section class="sec"><div class="wrap">
+  <div class="panel"><h2>Export for AI analysis</h2>
+  <p>All your tracking as CSV files: every session (with time of day and the plan block it fell in), daily and weekly totals, items, notes, design scores, retrospectives, mocks, stories and milestones. Plus <b>README_for_Claude.md</b>, which explains every column and asks Claude for a coaching review of your effort.</p>
+  <p class="small muted">In the app the files go to Downloads/DataLeap/export-date. Attach them in the Claude app, starting with README_for_Claude.md and sessions.csv.</p>
+  <div class="actions"><button class="btn haldi" type="button" data-export-ai>Export for AI analysis (CSV)</button></div></div>
+</div></section>
+<section class="sec"><div class="wrap">
   <div class="panel"><h2>Back up your data</h2>
-  <p>Progress lives only on this device. Export a backup every week, and import it on another device or browser.</p>
+  <p>Your data lives only on this device. Export a backup every week, and import it on another device or browser.</p>
   <div class="actions"><button class="btn primary" id="export">Export backup</button><label class="btn" for="import" style="margin:0">Import backup</label><input id="import" type="file" accept="application/json" hidden></div></div>
 </div></section>
 </main>

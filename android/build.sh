@@ -8,8 +8,8 @@ if [ ! -f "$JAR" ]; then mkdir -p tools; curl -fsSL -o "$JAR" https://raw.github
 WEB=${WEB_DIR:-../docs}
 KS=${KEYSTORE:-keystore/dataleap-release.jks}
 KS_PASS=${KS_PASS:-dataleap-2026}
-VERSION_CODE=${VERSION_CODE:-8}
-VERSION_NAME=${VERSION_NAME:-1.7.8}
+VERSION_CODE=${VERSION_CODE:-10}
+VERSION_NAME=${VERSION_NAME:-1.9.10}
 M=app/src/main
 OUT=app/build
 
@@ -31,6 +31,8 @@ aapt package -f -m -J "$OUT/gen" -M "$OUT/AndroidManifest.xml" -S "$M/res" -A "$
 rm -rf "$OUT/selftest" && mkdir -p "$OUT/selftest"
 javac -nowarn -d "$OUT/selftest" "$M/java/io/github/souravroy0708/dataleap/SchedulePlan.java" app/src/test/java/io/github/souravroy0708/dataleap/SelfTest.java
 java -cp "$OUT/selftest" io.github.souravroy0708.dataleap.SelfTest
+javac -nowarn -d "$OUT/selftest" "$M/java/io/github/souravroy0708/dataleap/Persona.java" app/src/test/java/io/github/souravroy0708/dataleap/PersonaTest.java
+java -cp "$OUT/selftest" io.github.souravroy0708.dataleap.PersonaTest | grep -E "ok |FAIL|passed|failed"
 javac -nowarn -Xlint:-options -source 8 -target 8 -encoding UTF-8 -bootclasspath "$JAR" -d "$OUT/classes" \
   $(find "$M/java" "$OUT/gen" -name '*.java')
 dalvik-exchange --dex --min-sdk-version=26 --output="$OUT/dex/classes.dex" "$OUT/classes"

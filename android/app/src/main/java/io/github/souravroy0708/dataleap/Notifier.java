@@ -14,6 +14,7 @@ final class Notifier {
     static final String CH_TIMER = "timer";
     static final String CH_WIN = "celebrations";
     static final String CH_MOTIV = "motivation";
+    static final String CH_QUIET = "quiet";
     static final int ID_REMIND = 10;
     static final int ID_TIMER = 20;
     static final int ID_TARGET = 21;
@@ -41,6 +42,17 @@ final class Notifier {
         NotificationChannel mo = new NotificationChannel(CH_MOTIV, "Morning motivation", NotificationManager.IMPORTANCE_DEFAULT);
         mo.setDescription("3 to 4 motivating notifications a day between 6 am and 2 pm, and a weekly summary on Sunday");
         m.createNotificationChannel(mo);
+        NotificationChannel q = new NotificationChannel(CH_QUIET, "Late-night check (silent)", NotificationManager.IMPORTANCE_LOW);
+        q.setDescription("No sound or vibration: seen only if you are already on your phone after bedtime");
+        q.setSound(null, null);
+        q.enableVibration(false);
+        m.createNotificationChannel(q);
+    }
+
+    static void quiet(Context c, String title, String body) {
+        ensureChannels(c);
+        Notification n = base(c, CH_QUIET, title, body).setContentIntent(openApp(c, null, 12)).setAutoCancel(true).setTimeoutAfter(45 * 60 * 1000L).build();
+        nm(c).notify(ID_REMIND + 8, n);
     }
 
     static void motivation(Context c, String title, String body, String track) {

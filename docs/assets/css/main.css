@@ -583,3 +583,12 @@ em.down{color:#B23A1E;font-style:normal;font-weight:700}
 .fit p{margin:0;font-size:14px;color:var(--tmuted)}
 .fit ul{margin:0;padding-left:18px;font-size:14px}
 .fit.now{border:2px solid var(--mint);background:#F2FBF6}
+
+/* Before you pick up your phone */
+.phonecard{background:var(--white);color:var(--tdark);border-radius:var(--r-lg);padding:22px 24px;margin-top:14px;border-left:6px solid var(--coral)}
+.phonecard h2{font-size:26px;margin:0 0 10px;color:var(--tdark)}
+.phonecard ul{margin:0;padding-left:20px}
+.phonecard li{margin-bottom:10px;font-size:16px;line-height:1.5}
+.phone-rule{margin:12px 0 0;background:#FFE9E3;border-radius:var(--r-sm);padding:10px 12px;font-size:16px}
+.bedtime .award-badge{background:radial-gradient(circle at 35% 30%,#B8C0FF,#5B6CFF 60%,#323A7C);box-shadow:0 0 0 10px rgba(143,153,255,.15),0 0 60px rgba(91,108,255,.35)}
+.bedtime .btn.quiet{color:var(--muted)}

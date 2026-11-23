@@ -34,6 +34,37 @@ final class Bridge {
     @JavascriptInterface public String dbLoad() { return DataStore.get(a).load(); }
     @JavascriptInterface public String dbInfo() { return DataStore.get(a).info(); }
     @JavascriptInterface public String dbSnapshot(String day) { return DataStore.get(a).snapshot(day); }
+    /** Bedtime screen: "I'm going to sleep" closes the app. */
+    @JavascriptInterface public void closeApp() { ui(new Runnable() { public void run() { a.finishAndRemoveTask(); } }); }
+    @JavascriptInterface public String kvGet(String k) { return DataStore.get(a).kvGet(k); }
+    @JavascriptInterface public void kvSet(String k, String v) { DataStore.get(a).kvSet(k, v); }
+    @JavascriptInterface public void kvDel(String k) { DataStore.get(a).kvDel(k); }
+    @JavascriptInterface public void dbReset() { DataStore.get(a).reset(); }
+
+    /** Saves several files at once into Downloads/DataLeap/<folder>/. Returns how many were written. */
+    @JavascriptInterface public int saveExport(String folder, String filesJson) {
+        int n = 0;
+        try {
+            org.json.JSONArray files = new org.json.JSONArray(filesJson);
+            ContentResolver cr = a.getContentResolver();
+            for (int i = 0; i < files.length(); i++) {
+                org.json.JSONObject f = files.getJSONObject(i);
+                ContentValues v = new ContentValues();
+                v.put(MediaStore.MediaColumns.DISPLAY_NAME, f.getString("name"));
+                v.put(MediaStore.MediaColumns.MIME_TYPE, f.optString("mime", "text/plain"));
+                v.put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/DataLeap/" + folder);
+                Uri uri = cr.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
+                if (uri == null) continue;
+                OutputStream os = cr.openOutputStream(uri);
+                os.write(f.getString("content").getBytes(StandardCharsets.UTF_8));
+                os.close();
+                n++;
+            }
+            final String msg = n + " files saved to Downloads/DataLeap/" + folder;
+            a.runOnUiThread(new Runnable() { public void run() { Toast.makeText(a, msg, Toast.LENGTH_LONG).show(); } });
+        } catch (Exception ignored) {}
+        return n;
+    }
 
     // ---------- voice ----------
     @JavascriptInterface public String voiceStatus() { return a.voice.status(); }

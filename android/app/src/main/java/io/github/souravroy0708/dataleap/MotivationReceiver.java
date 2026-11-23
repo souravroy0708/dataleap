@@ -24,21 +24,11 @@ public class MotivationReceiver extends BroadcastReceiver {
     private static void slot(Context c, int idx) {
         JSONObject t = Store.today(c);
         if ("ok".equals(t.optString("status")) || t.optBoolean("rest")) return;
-        String name = t.optString("name");
-        boolean comeback = t.optBoolean("missedYesterday");
+        Persona.Ctx x = Store.ctx(c, "slot" + idx);
         String[] cats = {"family", "switch", "sd", "dsa"};
-        String cat = comeback && idx == 0 ? "comeback" : cats[idx % cats.length];
-        String track = t.optBoolean("sdDone") || "dsa".equals(cat) ? "dsa" : "sd";
-        String next = "sd".equals(track) ? t.optString("sdNext") : t.optString("dsaNext");
-        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-        String title;
-        if (idx == 0 && hour < 10) title = name.length() > 0 ? "Good morning. This one is for " + name : "Good morning";
-        else if (comeback) title = "Today is the comeback";
-        else title = name.length() > 0 ? "For " + name : "DataLeap";
-        StringBuilder body = new StringBuilder("\u201C").append(Store.quote(c, cat)).append("\u201D");
-        if (next.length() > 0) body.append("\n\nToday's ").append("sd".equals(track) ? "system design" : "DSA").append(": ").append(next)
-            .append(" (").append(t.optInt("minutes", 10)).append(" min counts)");
-        Notifier.motivation(c, title, body.toString(), track);
+        String cat = x.missedYesterday && idx == 0 ? "comeback" : cats[idx % cats.length];
+        String[] n = Persona.motivation(x, idx, Store.quote(c, cat));
+        Notifier.motivation(c, n[0], n[1], x.sdDone ? "dsa" : "sd");
     }
 
     private static void weekly(Context c) {

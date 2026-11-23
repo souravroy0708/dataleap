@@ -72,6 +72,42 @@ final class Store {
         return out;
     }
 
+    /** Everything a notification needs to sound like it knows you. */
+    static Persona.Ctx ctx(Context c, String salt) {
+        JSONObject t = today(c);
+        JSONObject d = day(c);
+        Persona.Ctx x = new Persona.Ctx();
+        x.me = d.optString("me", "");
+        x.her = t.optString("name", "");
+        x.why = d.optString("why", "");
+        x.plan = d.optString("plan", "");
+        x.sdNext = t.optString("sdNext", "");
+        x.dsaNext = t.optString("dsaNext", "");
+        x.sleepAt = d.optString("sleepAt", "");
+        x.sdAt = d.optString("sdAt", "");
+        x.herAgeAtOffer = d.optString("herAgeAtOffer", "");
+        x.status = t.optString("status", "miss");
+        x.sdMin = d.optInt("sdMin", 10);
+        x.dsaMin = d.optInt("dsaMin", 10);
+        x.minCount = d.optInt("min", 5);
+        x.streak = d.optInt("streak", 0);
+        x.skipDays = d.optDouble("skipDays", -1);
+        x.missedYesterday = t.optBoolean("missedYesterday");
+        x.sdDone = t.optBoolean("sdDone");
+        x.dsaDone = t.optBoolean("dsaDone");
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        x.hour = cal.get(java.util.Calendar.HOUR_OF_DAY);
+        x.seed = cal.get(java.util.Calendar.DAY_OF_YEAR) * 7 + (salt == null ? 0 : Math.abs(salt.hashCode() % 97));
+        String offer = d.optString("offerDate", "");
+        if (offer.length() == 10) {
+            try {
+                long ms = new SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(offer).getTime() - System.currentTimeMillis();
+                x.daysLeft = (int) Math.max(0, Math.ceil(ms / 86400000.0));
+            } catch (Exception ignored) {}
+        }
+        return x;
+    }
+
     static String quote(Context c, String category) {
         try {
             JSONObject q = new JSONObject(get(c, K_QUOTES, "{}"));

@@ -1,4 +1,5 @@
-/* DataLeap static prototype. All data stays in this browser (localStorage).
+/* DataLeap. In the Android app all data lives in the phone's database (SQLite via window.AndroidBridge);
+   on the website it lives in this browser's localStorage.
    Export from Progress to back up; the Django + Android version replaces this storage with the API. */
 (function () {
   const D = window.DL_DATA;
@@ -43,7 +44,7 @@
     rest: [],
     settings: { levelMode: 'auto', level: 1, levelSince: ymd(new Date(Date.now() - 4 * 3600e3)), manual: { sd: 30, dsa: 25, min: 10 }, weekendX: 1.5, dayStart: 4, restPerWeek: 1, maxSession: 30, motiv: { on: true, count: 4, start: '06:00', end: '14:00', weekly: true } },
     profile: {
-      me: 'Sourav', years: 10, life: { officeStart: '14:30', officeEnd: '23:30', commute: 30, wake: '07:30', sleep: '00:30', weekendOff: true }, name: '', why: '', role: 'Staff Data Engineer', companies: 'Google, Uber, Visa', targetDate: '2027-09-30', hoursGoal: 250,
+      me: 'Sourav', years: 10, herAge: 2, herAgeAt: 0, life: { officeStart: '14:30', officeEnd: '23:30', commute: 30, wake: '07:30', sleep: '00:30', weekendOff: true }, name: '', why: '', role: 'Staff Data Engineer', companies: 'Google, Uber, Visa', targetDate: '2027-09-30', hoursGoal: 250,
       vision: {
         daughter: ['Her education is planned and funded before she starts school, so her choices never depend on fees.', 'I am home for dinner and bedtime, not stuck on late-night support calls.', 'She grows up watching her father set a hard goal and reach it, one day at a time.', 'Holidays where she sees new places, not just pictures of them.'],
         family: ['A safety cushion: insurance, savings and no month-end worry.', 'A home of our own, chosen together.', 'More evenings and weekends that belong to us.'],
@@ -59,10 +60,18 @@
     ],
     fired: {}, hit: {}
   });
-  function load() {
+  // ---------- storage: phone database in the app, browser storage on the website ----------
+  const kvGet = (k) => { if (BR && BR.kvGet) { try { return BR.kvGet(k) || null; } catch (e) { return null; } } return localStorage.getItem(k); };
+  const kvSet = (k, v) => { if (BR && BR.kvSet) { try { BR.kvSet(k, v); } catch (e) {} return; } localStorage.setItem(k, v); };
+  const kvDel = (k) => { if (BR && BR.kvDel) { try { BR.kvDel(k); } catch (e) {} return; } localStorage.removeItem(k); };
+  function readRaw() {
+    if (BR && BR.dbLoad) { try { return BR.dbLoad() || ''; } catch (e) { return ''; } }
+    try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; }
+  }
+  function load(rawStr) {
     const d = defaults();
     let raw = {};
-    try { raw = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { raw = {}; }
+    try { raw = JSON.parse((rawStr === undefined ? readRaw() : rawStr) || '{}'); } catch (e) { raw = {}; }
     const s = Object.assign(d, raw);
     s.settings = Object.assign(defaults().settings, raw.settings || {});
     s.settings.manual = Object.assign(defaults().settings.manual, (raw.settings || {}).manual || {});
@@ -72,21 +81,22 @@
     s.hit = s.hit || {}; s.fired = s.fired || {};
     return s;
   }
-  /** In the Android app the database on the phone is the source of truth; browser storage is only a fast cache. */
+  /** App: the phone database is the only store. Anything left in browser storage from older versions moves in once, then is deleted. */
   function loadBest() {
-    let s = load();
     if (BR && BR.dbLoad) {
       try {
-        const raw = BR.dbLoad();
-        if (raw) {
-          const db = JSON.parse(raw);
-          if (!s.updatedAt || (db.updatedAt || 0) > s.updatedAt || (!s.sessions.length && db.sessions && db.sessions.length)) {
-            localStorage.setItem(KEY, raw); s = load();
-          }
+        const ls = localStorage.getItem(KEY);
+        if (ls) {
+          const db = BR.dbLoad(); const a = JSON.parse(ls); const b = db ? JSON.parse(db) : null;
+          const lsNewer = !b || (a.updatedAt || 0) > (b.updatedAt || 0) || ((!b.sessions || !b.sessions.length) && a.sessions && a.sessions.length);
+          if (lsNewer) BR.dbSave(ls);
+          localStorage.removeItem(KEY);
         }
+        const lt = localStorage.getItem(TKEY);
+        if (lt) { if (BR.kvSet) BR.kvSet(TKEY, lt); localStorage.removeItem(TKEY); }
       } catch (e) {}
     }
-    return s;
+    return load();
   }
   let S = loadBest();
   let syncT;
@@ -94,10 +104,11 @@
   const save = () => {
     S.updatedAt = Date.now();
     const json = JSON.stringify(S);
-    try { localStorage.setItem(KEY, json); } catch (e) { toast('Could not save: storage is full or blocked.'); }
-    if (BR) {
+    if (BR && BR.dbSave) {
+      try { BR.dbSave(json); } catch (e) { toast('Could not save to the phone database.'); }
       clearTimeout(syncT); syncT = setTimeout(syncNative, 250);
-      clearTimeout(dbT); dbT = setTimeout(() => { try { BR.dbSave(JSON.stringify(S)); } catch (e) {} }, 400);
+    } else {
+      try { localStorage.setItem(KEY, json); } catch (e) { toast('Could not save: storage is full or blocked.'); }
     }
   };
   const st = (id) => S.items[id] || { status: 'not_started', notes: [], next: null, solvedCount: 0, pinned: null };
@@ -298,6 +309,8 @@
       if (sk >= 2 && nextM && nextM - sk <= 2) extra = ' ' + (nextM - sk) + ' more day' + (nextM - sk > 1 ? 's' : '') + ' to a ' + nextM + '-day streak.';
       else if (sk >= 3) extra = ' ' + sk + ' days in a row so far. Don’t break it tonight.';
     }
+    const sc = skipCostDays();
+    if (sc >= 0 && i.status !== 'ok' && !i.sdDone && !i.dsaDone && h >= 7 && h < 14) extra += ' Skipping today would push your finish about ' + halves(sc) + (sc <= 1 ? ' day' : ' days') + ' later.';
     const fz = focusNow();
     if (fz && i.status !== 'ok' && S.sessions.length && !/office|sleep|family/.test((nowBlock().cur || {}).kind || '')) extra += ' This month’s focus: ' + fz.title.toLowerCase() + '.';
     const sn = scheduleNote(i);
@@ -455,9 +468,9 @@
   }
 
   // ---------- timer ----------
-  const getT = () => { try { return JSON.parse(localStorage.getItem(TKEY) || 'null'); } catch (e) { return null; } };
+  const getT = () => { try { return JSON.parse(kvGet(TKEY) || 'null'); } catch (e) { return null; } };
   const setT = (t) => {
-    if (t) localStorage.setItem(TKEY, JSON.stringify(t)); else localStorage.removeItem(TKEY);
+    if (t) kvSet(TKEY, JSON.stringify(t)); else kvDel(TKEY);
     if (!BR) return;
     try {
       if (!t) { BR.timerStopped(); return; }
@@ -822,12 +835,25 @@
     document.getElementById('export').onclick = () => { if (BR) { if (!BR.saveFile('dataleap-backup-' + today() + '.json', 'application/json', JSON.stringify(S, null, 2))) toast('Could not save the backup.'); return; } const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dataleap-backup-' + today() + '.json'; a.click(); };
     document.getElementById('import').onchange = (e) => {
       const file = e.target.files[0]; if (!file) return; const r = new FileReader();
-      r.onload = () => { try { const d = JSON.parse(r.result); if (!d.sessions || !d.items) throw 0; localStorage.setItem(KEY, JSON.stringify(d)); S = load(); save(); renderProgress(); toast('Backup restored'); } catch (err) { toast('That file is not a DataLeap backup.'); } };
+      r.onload = () => { try { const d = JSON.parse(r.result); if (!d.sessions || !d.items) throw 0; S = load(JSON.stringify(d)); save(); renderProgress(); toast('Backup restored'); } catch (err) { toast('That file is not a DataLeap backup.'); } };
       r.readAsText(file);
     };
   }
 
   // ---------- My why ----------
+  function phoneCard() {
+    const n = her(); const N = n.charAt(0).toUpperCase() + n.slice(1); const pb = buildPlan(); const l = life();
+    const weekly = pb.budget.weekday * 5 + pb.budget.sat + pb.budget.sun; const pct = Math.round(420 / weekly * 100);
+    const sc = skipCostDays(); const age = herAgeAtOffer(); const sd = pb.weekday.find((b) => b.kind === 'sd');
+    const lines = [
+      '<li><b>One hour of reels a day is 7 hours a week.</b> That is ' + pct + '% of your whole weekly prep plan (' + fmtH(weekly) + '), gone into someone else’s feed.</li>',
+      sc >= 0 ? '<li><b>Skipping one day</b> pushes your finish about ' + halves(sc) + (sc <= 1 ? ' day' : ' days') + ' later, at your current pace.</li>' : '',
+      '<li><b>Sleep by ' + ampm(toMin(l.sleep, 30)) + '.</b> Your ' + (sd ? ampm(sd.s) : 'morning') + ' deep work is your sharpest hour only if the night before was sleep, not scrolling.</li>',
+      age ? '<li><b>' + esc(N) + ' will be about ' + age + '</b> when you start the new job. These are the months that decide which life she grows up in.</li>' : '',
+      S.profile.targetDate ? '<li><b>' + Math.max(0, daysBetween(today(), S.profile.targetDate)) + ' days</b> to your offer date. Each one is either prep or a day you will have to make up.</li>' : ''
+    ].filter(Boolean).join('');
+    return '<section class="phonecard"><h2>Before you pick up your phone</h2><ul>' + lines + '</ul><p class="phone-rule">The rule: <b>timer first, feed never</b> until the day is complete. Charge the phone outside the bedroom.</p></section>';
+  }
   function renderWhyView() {
     const p = S.profile; const n = daughter() || 'my daughter'; const v = p.vision;
     const left = p.targetDate ? daysBetween(today(), p.targetDate) : null;
@@ -837,17 +863,20 @@
       '<p class="lede">' + esc(p.role) + ' at ' + esc(p.companies) + (p.targetDate ? '. Offer by ' + esc(niceDate(p.targetDate)) + (left !== null && left >= 0 ? ', ' + left + ' days from now' : '') : '') + '.</p>' +
       '<div class="vision"><section><h2>For ' + esc(n) + '</h2>' + list(v.daughter) + '</section><section><h2>For our family</h2>' + list(v.family) + '</section><section><h2>For me</h2>' + list(v.me) + '</section></div>' +
       (p.letter ? '<section class="letter"><h2>A letter to ' + esc(n) + ', to read on offer day</h2><p>' + esc(p.letter).replace(/\n/g, '<br>') + '</p></section>' : '') +
+      phoneCard() +
       '<p class="note">Read this when you feel like skipping. Then start the timer for ' + minNow() + ' minutes. That is all today needs.</p>';
   }
   function initWhy() {
     const f = document.getElementById('whyform'); const p = S.profile;
     ['me', 'years', 'name', 'why', 'role', 'companies', 'targetDate', 'hoursGoal', 'letter'].forEach((k) => { f.elements[k].value = p[k] || ''; });
+    f.elements.herAge.value = p.herAge === undefined ? '' : p.herAge;
     ['daughter', 'family', 'me'].forEach((k) => { f.elements['v-' + k].value = (p.vision[k] || []).join('\n'); });
     f.onsubmit = (e) => {
       e.preventDefault();
       ['me', 'name', 'why', 'role', 'companies', 'targetDate', 'letter'].forEach((k) => { p[k] = f.elements[k].value.trim(); });
       p.hoursGoal = Math.max(10, parseInt(f.elements.hoursGoal.value, 10) || 250);
       p.years = Math.max(1, Math.min(40, parseInt(f.elements.years.value, 10) || 10));
+      const ha = f.elements.herAge.value.trim(); if (String(ha) !== String(p.herAge)) { p.herAge = ha === '' ? '' : Math.max(0, Math.min(25, +ha)); p.herAgeAt = Date.now(); }
       ['daughter', 'family', 'me'].forEach((k) => { p.vision[k] = f.elements['v-' + k].value.split('\n').map((x) => x.trim()).filter(Boolean); });
       save(); renderWhyView(); document.getElementById('quote-text').textContent = quoteFor('why', quoteShift); window.scrollTo({ top: 0, behavior: 'smooth' }); toast('Saved. This is why.');
     };
@@ -876,7 +905,7 @@
   }
   function initSettings() {
     const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const FOCUS = { either: 'Either', dsa: 'DSA', sd: 'System design', family: 'Family', sleep: 'Sleep' };
+    const FOCUS = { either: 'Either', dsa: 'DSA', sd: 'System design', family: 'Family', sleep: 'Sleep', night: 'Phone down', late: 'Late check (silent)' };
     function renderRem() {
       document.getElementById('remlist').innerHTML = S.reminders.length ? '<table class="dtable"><thead><tr><th>Time</th><th>Days</th><th>Focus</th><th>Message</th><th>Rules</th><th></th></tr></thead><tbody>' +
         S.reminders.slice().sort((a, b) => a.time.localeCompare(b.time)).map((r) => '<tr><td><b>' + r.time + '</b></td><td>' + (r.days.length === 7 ? 'Every day' : r.days.length === 5 && !r.days.includes(0) && !r.days.includes(6) ? 'Weekdays' : r.days.map((d) => DAYS[d]).join(' ')) + '</td><td>' + FOCUS[r.focus] + '</td><td>' + esc(r.msg) + '</td><td class="small muted">' + [r.skip ? 'Skips when done' : '', r.last ? 'Last call' : ''].filter(Boolean).join(', ') + '</td><td style="white-space:nowrap"><label class="small inline"><input type="checkbox" data-remon="' + r.id + '"' + (r.on ? ' checked' : '') + '> On</label> <button class="linkish small" data-remdel="' + r.id + '">Delete</button></td></tr>').join('') + '</tbody></table>'
@@ -927,16 +956,17 @@
       const drawDb = () => {
         let info = {}; try { info = JSON.parse(BR.dbInfo()); } catch (e) {}
         const snaps = info.snapshots || [];
-        dbp.innerHTML = '<h2>Your data on this phone</h2><p>Everything (sessions, notes, statuses, retrospectives, your plan and settings) is saved in DataLeap’s own database on this phone after every change. Nothing is uploaded anywhere.</p>' +
+        dbp.innerHTML = '<h2>Your data on this phone</h2><p>Everything (sessions, notes, statuses, retrospectives, stories, mocks, your plan, settings and the running timer) is saved in DataLeap’s own database on this phone the moment it changes. Nothing is kept in browser storage and nothing is uploaded anywhere.</p>' +
           '<ul class="nativestat"><li><span class="chip st-done">Saved</span> ' + (info.updated ? 'Last saved ' + new Date(info.updated).toLocaleString() : 'Not saved yet') + (info.bytes ? ', ' + Math.max(1, Math.round(info.bytes / 1024)) + ' KB' : '') + '</li>' +
           '<li><span class="chip">' + snaps.length + '</span> daily snapshots kept (last 30 days)</li></ul>' +
           (snaps.length ? '<div class="row"><div class="field"><label for="snap">Restore a day</label><select id="snap">' + snaps.map((x) => '<option value="' + x.day + '">' + esc(niceDate(x.day)) + '</option>').join('') + '</select></div><div class="field" style="flex:0 0 auto"><button class="btn" id="snapgo" type="button">Restore</button></div></div>' : '') +
+          '<p class="actions"><button class="btn primary" type="button" data-export-ai>Export for AI analysis (CSV)</button></p>' +
           '<p class="small muted">Uninstalling the app deletes this database. Before changing phones, use Progress → Export backup.</p>';
         const go = document.getElementById('snapgo');
         if (go) go.onclick = () => {
           const day = document.getElementById('snap').value;
           if (!confirm('Replace your current data with the snapshot from ' + niceDate(day) + '? Anything after that is lost.')) return;
-          try { const raw = BR.dbSnapshot(day); const d = JSON.parse(raw); if (!d.sessions) throw 0; d.updatedAt = Date.now(); localStorage.setItem(KEY, JSON.stringify(d)); S = load(); save(); toast('Restored ' + niceDate(day)); setTimeout(() => location.reload(), 600); } catch (e) { toast('That snapshot could not be read.'); }
+          try { const raw = BR.dbSnapshot(day); const d = JSON.parse(raw); if (!d.sessions) throw 0; d.updatedAt = Date.now(); S = load(JSON.stringify(d)); save(); toast('Restored ' + niceDate(day)); setTimeout(() => location.reload(), 600); } catch (e) { toast('That snapshot could not be read.'); }
         };
       };
       drawDb();
@@ -975,7 +1005,7 @@
       S.settings.maxSession = Math.min(120, Math.max(10, +lf.elements.maxSession.value || 30));
       save(); toast('Saved');
     };
-    document.getElementById('reset').onclick = () => { if (confirm('Delete all progress, notes and settings in this browser? Export a backup first if you need it.')) { localStorage.removeItem(KEY); localStorage.removeItem(TKEY); location.reload(); } };
+    document.getElementById('reset').onclick = () => { if (confirm('Delete all progress, notes and settings' + (BR ? ' from the phone database' : ' in this browser') + '? Export a backup first if you need it.')) { if (BR && BR.dbReset) BR.dbReset(); else { localStorage.removeItem(KEY); localStorage.removeItem(TKEY); } location.reload(); } };
   }
 
   // ---------- reminders (fire while any DataLeap tab is open) ----------
@@ -1303,6 +1333,21 @@
     if (document.getElementById('report')) renderReport();
   }
 
+  // ---------- the honest cost of skipping, and her age when you start ----------
+  function skipCostDays() {
+    if (!S.sessions.length) return -1;
+    const t = today(); const span = Math.min(28, daysBetween(firstDay(), t) + 1);
+    let mins = 0; S.sessions.forEach((x) => { if (x.date > addDays(t, -span) && x.date <= t) mins += x.minutes; });
+    const avg = mins / span; const tg = targets(t);
+    return avg > 0 ? (tg.sd + tg.dsa) / avg : 1;
+  }
+  const halves = (v) => { const r = Math.max(0.5, Math.round(v * 2) / 2); const w = Math.floor(r); return (r === w ? String(w) : (w ? w : '') + '½'); };
+  function herAgeAtOffer() {
+    const p = S.profile; if (!p.targetDate || p.herAge === '' || p.herAge === null || p.herAge === undefined || isNaN(+p.herAge)) return '';
+    const asOf = p.herAgeAt || Date.now(); const [y, m, d] = p.targetDate.split('-').map(Number);
+    return halves(+p.herAge + (new Date(y, m - 1, d) - asOf) / (365.25 * 864e5));
+  }
+
   // ---------- career mentor: the day plan ----------
   const toMin = (hhmm, def) => { const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm || ''); return m ? (+m[1]) * 60 + (+m[2]) : def; };
   const toHM = (m) => { m = ((m % 1440) + 1440) % 1440; return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
@@ -1362,7 +1407,9 @@
       r('p-kid', daughterBlock ? daughterBlock.s : dsa.e + 30, wk, 'family', 'Laptop closed. Time with {name}.'),
       r('p-rev', rev.s, wk, 'either', '15-minute revision before you get ready for office.'),
       r('p-last', wind.s + 10, wk, 'either', 'Office done. Only if today is incomplete: the 10-minute version, then rest.', { last: true }),
+      r('p-night', wind.s + 25, wk, 'night', 'Office is over. Phone down: dinner, family, sleep.'),
       r('p-sleep', sleep.s - 15, [0, 1, 2, 3, 4, 5, 6], 'sleep', 'Wind down in 15 minutes. Sleep by ' + ampm(sleep.s) + '.'),
+      r('p-late', sleep.s + 20, [0, 1, 2, 3, 4, 5, 6], 'late', 'Silent check if you are still on your phone after bedtime.'),
       r('p-sat', satSd.s - 5, [6], 'sd', 'Saturday deep work: one full design case or a mock interview.'),
       r('p-satdsa', satDsa.s, [6], 'dsa', 'Two DSA questions under interview conditions.'),
       r('p-sun', sunRev.s, [0], 'either', 'Sunday: weekly retrospective and 20 minutes of revision. Then back to family.')
@@ -1373,7 +1420,7 @@
     S.reminders = planReminders(p);
     S.settings.motiv = Object.assign({}, S.settings.motiv, { on: true, count: 3, start: toHM(toMin(p.l.wake, 450) + 20), end: toHM(toMin(p.l.officeStart, 870) - 30) });
     S.settings.restPerWeek = Math.max(1, S.settings.restPerWeek);
-    S.planApplied = Date.now(); save(); syncNative();
+    S.planApplied = Date.now(); S.planVersion = 2; save(); syncNative();
     if (!silent) showCoachCard('Done. Your reminders now follow your day: family first in the morning, deep work at ' + ampm(p.weekday.find((x) => x.kind === 'sd').s) + ', nothing heavy after office, sleep by ' + ampm(p.weekday.find((x) => x.kind === 'sleep').s) + '.');
   }
   function blocksFor(date) { const p = buildPlan(); const d = dow(date); return d === 6 ? p.sat : d === 0 ? p.sun : p.weekday; }
@@ -1645,6 +1692,187 @@
   });
   function initCareer() { refresh = renderCareer; renderCareer(); }
 
+  // ---------- export for analysis: CSV files + a guide for Claude ----------
+  const WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  function csv(header, rows) {
+    const cell = (v) => {
+      if (v === null || v === undefined) return '';
+      const s = String(v);
+      return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    return '\uFEFF' + [header.join(','), ...rows.map((r) => r.map(cell).join(','))].join('\r\n') + '\r\n';
+  }
+  const iso = (ts) => { if (!ts) return ''; const d = new Date(ts); return ymd(d) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const trackName = (t) => ({ sd: 'system_design', dsa: 'dsa', sql: 'sql' }[t] || t);
+  function blockAt(ts) {
+    try {
+      const d = new Date(ts); const m = d.getHours() * 60 + d.getMinutes(); const bl = blocksFor(ymd(d));
+      for (const b of bl) { const mm = m < b.s && b.e > 1440 && m < 360 ? m + 1440 : m; if (mm >= b.s && mm < b.e) return b.title; }
+    } catch (e) {}
+    return '';
+  }
+  function buildExport() {
+    const files = []; const add = (name, content, mime) => files.push({ name, mime: mime || 'text/csv', content });
+    const first = S.sessions.length ? firstDay() : today();
+
+    // 1. sessions: every logged session
+    add('sessions.csv', csv(
+      ['session_id', 'study_date', 'weekday', 'logged_at', 'hour', 'track', 'minutes', 'min_to_count', 'counted', 'activity', 'item_id', 'item_title', 'topic_code', 'topic_name', 'item_type', 'difficulty', 'design_part', 'source', 'plan_block_at_that_time'],
+      S.sessions.slice().sort((a, b) => a.at - b.at).map((x) => {
+        const it = byId[x.itemId]; const tp = it ? topicBy[it.topic] : null; const min = x.min || 10;
+        return [x.id, x.date, WD[dow(x.date)], iso(x.at), new Date(x.at).getHours(), trackName(x.track), x.minutes, min, x.minutes >= min ? 'yes' : 'no',
+          x.activity || '', x.itemId || '', it ? it.title : '', it ? it.topic : '', tp ? tp.name : '', it ? it.type : '', it ? (it.diff || '') : '', x.part || '', x.source || '', blockAt(x.at)];
+      })));
+
+    // 2. daily: one row per day since you started, with a running streak
+    const days = []; let run = 0;
+    for (let d = first; d <= today(); d = addDays(d, 1)) {
+      const i = dayInfo(d); const tg = targets(d); const n = S.sessions.filter((x) => x.date === d).length;
+      if (i.status === 'ok') run++; else if (i.status !== 'rest' && d !== today()) run = 0;
+      days.push([d, WD[dow(d)], i.sd, i.dsa, i.sd + i.dsa, tg.sd, tg.dsa, { ok: 'complete', part: 'partial', miss: 'missed', rest: 'rest' }[i.status] || i.status, n, run]);
+    }
+    add('daily.csv', csv(['date', 'weekday', 'system_design_min', 'dsa_min', 'total_min', 'system_design_target_min', 'dsa_target_min', 'day_status', 'sessions', 'streak_after_day'], days));
+
+    // 3. weekly, joined with that week's retrospective
+    const weeks = [];
+    for (let w = weekStart(first); w <= today(); w = addDays(w, 7)) {
+      const x = weekStats(w); const r = retroFor(w) || {};
+      weeks.push([w, x.min, x.sd, x.dsa, x.complete, x.active, x.best && (x.best.sd + x.best.dsa) ? x.best.date : '', r.mood || '', r.well || '', r.blockers || '', r.change || '']);
+    }
+    add('weekly.csv', csv(['week_start', 'total_min', 'system_design_min', 'dsa_min', 'complete_days', 'active_days', 'best_day', 'retro_mood_1to5', 'retro_went_well', 'retro_got_in_the_way', 'retro_change_for_next_week'], weeks));
+
+    // 4. items: status of every question, topic and lesson you have touched
+    const touched = D.items.filter((i) => S.items[i.id] || minutesFor(i.id) > 0);
+    add('items.csv', csv(
+      ['item_id', 'track', 'topic_code', 'topic_name', 'title', 'type', 'difficulty', 'course_priority', 'status', 'next_review', 'times_solved_alone', 'total_min', 'sessions', 'notes', 'last_rubric_score_of_14', 'best_rubric_score_of_14', 'from_your_experience', 'link'],
+      touched.map((i) => {
+        const s = st(i.id); const sc = s.scores || []; const ex = typeof expFor === 'function' ? expFor(i.id) : null;
+        return [i.id, trackName(i.track), i.topic, (topicBy[i.topic] || {}).name || '', i.title, i.type, i.diff || '', i.tier || '', STATUS_LABEL[s.status] || s.status, s.next || '', s.solvedCount || 0,
+          minutesFor(i.id), S.sessions.filter((x) => x.itemId === i.id).length, (s.notes || []).length, sc.length ? sc[sc.length - 1].total : '', sc.length ? Math.max(...sc.map((x) => x.total)) : '', ex ? ex.from : '', i.links[0] ? i.links[0].url : ''];
+      })));
+
+    // 5. notes
+    const notes = [];
+    Object.keys(S.items).forEach((id) => { const s = S.items[id]; (s.notes || []).forEach((n) => notes.push([iso(n.at), id, (byId[id] || {}).title || '', (byId[id] || {}).topic || '', n.type, n.id === s.pinned ? 'yes' : 'no', n.body])); });
+    notes.sort((a, b) => (a[0] > b[0] ? 1 : -1));
+    add('notes.csv', csv(['created', 'item_id', 'item_title', 'topic_code', 'note_type', 'pinned_key_note', 'text'], notes));
+
+    // 6. rubric scores for design cases
+    const scores = [];
+    D.items.forEach((i) => (st(i.id).scores || []).forEach((x) => scores.push([iso(x.at), i.id, i.title, x.total].concat(x.vals || []))));
+    add('design_scores.csv', csv(['scored_at', 'item_id', 'case', 'total_of_14'].concat(D.rubric.map((r, k) => 'c' + (k + 1) + '_' + r.split(':')[0].toLowerCase().replace(/[^a-z]+/g, '_').replace(/_$/, ''))), scores));
+
+    // 7. retrospectives
+    add('retrospectives.csv', csv(['week_start', 'saved_at', 'mood_1to5', 'practice_min', 'complete_days', 'went_well', 'got_in_the_way', 'change_for_next_week'],
+      (S.retros || []).slice().sort((a, b) => (a.week > b.week ? 1 : -1)).map((r) => [r.week, iso(r.at), r.mood || '', r.min || 0, r.complete || 0, r.well || '', r.blockers || '', r.change || ''])));
+
+    // 8. mock interviews
+    add('mock_interviews.csv', csv(['date', 'round', 'with', 'verdict', 'verdict_score_1to4', 'went_well', 'fix_next'],
+      (S.mocks || []).slice().sort((a, b) => (a.date > b.date ? 1 : -1)).map((m) => [m.date, MOCK_TYPES[m.type] || m.type, m.with || '', MOCK_SCORES[m.score] || '', m.score || '', m.well || '', m.fix || ''])));
+
+    // 9. story bank
+    add('stories.csv', csv(['story_id', 'title', 'where', 'strength_pct', 'staff_signals', 'times_practised', 'last_updated'].concat(STORY_FIELDS.map((f) => f[0])),
+      (S.stories || []).map((x) => [x.id, x.title, x.org || '', storyStrength(x), (x.tags || []).join('; '), (x.practiced || []).length, iso(x.updated)].concat(STORY_FIELDS.map((f) => x[f[0]] || '')))));
+
+    // 10. milestones
+    add('milestones.csv', csv(['milestone_id', 'group', 'title', 'description', 'unlocked_at'],
+      ACH.map((a) => [a.id, a.g, a.t, a.d, S.ach && S.ach[a.id] ? iso(S.ach[a.id]) : ''])));
+
+    // 11. the guide for Claude
+    add('README_for_Claude.md', analysisGuide(), 'text/markdown');
+    return files;
+  }
+  function analysisGuide() {
+    const r = readiness(); const pc = pace(); const p = S.profile; const c = S.coach;
+    const lastWeeks = []; for (let k = 7; k >= 0; k--) { const w = weekStats(addDays(weekStart(today()), -7 * k)); lastWeeks.push('| ' + w.ws + ' | ' + (Math.round(w.min / 6) / 10) + ' | ' + (Math.round(w.sd / 6) / 10) + ' | ' + (Math.round(w.dsa / 6) / 10) + ' | ' + w.complete + '/7 |'); }
+    return [
+      '# DataLeap export for analysis',
+      '',
+      'Exported ' + iso(Date.now()) + '. I am ' + (me() || 'a data engineer') + ', with ' + (p.years || 10) + ' years in software, preparing to move from a service company to a ' + (p.role || 'Staff Data Engineer') + ' role at ' + (p.companies || 'top product companies') + '.',
+      p.targetDate ? 'Target offer date: ' + p.targetDate + '. Plan: ' + pc.goal + ' prep hours; done so far: ' + (Math.round(pc.doneH * 10) / 10) + ' h. Last-4-week average: ' + (Math.round(pc.avgWeekH * 10) / 10) + ' h a week; needed: ' + (Math.round((pc.needWeekH || 0) * 10) / 10) + ' h a week.' : '',
+      'Office hours ' + life().officeStart + ' to ' + life().officeEnd + ' IST; I study in the morning before office and protect family time with my young daughter.',
+      'Interview readiness (DataLeap score): ' + r.score + '% (' + r.label + '). ' + r.parts.map((x) => x.label + ' ' + Math.round(x.v * 100) + '%').join('; ') + '.',
+      c && c.gaps ? 'My known gaps, in priority order: ' + c.gaps.map((g) => g.title).join('; ') + '.' : '',
+      '',
+      '## Last 8 weeks (hours)',
+      '',
+      '| Week start | Total | System design | DSA | Complete days |',
+      '| --- | --- | --- | --- | --- |',
+      ...lastWeeks,
+      '',
+      '## Files',
+      '',
+      '- `sessions.csv`: every practice session. `counted` = it met the minimum for that day. `plan_block_at_that_time` = what my day plan had scheduled then (useful to check schedule adherence).',
+      '- `daily.csv`: one row per day: minutes, targets, status (complete, partial, missed, rest) and running streak.',
+      '- `weekly.csv`: one row per week, joined with that week\'s retrospective.',
+      '- `items.csv`: every question, topic, lesson and design case I have touched, with status and time spent. `from_your_experience` marks design cases that match systems I built.',
+      '- `notes.csv`: my notes on items (approach, mistakes, key insights).',
+      '- `design_scores.csv`: staff-rubric scores (0 to 2 per criterion, 14 max) for full design attempts.',
+      '- `retrospectives.csv`, `mock_interviews.csv`, `stories.csv` (project stories for deep-dive rounds), `milestones.csv`.',
+      '',
+      '## What I want from you',
+      '',
+      'Act as a staff data engineer at a top product company coaching me. Be direct and specific; use numbers from the files.',
+      '',
+      '1. **Effort:** weekly trend, consistency (complete days), my most and least productive weekdays and hours, and whether I am on pace for my offer date.',
+      '2. **Balance:** system design vs DSA share (target about 60/40), and which topics I avoid (little time, many not started).',
+      '3. **Schedule:** how often I practise inside my planned blocks vs outside them, and what that says about my day plan.',
+      '4. **Quality:** items I keep needing help with, rubric criteria I score lowest on, mock interview verdicts and the fixes I noted.',
+      '5. **Retrospectives:** recurring blockers, whether I acted on the changes I committed to, and mood vs output.',
+      '6. **Stories:** which project stories are weakest and what each needs before a deep-dive round.',
+      '7. **Next 2 weeks:** a concrete plan (daily topics and minutes) that fixes the biggest gap without hurting family time or sleep.',
+      ''
+    ].filter((x) => x !== null).join('\n');
+  }
+  // Minimal ZIP writer (stored, no compression) for the website download
+  function zipFiles(files) {
+    const enc = new TextEncoder(); const table = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) { let c = i; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; table[i] = c >>> 0; }
+    const crc32 = (b) => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = table[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+    const parts = []; const central = []; let offset = 0;
+    const u16 = (v) => [v & 255, (v >>> 8) & 255]; const u32 = (v) => [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255];
+    files.forEach((f) => {
+      const name = enc.encode(f.name); const data = enc.encode(f.content); const crc = crc32(data);
+      const head = [0x50, 0x4B, 0x03, 0x04, ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0)];
+      parts.push(new Uint8Array(head), name, data);
+      central.push(new Uint8Array([0x50, 0x4B, 0x01, 0x02, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(offset)]), name);
+      offset += head.length + name.length + data.length;
+    });
+    const csize = central.reduce((a, b) => a + b.length, 0);
+    const end = new Uint8Array([0x50, 0x4B, 0x05, 0x06, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(csize), ...u32(offset), ...u16(0)]);
+    return new Blob([...parts, ...central, end], { type: 'application/zip' });
+  }
+  function exportForAnalysis() {
+    const files = buildExport(); const stamp = today() + '-' + pad(new Date().getHours()) + pad(new Date().getMinutes());
+    if (BR && BR.saveExport) {
+      const n = BR.saveExport('export-' + stamp, JSON.stringify(files));
+      if (n) showCoachCard(n + ' files saved to Downloads/DataLeap/export-' + stamp + '. Open the Claude app, attach them (start with README_for_Claude.md and sessions.csv), and ask for your coaching review.');
+      else toast('Could not save the export.');
+      return;
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(zipFiles(files)); a.download = 'dataleap-export-' + stamp + '.zip'; a.click();
+    toast('Export downloaded: ' + files.length + ' files in one zip.');
+  }
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-export-ai]')) { e.preventDefault(); exportForAnalysis(); } });
+
+  // ---------- bedtime screen: opened after bedtime? Go to sleep. ----------
+  function bedtimeCheck() {
+    if (!S.planApplied || sessionStorage.getItem('dl-bed-ok') === today()) return;
+    const l = life(); const now = new Date(); let m = now.getHours() * 60 + now.getMinutes();
+    let sl = toMin(l.sleep, 30); const wk = toMin(l.wake, 450);
+    if (sl < 720) sl += 1440; if (m < 720) m += 1440;
+    const end = Math.min(wk + 1440 - 120, 1440 + 300);
+    if (m < sl || m > end) return;
+    const n = her(); const N = n.charAt(0).toUpperCase() + n.slice(1); const pb = buildPlan(); const sd = pb.weekday.find((b) => b.kind === 'sd');
+    const d = document.createElement('dialog'); d.className = 'award bedtime';
+    d.innerHTML = '<div class="award-in"><p class="award-kicker">Past your bedtime</p><div class="award-badge" aria-hidden="true">🌙</div><h2>It’s ' + esc(now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })) + (me() ? ', ' + esc(me()) : '') + '</h2>' +
+      '<p class="award-msg"><span class="coach-av sm" aria-hidden="true">' + MARK + '</span><span>Nothing in this app is worth losing sleep over. ' + esc(N) + ' will be up early, and your ' + (sd ? ampm(sd.s) : 'morning') + ' deep work needs a clear head. ' + (dayInfo(today()).status === 'ok' ? 'Today is already complete.' : 'Whatever is left, tomorrow morning covers it.') + '</span></p>' +
+      '<button class="btn haldi" type="button" id="bed-go">I’m going to sleep</button><button class="btn quiet" type="button" id="bed-two">Two minutes, then sleep</button></div>';
+    document.body.appendChild(d); d.showModal();
+    document.getElementById('bed-go').onclick = () => { sessionStorage.setItem('dl-bed-ok', today()); d.close(); if (BR && BR.closeApp) BR.closeApp(); else toast('Good night.'); };
+    document.getElementById('bed-two').onclick = () => { sessionStorage.setItem('dl-bed-ok', today()); d.close(); };
+  }
+
   // ---------- Android bridge sync ----------
   let lastRem = '', lastQ = '', lastMo = '';
   function syncNative() {
@@ -1655,7 +1883,10 @@
       S.sessions.forEach((x) => { if (x.date >= wkStart && x.date <= t) weekMin += x.minutes; });
       for (let d = wkStart; d <= t; d = addDays(d, 1)) if (dayInfo(d).status === 'ok') weekComplete++;
       BR.setDayState(JSON.stringify({ date: t, sdDone: i.sdDone, dsaDone: i.dsaDone, status: i.status, rest: S.rest.includes(t), missedYesterday: missedYesterday(),
-        sdNext: sd ? sd.item.title : '', dsaNext: ds ? ds.item.title : '', dayStart: S.settings.dayStart, min: minNow(), name: daughter(), weekMin, weekComplete, streak: streak() }));
+        sdNext: sd ? sd.item.title : '', dsaNext: ds ? ds.item.title : '', dayStart: S.settings.dayStart, min: minNow(), name: daughter(), weekMin, weekComplete, streak: streak(),
+        me: me(), why: (S.profile.why || '').trim(), plan: latestPlan() || '', sdMin: targets(t).sd, dsaMin: targets(t).dsa, skipDays: skipCostDays(),
+        sleepAt: ampm(toMin(life().sleep, 30)), sdAt: (() => { const b = buildPlan().weekday.find((x) => x.kind === 'sd'); return b ? ampm(b.s) : ''; })(),
+        herAgeAtOffer: herAgeAtOffer(), offerDate: S.profile.targetDate || '' }));
       const mo = JSON.stringify(S.settings.motiv); if (mo !== lastMo) { lastMo = mo; if (BR.setMotivation) BR.setMotivation(mo); }
       const r = JSON.stringify(S.reminders); if (r !== lastRem) { lastRem = r; BR.setReminders(r); }
       const qo = {}; Object.keys(D.quotes).forEach((k) => { qo[k] = D.quotes[k].map(personal); });
@@ -1667,10 +1898,15 @@
   checkProgress();
   renderChrome();
   const page = document.body.dataset.page;
+  if (S.planApplied && (S.planVersion || 1) < 2) {
+    applyPlan(true);
+    setTimeout(() => showCoachCard('New: after office I’ll tell you to put the phone down, and a silent check after your bedtime asks if you’re still scrolling. Sleep protects your morning deep work.'), 1500);
+  }
   if (!S.planApplied) {
     applyPlan(true);
     setTimeout(() => showCoachCard('I’ve planned your day around your ' + ampm(toMin(life().officeStart, 870)) + ' to ' + ampm(toMin(life().officeEnd, 1410)) + ' office shift: family first in the morning, deep work before office, nothing heavy after it, sleep by ' + ampm(toMin(life().sleep, 30)) + '. Tap to see it.', () => { location.href = 'plan.html'; }), 1500);
   }
+  setTimeout(bedtimeCheck, 600);
   if (page === 'home') initHome();
   else if (page === 'dsa') initList('dsa');
   else if (page === 'sd') initList('sd');
@@ -1684,7 +1920,7 @@
   setInterval(() => { tick(); updateCountdown(); }, 1000);
   setInterval(checkReminders, 20000);
   checkReminders();
-  window.addEventListener('storage', () => { S = load(); refresh(); tick(); });
+  if (!BR) window.addEventListener('storage', () => { S = load(); refresh(); tick(); });
   window.dlResume = () => { S = loadBest(); refresh(); tick(); checkProgress(); syncNative(); if (window.dlSettingsRedraw) window.dlSettingsRedraw(); if (window.dlVoiceResume) window.dlVoiceResume(); };
   syncNative();
 })();

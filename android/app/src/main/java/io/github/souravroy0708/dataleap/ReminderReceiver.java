@@ -27,32 +27,31 @@ public class ReminderReceiver extends BroadcastReceiver {
 
     static void fire(Context c, JSONObject r) {
         JSONObject t = Store.today(c);
-        String f0 = r.optString("focus", "either");
-        if ("family".equals(f0) || "sleep".equals(f0)) {
-            // Life reminders: always fire. Family time and sleep are part of the plan, not a reward for finishing it.
-            String name = t.optString("name");
-            String title = "family".equals(f0) ? (name.length() > 0 ? "Time with " + name : "Family time") : "Time to sleep";
-            String body = r.optString("msg", "") + ("sleep".equals(f0)
-                ? ("ok".equals(t.optString("status")) ? "\nToday is complete. Rest well." : "\nWhatever is left, tomorrow's morning block will cover it.")
-                : "\n\n\u201C" + Store.quote(c, "family") + "\u201D");
-            Notifier.life(c, title, body, r.optString("id"));
+        String focus = r.optString("focus", "either");
+        String id = r.optString("id");
+        Persona.Ctx x = Store.ctx(c, id);
+        // Life reminders always fire: family time and sleep are part of the plan, not a reward for finishing it.
+        if ("family".equals(focus)) {
+            String[] n = Persona.family(x, x.hour < 10, Store.quote(c, "family"));
+            Notifier.life(c, n[0], n[1], id);
+            return;
+        }
+        if ("sleep".equals(focus)) { String[] n = Persona.sleep(x); Notifier.life(c, n[0], n[1], id); return; }
+        if ("night".equals(focus)) { String[] n = Persona.night(x); Notifier.life(c, n[0], n[1], id); return; }
+        if ("late".equals(focus)) {
+            String clock = new java.text.SimpleDateFormat("h:mm a", java.util.Locale.US).format(new java.util.Date()).toLowerCase(java.util.Locale.US);
+            String[] n = Persona.late(x, clock);
+            Notifier.quiet(c, n[0], n[1]);
             return;
         }
         String status = t.optString("status");
         boolean sdDone = t.optBoolean("sdDone"), dsaDone = t.optBoolean("dsaDone");
         if (t.optBoolean("rest") || "ok".equals(status)) return;
-        String focus = r.optString("focus", "either");
         if (r.optBoolean("skip", true) && (("dsa".equals(focus) && dsaDone) || ("sd".equals(focus) && sdDone))) return;
         String track = "either".equals(focus) ? (sdDone ? "dsa" : "sd") : focus;
-        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-        String cat = t.optBoolean("missedYesterday") ? "comeback" : (hour >= 20 ? "family" : track);
-        String next = "sd".equals(track) ? t.optString("sdNext") : t.optString("dsaNext");
-        String name = t.optString("name");
-        String title = r.optBoolean("last") ? "Last call" : (name.length() > 0 ? "For " + name : "DataLeap");
-        StringBuilder body = new StringBuilder(r.optString("msg", "Time to practise"));
-        if (next.length() > 0) body.append("\nToday: ").append(next);
-        if ("part".equals(status)) body.append("\nOne task left today.");
-        body.append("\n\n\u201C").append(Store.quote(c, cat)).append("\u201D");
-        Notifier.reminder(c, title, body.toString(), track, r.optString("id"));
+        String cat = x.missedYesterday ? "comeback" : (x.hour >= 20 ? "family" : track);
+        String kind = r.optBoolean("last") ? "last" : focus;
+        String[] n = Persona.study(x, kind, r.optString("msg", ""), Store.quote(c, cat));
+        Notifier.reminder(c, n[0], n[1], track, id);
     }
 }
