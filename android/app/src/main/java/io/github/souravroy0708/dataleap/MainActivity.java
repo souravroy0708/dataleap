@@ -28,6 +28,7 @@ public class MainActivity extends Activity {
     private static final int REQ_NOTIF = 43;
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
+    Voice voice;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -45,6 +46,7 @@ public class MainActivity extends Activity {
         s.setAllowContentAccess(true);
         s.setSupportMultipleWindows(false);
         s.setMediaPlaybackRequiresUserGesture(true);
+        voice = new Voice(this);
         web.addJavascriptInterface(new Bridge(this), "AndroidBridge");
 
         web.setWebViewClient(new WebViewClient() {
@@ -114,6 +116,7 @@ public class MainActivity extends Activity {
     private static String startUrl(Intent i) {
         String start = i == null ? null : i.getStringExtra("start");
         if ("sd".equals(start) || "dsa".equals(start)) return BASE + "index.html?start=" + start;
+        if ("retro".equals(start)) return BASE + "progress.html?retro=1";
         return BASE + "index.html";
     }
 
@@ -136,9 +139,27 @@ public class MainActivity extends Activity {
         web.saveState(out);
     }
 
+    /** Runs JavaScript in the page from any thread. */
+    void js(final String code) {
+        runOnUiThread(new Runnable() { public void run() { if (web != null) web.evaluateJavascript(code, null); } });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] results) {
+        super.onRequestPermissionsResult(req, perms, results);
+        if (req == Voice.REQ_MIC) voice.onPermissionResult(results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (voice != null) voice.cancel();
+    }
+
     @Override
     protected void onActivityResult(int req, int result, Intent data) {
         super.onActivityResult(req, result, data);
+        if (req == Voice.REQ_SCREEN) { voice.onScreenResult(result, data); return; }
         if (req == REQ_FILE && fileCallback != null) {
             Uri[] res = null;
             if (result == RESULT_OK && data != null && data.getData() != null) res = new Uri[]{data.getData()};

@@ -26,7 +26,7 @@ public class MotivationReceiver extends BroadcastReceiver {
         if ("ok".equals(t.optString("status")) || t.optBoolean("rest")) return;
         String name = t.optString("name");
         boolean comeback = t.optBoolean("missedYesterday");
-        String[] cats = {"family", "sd", "habit", "dsa"};
+        String[] cats = {"family", "switch", "sd", "dsa"};
         String cat = comeback && idx == 0 ? "comeback" : cats[idx % cats.length];
         String track = t.optBoolean("sdDone") || "dsa".equals(cat) ? "dsa" : "sd";
         String next = "sd".equals(track) ? t.optString("sdNext") : t.optString("dsaNext");

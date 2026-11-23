@@ -27,6 +27,17 @@ public class ReminderReceiver extends BroadcastReceiver {
 
     static void fire(Context c, JSONObject r) {
         JSONObject t = Store.today(c);
+        String f0 = r.optString("focus", "either");
+        if ("family".equals(f0) || "sleep".equals(f0)) {
+            // Life reminders: always fire. Family time and sleep are part of the plan, not a reward for finishing it.
+            String name = t.optString("name");
+            String title = "family".equals(f0) ? (name.length() > 0 ? "Time with " + name : "Family time") : "Time to sleep";
+            String body = r.optString("msg", "") + ("sleep".equals(f0)
+                ? ("ok".equals(t.optString("status")) ? "\nToday is complete. Rest well." : "\nWhatever is left, tomorrow's morning block will cover it.")
+                : "\n\n\u201C" + Store.quote(c, "family") + "\u201D");
+            Notifier.life(c, title, body, r.optString("id"));
+            return;
+        }
         String status = t.optString("status");
         boolean sdDone = t.optBoolean("sdDone"), dsaDone = t.optBoolean("dsaDone");
         if (t.optBoolean("rest") || "ok".equals(status)) return;

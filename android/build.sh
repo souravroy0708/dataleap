@@ -8,8 +8,8 @@ if [ ! -f "$JAR" ]; then mkdir -p tools; curl -fsSL -o "$JAR" https://raw.github
 WEB=${WEB_DIR:-../docs}
 KS=${KEYSTORE:-keystore/dataleap-release.jks}
 KS_PASS=${KS_PASS:-dataleap-2026}
-VERSION_CODE=${VERSION_CODE:-2}
-VERSION_NAME=${VERSION_NAME:-1.1.2}
+VERSION_CODE=${VERSION_CODE:-8}
+VERSION_NAME=${VERSION_NAME:-1.7.8}
 M=app/src/main
 OUT=app/build
 

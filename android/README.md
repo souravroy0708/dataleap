@@ -12,12 +12,15 @@ The DataLeap app: the same screens as the website, plus real Android features.
 | Morning motivation | 3 or 4 notifications a day at varied times between 06:00 and 14:00 (you choose count and window), a quote plus today's item; stops once the day is complete; never within 20 minutes of a reminder |
 | Weekly summary | Sunday 7 pm: hours, complete days and streak, with a line for the week ahead |
 | Celebrations | Streak milestones, level-ups and completed days as notifications |
+| Phone database | Everything is saved in DataLeap's SQLite database on the phone (`dataleap.db`) after every change, with a daily snapshot kept for 30 days and restorable from Reminders → Your data on this phone. Nothing is uploaded |
+| Day plan | My day builds the day around office hours, commute, wake and sleep: family first in the morning, deep work before office, nothing heavy after it. Reminders, family and sleep nudges and the morning-motivation window follow the plan |
+| Career kit | Story bank for the project deep-dive round (strength score, practise-aloud timer), mock interview log, signed commitment, weekly check-in shared through the Android share sheet |
 | Backups | Export saves to `Downloads/DataLeap/`; import uses the system file picker |
 | Privacy | All data stays on the phone. No accounts, no analytics, no third-party libraries |
 
 ## How it is built
 
-- **Native layer (Java, Android framework only):** `MainActivity`, `Bridge` (exposed to the UI as `window.AndroidBridge`), `Scheduler`, `SchedulePlan` (pure scheduling maths, self-tested), `Motivation` + `MotivationReceiver`, `Notifier`, `ReminderReceiver`, `TimerReceiver`, `ActionReceiver`, `BootReceiver`, `Store`.
+- **Native layer (Java, Android framework only):** `MainActivity`, `Bridge` (exposed to the UI as `window.AndroidBridge`), `Scheduler`, `SchedulePlan` (pure scheduling maths, self-tested), `Motivation` + `MotivationReceiver`, `DataStore` (SQLite), `Voice`, `Notifier`, `ReminderReceiver`, `TimerReceiver`, `ActionReceiver`, `BootReceiver`, `Store`.
 - **UI:** the website from `docs/`, bundled in `app/src/main/assets/www/` and served from a private `https://dataleap.app.local/` origin inside a WebView. External links (NeetCode, Aced, YouTube) open in your browser.
 - minSdk 29 (Android 10), targetSdk 34.
 

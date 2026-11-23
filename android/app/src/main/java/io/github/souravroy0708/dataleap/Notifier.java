@@ -99,6 +99,25 @@ final class Notifier {
 
     static void cancelTimer(Context c) { nm(c).cancel(ID_TIMER); }
 
+    /** Family and sleep reminders: no study buttons on purpose. */
+    static void life(Context c, String title, String body, String id) {
+        ensureChannels(c);
+        Notification n = base(c, CH_MOTIV, title, body).setContentIntent(openApp(c, null, 11)).setAutoCancel(true).build();
+        nm(c).notify(ID_REMIND + 1 + Math.abs(id.hashCode() % 5), n);
+    }
+
+    /** Sunday summary: tapping it opens the weekly retrospective. */
+    static void weekly(Context c, String title, String body) {
+        ensureChannels(c);
+        Icon ic = Icon.createWithResource(c, R.drawable.ic_stat_dataleap);
+        Notification n = base(c, CH_MOTIV, title, body)
+            .setContentIntent(openApp(c, "retro", 9))
+            .setAutoCancel(true)
+            .addAction(new Notification.Action.Builder(ic, "Start retrospective", openApp(c, "retro", 10)).build())
+            .build();
+        nm(c).notify(ID_WEEK, n);
+    }
+
     static void simple(Context c, int id, String channel, String title, String body) {
         ensureChannels(c);
         Notification n = base(c, channel, title, body).setContentIntent(openApp(c, null, 5)).setAutoCancel(true).build();

@@ -79,7 +79,16 @@ final class Scheduler {
         return PendingIntent.getBroadcast(c, TIMER_CODE, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
+    static final String ACTION_CAP = "io.github.souravroy0708.dataleap.TIMER_CAP";
+
+    private static PendingIntent capPi(Context c) {
+        Intent i = new Intent(c, TimerReceiver.class).setAction(ACTION_CAP);
+        return PendingIntent.getBroadcast(c, TIMER_CODE + 1, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
     static void timerTarget(Context c, long when) { at(c, when, timerPi(c)); }
 
-    static void cancelTimer(Context c) { am(c).cancel(timerPi(c)); }
+    static void timerCap(Context c, long when) { at(c, when, capPi(c)); }
+
+    static void cancelTimer(Context c) { am(c).cancel(timerPi(c)); am(c).cancel(capPi(c)); }
 }

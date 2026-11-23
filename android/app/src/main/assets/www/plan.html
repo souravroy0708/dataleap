@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My day · DataLeap</title>
+<meta name="description" content="Your day planned around office hours, family and interview prep.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="plan">
+<header id="top"></header>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>Your career mentor</span>
+<h1>Your day, built around office and family</h1>
+<p class="lede">You work <span id="lede-hours">2:30 pm to 11:30 pm</span>, so on office days your daughter is asleep when you get home. <strong>Your mornings are the only time you see her awake, and the time your mind is sharpest.</strong> This plan gives the morning to her first, the next hours to deep work, keeps nothing heavy after office, and protects your sleep. Your reminders follow it.</p>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <form id="lifeform" class="panel">
+    <h2>Your fixed points</h2>
+    <div class="row">
+      <div class="field"><label for="lf-os">Office starts</label><input id="lf-os" name="officeStart" type="time"></div>
+      <div class="field"><label for="lf-oe">Office ends</label><input id="lf-oe" name="officeEnd" type="time"></div>
+      <div class="field"><label for="lf-c">Commute (min, 0 if from home)</label><input id="lf-c" name="commute" type="number" min="0" max="180"></div>
+      <div class="field"><label for="lf-w">Wake up</label><input id="lf-w" name="wake" type="time"></div>
+      <div class="field"><label for="lf-s">Sleep</label><input id="lf-s" name="sleep" type="time"></div>
+    </div>
+    <button class="btn primary" type="submit">Plan my day and update reminders</button>
+    <p class="small muted" id="applied" style="margin:10px 0 0"></p>
+  </form>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="budget" id="budget"></div>
+</div></section>
+<section class="sec"><div class="wrap cols">
+  <div class="card"><div class="sec-head"><h2>Office days</h2><p class="muted">Monday to Friday</p></div><div id="weekday"></div></div>
+  <div class="card"><div class="sec-head"><h2>Weekend</h2></div><div id="weekend"></div></div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><h2>Your priorities, in this order</h2>
+    <ol class="prio-list">
+      <li><b>Sleep and health.</b> Seven hours and a 30-minute walk. Everything else runs on this, and a 9-hour evening shift makes it easy to lose.</li>
+      <li><b>Your daughter and family.</b> Mornings are hers on office days. Weekends are mostly family. This is non-negotiable, and it is also why you are doing all this.</li>
+      <li><b>Your current job.</b> Do it well. It pays for everything, and your next manager will ask about it.</li>
+      <li><b>System design.</b> The round that decides staff offers. It gets your best hour, every day.</li>
+      <li><b>Data engineering DSA.</b> The gate, not the goal. Thirty minutes a day is enough.</li>
+      <li><b>Everything else.</b> Social media, OTT, news: cut until the offer. That is where your 10 hours a week come from.</li>
+    </ol>
+  </div>
+</div></section>
+<section class="sec" id="timeline"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Your career timeline</h2><p class="muted">Counted back from your offer date</p></div><div id="careerbox"><div id="career"></div></div></div>
+</div></section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/library.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/voice.js"></script>
+</body>
+</html>

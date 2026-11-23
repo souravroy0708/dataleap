@@ -24,6 +24,8 @@
   <div class="sec-head"><h2>Write it in your words</h2></div>
   <form id="whyform" class="panel">
     <div class="row">
+      <div class="field"><label for="w-me">Your name</label><input id="w-me" name="me" autocomplete="given-name"></div>
+      <div class="field" style="flex:0 1 130px"><label for="w-years">Years of experience</label><input id="w-years" name="years" type="number" min="1" max="40"></div>
       <div class="field"><label for="w-name">Daughter's name</label><input id="w-name" name="name" autocomplete="off"></div>
       <div class="field"><label for="w-date">Offer by</label><input id="w-date" name="targetDate" type="date"></div>
       <div class="field"><label for="w-hours">Prep hours goal</label><input id="w-hours" name="hoursGoal" type="number" min="10"></div>
@@ -38,12 +40,13 @@
     <div class="field"><label for="w-m">For me (one per line)</label><textarea id="w-m" name="v-me" rows="4"></textarea></div>
     <div class="field"><label for="w-l">A letter to her, to read on offer day</label><textarea id="w-l" name="letter" rows="6" placeholder="Write it now, while the work is still ahead of you."></textarea></div>
     <button class="btn primary" type="submit">Save</button>
-    <p class="small muted" style="margin-top:10px">Her name appears in quotes, balloons and reminders. It is stored only in this browser.</p>
+    <p class="small muted" style="margin-top:10px">Your coach uses both names. They appear in quotes, balloons and reminders, and stay on this device. Tap a 🎤 to speak instead of typing.</p>
   </form>
 </div></section>
 </main>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/library.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="assets/js/voice.js"></script>
 </body>
 </html>

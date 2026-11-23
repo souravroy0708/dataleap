@@ -30,6 +30,8 @@ System design first, DSA second. Every day: 1 system design unit (a concept, a v
 ```
 dataleap/
 ├── docs/                  GitHub Pages site (static prototype, works today)
+│   ├── career.html        Career kit: story bank, mock interviews, commitment, accountability
+│   ├── plan.html          My day: schedule around office hours and family, priorities, career timeline
 │   ├── index.html         Today: why strip, level, the daily run, timer, history grid, revision queue
 │   ├── dsa.html           DSA questions by topic
 │   ├── system-design.html Design cases and concepts by topic

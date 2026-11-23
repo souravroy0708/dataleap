@@ -85,11 +85,13 @@ jobs:
           m=$(find android/app/build/intermediates/merged_manifest -path "*release*" -name AndroidManifest.xml | head -n1)
           echo "Checking: $m"
           [ -f "$m" ] || { echo "::error::Merged release manifest not found"; exit 1; }
-          if grep -q 'READ_SMS"\|RECEIVE_SMS"\|SEND_SMS"\|READ_CALL_LOG"\|READ_CONTACTS"\|ACCESS_FINE_LOCATION"\|ACCESS_COARSE_LOCATION"\|RECORD_AUDIO"\|CAMERA"\|AD_ID"'  "$m"; then
-            echo "::error::A personal-data permission was found. DataLeap must never read messages, calls, contacts, location, mic, camera or ad id."; exit 1
+          if grep -q 'READ_SMS"\|RECEIVE_SMS"\|SEND_SMS"\|READ_CALL_LOG"\|READ_CONTACTS"\|ACCESS_FINE_LOCATION"\|ACCESS_COARSE_LOCATION"\|CAMERA"\|AD_ID"'  "$m"; then
+            echo "::error::A personal-data permission was found. DataLeap must never read messages, calls, contacts, location, camera or ad id."; exit 1
           fi
+          # The mic is only for voice entry, while the listening sheet is open: never in the background.
+          if grep -q 'FOREGROUND_SERVICE_MICROPHONE"\|CAPTURE_AUDIO_OUTPUT"' "$m"; then echo "::error::background microphone permission found"; exit 1; fi
           grep -o 'uses-permission[^>]*android:name="[^"]*"' "$m" | sed 's/.*name="//; s/"//' | sort
-          echo "✓ Only internet (for links), notifications, alarms and boot."
+          echo "✓ Only internet (links), notifications, alarms, boot and the foreground mic for voice entry."
 
       - name: Verify signature
         run: |

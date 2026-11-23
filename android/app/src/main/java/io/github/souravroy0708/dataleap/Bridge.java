@@ -1,6 +1,5 @@
 package io.github.souravroy0708.dataleap;
 
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -16,9 +15,36 @@ import java.nio.charset.StandardCharsets;
 
 /** Exposed to the web UI as window.AndroidBridge. */
 final class Bridge {
-    private final Activity a;
+    private final MainActivity a;
 
-    Bridge(Activity a) { this.a = a; }
+    Bridge(MainActivity a) { this.a = a; }
+
+    private void ui(Runnable r) { a.runOnUiThread(r); }
+
+    /** Android share sheet: WhatsApp, SMS, email. */
+    @JavascriptInterface public void share(final String text) {
+        ui(new Runnable() { public void run() {
+            Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text);
+            try { a.startActivity(Intent.createChooser(i, "Share your check-in")); } catch (Exception ignored) {}
+        } });
+    }
+
+    // ---------- database on the phone ----------
+    @JavascriptInterface public void dbSave(String json) { if (json != null && json.length() > 2) DataStore.get(a).save(json); }
+    @JavascriptInterface public String dbLoad() { return DataStore.get(a).load(); }
+    @JavascriptInterface public String dbInfo() { return DataStore.get(a).info(); }
+    @JavascriptInterface public String dbSnapshot(String day) { return DataStore.get(a).snapshot(day); }
+
+    // ---------- voice ----------
+    @JavascriptInterface public String voiceStatus() { return a.voice.status(); }
+    @JavascriptInterface public void voiceRequestMic() { ui(new Runnable() { public void run() { a.voice.requestMic(); } }); }
+    @JavascriptInterface public void voiceStart(final String prompt) { ui(new Runnable() { public void run() { a.voice.start(prompt); } }); }
+    @JavascriptInterface public void voiceStop() { ui(new Runnable() { public void run() { a.voice.stop(); } }); }
+    @JavascriptInterface public void voiceCancel() { ui(new Runnable() { public void run() { a.voice.cancel(); } }); }
+    @JavascriptInterface public void voiceGoogleScreen(final String prompt) { ui(new Runnable() { public void run() { a.voice.googleScreen(prompt); } }); }
+    @JavascriptInterface public void openAppSettings(String pkg) { Voice.openAppSettings(a, pkg); }
+    @JavascriptInterface public void openSpeechStore() { Voice.openSpeechStore(a); }
+    @JavascriptInterface public void openVoiceSettings() { Voice.openVoiceSettings(a); }
 
     @JavascriptInterface public String version() {
         try { return a.getPackageManager().getPackageInfo(a.getPackageName(), 0).versionName; } catch (Exception e) { return ""; }
@@ -51,11 +77,16 @@ final class Bridge {
         } catch (Exception ignored) {}
     }
 
-    @JavascriptInterface public void timerStarted(String track, String title, long startMs, long goalAt) {
+    @JavascriptInterface public void timerStarted(String track, String title, long startMs, long goalAt, long capAt) {
         Store.put(a, "timerTrack", track);
+        Store.put(a, "timerCapMin", String.valueOf(Math.max(1, (capAt - startMs) / 60000)));
         String label = "dsa".equals(track) ? "DSA" : "System design";
-        Notifier.timer(a, label + " timer running", title == null || title.isEmpty() ? "Tap to open DataLeap" : title, startMs, true);
-        if (goalAt > System.currentTimeMillis()) Scheduler.timerTarget(a, goalAt); else Scheduler.cancelTimer(a);
+        String when = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).format(new java.util.Date(capAt));
+        Notifier.timer(a, label + " timer running", (title == null || title.isEmpty() ? "Tap to open DataLeap" : title) + "\nStops and saves by itself at " + when, startMs, true);
+        Scheduler.cancelTimer(a);
+        long now = System.currentTimeMillis();
+        if (goalAt > now && goalAt < capAt) Scheduler.timerTarget(a, goalAt);
+        if (capAt > now) Scheduler.timerCap(a, capAt);
     }
 
     @JavascriptInterface public void timerPaused(String track, String title) {

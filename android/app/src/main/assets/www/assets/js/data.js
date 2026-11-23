@@ -334,6 +334,16 @@
       'The offer letter is the milestone. A better life for {name} is the point.',
       'Close the laptop on time tonight. {name} needs you more than the timer does.'
     ],
+    switch: [
+      'You are not starting from zero. You are starting from {years} years. Prepare like it.',
+      '{years} years of building real systems is your edge. Product interviews only test it in a different language.',
+      'Service work taught you to deliver. Product interviews ask you to decide. Practise deciding out loud.',
+      'The gap is not knowledge. It is interview practice, and that gap closes one session at a time.',
+      'Nobody in a Google or Uber loop will ask where you worked. They will ask how you think. Show them.',
+      'Every staff engineer at a product company once sat where you are, deciding to prepare.',
+      'Your experience got you this far. Your preparation decides what comes next.',
+      'You have fixed production at 2 am for clients. You can handle a 45-minute design round.'
+    ],
     comeback: [
       'You missed yesterday. Do not let it become two. Ten minutes, now.',
       'Falling off is not failure. Staying off is.',
