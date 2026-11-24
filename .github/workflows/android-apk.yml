@@ -38,7 +38,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.7"
+          gradle-version: "8.13"
 
       - name: Version
         run: |
@@ -72,12 +72,12 @@ jobs:
             echo "DL_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
           fi
 
-      - name: Build release APK
+      - name: Build release APK and Play Store bundle (AAB)
         env:
           DL_KEYSTORE_PASSWORD: ${{ secrets.DL_KEYSTORE_PASSWORD }}
           DL_KEY_ALIAS: ${{ secrets.DL_KEY_ALIAS }}
           DL_KEY_PASSWORD: ${{ secrets.DL_KEY_PASSWORD }}
-        run: gradle -p android assembleRelease --console=plain
+        run: gradle -p android assembleRelease bundleRelease --console=plain
 
       - name: Privacy gate (fails the build if a permission sneaks in)
         run: |
@@ -88,10 +88,13 @@ jobs:
           if grep -q 'READ_SMS"\|RECEIVE_SMS"\|SEND_SMS"\|READ_CALL_LOG"\|READ_CONTACTS"\|ACCESS_FINE_LOCATION"\|ACCESS_COARSE_LOCATION"\|CAMERA"\|AD_ID"'  "$m"; then
             echo "::error::A personal-data permission was found. DataLeap must never read messages, calls, contacts, location, camera or ad id."; exit 1
           fi
+          # Google Play restricts USE_EXACT_ALARM to alarm and calendar apps: DataLeap uses SCHEDULE_EXACT_ALARM, granted by the user.
+          if grep -q 'USE_EXACT_ALARM"' "$m"; then echo "::error::USE_EXACT_ALARM must not be declared (Play policy)"; exit 1; fi
+          grep -q 'targetSdkVersion="36"\|targetSdkVersion="3[7-9]"' "$m" || grep -rq 'targetSdk = 36' android/app/build.gradle.kts || { echo "::error::Google Play requires target API 36"; exit 1; }
           # The mic is only for voice entry, while the listening sheet is open: never in the background.
           if grep -q 'FOREGROUND_SERVICE_MICROPHONE"\|CAPTURE_AUDIO_OUTPUT"' "$m"; then echo "::error::background microphone permission found"; exit 1; fi
           grep -o 'uses-permission[^>]*android:name="[^"]*"' "$m" | sed 's/.*name="//; s/"//' | sort
-          echo "✓ Only internet (links), notifications, alarms, boot and the foreground mic for voice entry."
+          echo "✓ Only internet (links), notifications, alarms, boot and the foreground mic for voice entry. Target API 36."
 
       - name: Verify signature
         run: |
@@ -103,13 +106,16 @@ jobs:
           mkdir -p out
           cp android/app/build/outputs/apk/release/*.apk "out/DataLeap-$V.apk"
           cp "out/DataLeap-$V.apk" out/DataLeap.apk
+          cp android/app/build/outputs/bundle/release/*.aab "out/DataLeap-$V.aab"
           ls -la out
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: DataLeap-${{ env.V }}
-          path: out/*.apk
+          path: |
+            out/*.apk
+            out/*.aab
           retention-days: 30
 
       - name: Publish GitHub Release (signed builds only)
@@ -122,6 +128,7 @@ jobs:
           files: |
             out/DataLeap.apk
             out/DataLeap-${{ env.V }}.apk
+            out/DataLeap-${{ env.V }}.aab
           body: |
             **DataLeap: staff data engineering prep, every day.**
             System design first, DSA second. Reminders, morning motivation and a live timer, all on your phone.
