@@ -44,12 +44,10 @@
     rest: [],
     settings: { levelMode: 'auto', level: 1, levelSince: ymd(new Date(Date.now() - 4 * 3600e3)), manual: { sd: 30, dsa: 25, min: 10 }, weekendX: 1.5, dayStart: 4, restPerWeek: 1, maxSession: 30, motiv: { on: true, count: 4, start: '06:00', end: '14:00', weekly: true } },
     profile: {
-      me: 'Sourav', years: 10, herAge: 2, herAgeAt: 0, life: { officeStart: '14:30', officeEnd: '23:30', commute: 30, wake: '07:30', sleep: '00:30', weekendOff: true }, name: '', why: '', role: 'Staff Data Engineer', companies: 'Google, Uber, Visa', targetDate: '2027-09-30', hoursGoal: 250,
-      vision: {
-        daughter: ['Her education is planned and funded before she starts school, so her choices never depend on fees.', 'I am home for dinner and bedtime, not stuck on late-night support calls.', 'She grows up watching her father set a hard goal and reach it, one day at a time.', 'Holidays where she sees new places, not just pictures of them.'],
-        family: ['A safety cushion: insurance, savings and no month-end worry.', 'A home of our own, chosen together.', 'More evenings and weekends that belong to us.'],
-        me: ['Designing data platforms used by millions, with engineers who raise my bar.', 'A staff role where I set technical direction, not just deliver tickets.', 'Learning is part of the job, not squeezed in at midnight.', 'Proof to myself that a long career in services can lead anywhere.']
-      },
+      me: '', years: '', companyType: 'service', motive: { relation: '', name: '', age: '', ageAt: 0, pronoun: '' },
+      life: { officeStart: '09:30', officeEnd: '18:30', commute: 30, wake: '06:30', sleep: '23:00', workDays: [1, 2, 3, 4, 5] },
+      why: '', role: 'Staff Data Engineer', companies: '', targetDate: '', hoursGoal: 250, weeklyHours: 8,
+      vision: {},
       letter: ''
     },
     reminders: [
@@ -77,7 +75,16 @@
     s.settings.manual = Object.assign(defaults().settings.manual, (raw.settings || {}).manual || {});
     s.settings.motiv = Object.assign(defaults().settings.motiv, (raw.settings || {}).motiv || {});
     s.profile = Object.assign(defaults().profile, raw.profile || {});
-    s.profile.vision = Object.assign(defaults().profile.vision, (raw.profile || {}).vision || {});
+    s.profile.vision = Object.assign({}, (raw.profile || {}).vision || {});
+    s.profile.motive = Object.assign(defaults().profile.motive, (raw.profile || {}).motive || {});
+    // Older versions stored one person (a daughter) as profile.name / herAge: move it into the motive model once.
+    const rp = raw.profile || {};
+    if (!((raw.profile || {}).motive) && (rp.name || rp.herAge !== undefined) && raw.sessions) {
+      s.profile.motive = { relation: 'daughter', name: rp.name || '', age: rp.herAge === undefined ? '' : rp.herAge, ageAt: rp.herAgeAt || 0, pronoun: '' };
+    }
+    if (s.profile.vision.daughter && !s.profile.vision.them) { s.profile.vision.them = s.profile.vision.daughter; delete s.profile.vision.daughter; }
+    if (raw.sessions && raw.sessions.length && s.setupDone === undefined) s.setupDone = true;
+    if (raw.planApplied && s.setupDone === undefined) s.setupDone = true;
     s.hit = s.hit || {}; s.fired = s.fired || {};
     return s;
   }
@@ -122,13 +129,46 @@
   const niceDate = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }); };
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmtH = (m) => (m >= 60 ? (m / 60).toFixed(1) + ' h' : m + ' min');
-  const daughter = () => (S.profile.name || '').trim();
-  function personal(t) {
-    t = t.replace(/\{years\}/g, String(S.profile.years || 10));
-    const n = daughter();
-    if (n) return t.replace(/\{name\}/g, n);
-    return t.replace(/^\{name\}/, 'Your daughter').replace(/\{name\}/g, 'your daughter');
+  // ---------- who you are doing this for: relation, names, pronouns ----------
+  const REL = {
+    daughter: { label: 'My daughter', def: 'your daughter', p: 'she', child: true },
+    son: { label: 'My son', def: 'your son', p: 'he', child: true },
+    children: { label: 'My children', def: 'your children', p: 'they', child: true },
+    parents: { label: 'My parents', def: 'your parents', p: 'they' },
+    mother: { label: 'My mother', def: 'your mother', p: 'she' },
+    father: { label: 'My father', def: 'your father', p: 'he' },
+    wife: { label: 'My wife', def: 'your wife', p: 'she' },
+    husband: { label: 'My husband', def: 'your husband', p: 'he' },
+    partner: { label: 'My partner', def: 'your partner', p: 'they' },
+    family: { label: 'My family', def: 'your family', p: 'they' },
+    myself: { label: 'Myself', def: 'yourself', p: 'self' },
+    other: { label: 'Someone else', def: 'the people you love', p: 'they' }
+  };
+  const motive = () => S.profile.motive || {};
+  const rel = () => REL[motive().relation] || REL.family;
+  const isSelf = () => motive().relation === 'myself';
+  const isChild = () => !!rel().child;
+  const daughter = () => (isSelf() ? '' : (motive().name || '').trim()); // the name you entered, if any
+  const who = () => daughter() || rel().def;
+  const Cap = (x) => (x ? x.charAt(0).toUpperCase() + x.slice(1) : x);
+  function pron() {
+    const m = motive(); let p = m.pronoun || rel().p;
+    if (/ and |,|&/.test(m.name || '') && p !== 'self') p = 'they';
+    return p;
   }
+  const PR = { she: ['she', 'her', 'her', 's'], he: ['he', 'him', 'his', 's'], they: ['they', 'them', 'their', ''], self: ['you', 'you', 'your', ''] };
+  const yrsTxt = () => (S.profile.years ? String(S.profile.years) : '');
+  function personal(t) {
+    const y = yrsTxt();
+    t = y ? t.replace(/\{years\}/g, y) : t.replace(/\{years\} years/g, 'your years').replace(/\{years\}/g, 'many');
+    const [they, them, their, s] = PR[pron()] || PR.they;
+    const n = who();
+    return t.replace(/\{Name\}/g, Cap(n)).replace(/\{name\}/g, n)
+      .replace(/\{They\}/g, Cap(they)).replace(/\{they\}/g, they).replace(/\{them\}/g, them)
+      .replace(/\{Their\}/g, Cap(their)).replace(/\{their\}/g, their).replace(/\{s\}/g, s)
+      .replace(/\{is\}/g, s ? 'is' : 'are').replace(/\{has\}/g, s ? 'has' : 'have').replace(/\{me\}/g, (S.profile.me || '').trim());
+  }
+  const famCat = (c) => (c === 'family' && isSelf() ? 'self' : c);
 
   // ---------- levels and targets ----------
   const L = () => D.levels[Math.min(4, Math.max(1, S.settings.level)) - 1];
@@ -266,7 +306,7 @@
 
   // ---------- coach: speaks to you by name, from your real state ----------
   const me = () => (S.profile.me || '').trim();
-  const her = () => daughter() || 'your daughter';
+  const her = () => who();
   const cap = () => Math.max(10, Math.min(120, +S.settings.maxSession || 30));
   function pickBy(key, list) { let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0; return list[h % list.length]; }
   function greeting() {
@@ -284,11 +324,11 @@
     const k = t + i.status;
     let body;
     if (!S.sessions.length) {
-      body = 'You bring ' + (S.profile.years || 10) + ' years of real systems. What’s missing is only interview practice, and that we build daily. Today I’ll keep it small: ' + tg.sd + ' minutes of system design, ' + tg.dsa + ' of DSA. Start with “' + sdName + '”.';
+      body = 'You bring ' + (yrsTxt() ? yrsTxt() + ' years' : 'years') + ' of real systems. What’s missing is only interview practice, and that we build daily. Today I’ll keep it small: ' + tg.sd + ' minutes of system design, ' + tg.dsa + ' of DSA. Start with “' + sdName + '”.';
     } else if (S.rest.includes(t) && i.status !== 'ok') {
-      body = 'Rest day. Rest is part of the plan, not a break from it. Be fully with ' + her() + ' today; we go again tomorrow.';
+      body = 'Rest day. Rest is part of the plan, not a break from it. ' + (isSelf() ? 'Recharge properly' : 'Be fully with ' + her()) + ' today; we go again tomorrow.';
     } else if (i.status === 'ok') {
-      body = h >= 20 ? pickBy(k, ['Both done. You kept your word to ' + her() + ' today. Close the laptop and go be with her.', 'Day complete. ' + (sk > 1 ? sk + ' days in a row. ' : '') + 'The rest of tonight belongs to your family.'])
+      body = h >= 20 ? pickBy(k, [isSelf() ? 'Both done. You kept your word to yourself today. Close the laptop and rest.' : personal('Both done. You kept your word to {name} today. Close the laptop and go be with {them}.'), 'Day complete. ' + (sk > 1 ? sk + ' days in a row. ' : '') + 'The rest of tonight belongs to your family.'])
         : pickBy(k, ['Both done before evening. That is the kind of consistency interviewers can feel.', 'Day complete' + (sk > 1 ? ', ' + sk + ' in a row' : '') + '. Anything more today is a bonus, not a debt.']);
     } else if (missedYesterday()) {
       body = 'Yesterday slipped. It happens to everyone who is busy and still trying. What matters is today: ' + m + ' minutes on “' + sdName + '” and the habit is alive again.';
@@ -297,11 +337,11 @@
     } else if (i.dsaDone && !i.sdDone) {
       body = 'DSA done. Now the round that decides staff offers: “' + sdName + '”, ' + tg.sd + ' minutes.';
     } else if (h < 12) {
-      body = pickBy(k + 'm', ['You already know how these systems run in production. Today, practise explaining one the way a product interviewer wants: “' + sdName + '”, ' + tg.sd + ' minutes.', 'Before the day takes over, give ' + her() + ' ' + tg.sd + ' minutes. Start with “' + sdName + '”.', 'Mornings are yours before they are anyone else’s. ' + tg.sd + ' minutes on “' + sdName + '” and the hardest part of today is done.']);
+      body = pickBy(k + 'm', ['You already know how these systems run in production. Today, practise explaining one the way a product interviewer wants: “' + sdName + '”, ' + tg.sd + ' minutes.', (isSelf() ? 'Before the day takes over, give your future ' : 'Before the day takes over, give ' + her() + ' ') + tg.sd + ' minutes. Start with “' + sdName + '”.', 'Mornings are yours before they are anyone else’s. ' + tg.sd + ' minutes on “' + sdName + '” and the hardest part of today is done.']);
     } else if (h < 18) {
       body = pickBy(k, ['The day is half gone, the chance isn’t. ' + m + ' minutes now beats an hour you never find. Start with “' + sdName + '”.', 'Find one quiet slot in the next hour. “' + sdName + '”, ' + tg.sd + ' minutes. I’ll time it.']);
     } else {
-      body = pickBy(k, ['I know you’re tired. ' + m + ' honest minutes still count, and they keep the promise you made to ' + her() + '.', 'Long day. Don’t aim for perfect, aim for done: ' + m + ' minutes on “' + sdName + '” and the streak lives.']);
+      body = pickBy(k, ['I know you’re tired. ' + m + ' honest minutes still count, and they keep the promise you made to ' + (isSelf() ? 'yourself' : her()) + '.', 'Long day. Don’t aim for perfect, aim for done: ' + m + ' minutes on “' + sdName + '” and the streak lives.']);
     }
     let extra = '';
     if (i.status !== 'ok') {
@@ -309,6 +349,7 @@
       if (sk >= 2 && nextM && nextM - sk <= 2) extra = ' ' + (nextM - sk) + ' more day' + (nextM - sk > 1 ? 's' : '') + ' to a ' + nextM + '-day streak.';
       else if (sk >= 3) extra = ' ' + sk + ' days in a row so far. Don’t break it tonight.';
     }
+    if (followUpsDue().length && i.status !== 'ok') extra += ' Also today: follow up with ' + followUpsDue().map((a) => a.company).slice(0, 2).join(' and ') + '.';
     const sc = skipCostDays();
     if (sc >= 0 && i.status !== 'ok' && !i.sdDone && !i.dsaDone && h >= 7 && h < 14) extra += ' Skipping today would push your finish about ' + halves(sc) + (sc <= 1 ? ' day' : ' days') + ' later.';
     const fz = focusNow();
@@ -322,7 +363,7 @@
   }
   function coachReaction(sess, before, after) {
     const m = sess.minutes; const sk = streak(); const min = sess.min || minNow();
-    if (after === 'ok' && before !== 'ok') return 'Day complete' + (me() ? ', ' + me() : '') + '. ' + (sk > 1 ? sk + '-day streak. ' : '') + her().charAt(0).toUpperCase() + her().slice(1) + ' will never see this hour, but she will live inside what it builds.';
+    if (after === 'ok' && before !== 'ok') return 'Day complete' + (me() ? ', ' + me() : '') + '. ' + (sk > 1 ? sk + '-day streak. ' : '') + (isSelf() ? 'This is how careers change: one finished day at a time.' : personal('{Name} will never see this hour, but {they} will live inside what it builds.'));
     if (m < min) return m + ' minutes logged. ' + (min - m) + ' more and it counts for today. You’re close.';
     const i = dayInfo(sess.date);
     if (sess.track === 'sd' && !i.dsaDone) return 'System design: ' + m + ' minutes in the bank. One DSA question and today is yours.';
@@ -336,7 +377,7 @@
   function timerLine(t) {
     const el = elapsed(t); const list = TIMER_LINES[t.track] || TIMER_LINES.sd;
     if (el < 60000) return 'Good. You started. That was the hardest part.';
-    return list[Math.floor(el / 180000) % list.length].replace('{her}', her());
+    return list[Math.floor(el / 180000) % list.length].replace('{her}', isSelf() ? 'your future' : her());
   }
   function showCoachCard(text, onTap) {
     const wrap = document.getElementById('popwrap'); if (!wrap) return;
@@ -354,11 +395,11 @@
   function quoteFor(page, shift) {
     let cats = PAGE_QUOTES[page] || ['habit'];
     if (page === 'home' && missedYesterday()) cats = ['comeback'];
-    const list = cats.flatMap((c) => D.quotes[c]);
+    const list = cats.flatMap((c) => D.quotes[famCat(c)]);
     let h = 0; const key = today() + page; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
     return personal(list[(h + (shift || 0)) % list.length]);
   }
-  function randomQuote(cat) { const l = D.quotes[cat]; return personal(l[Math.floor(Math.random() * l.length)]); }
+  function randomQuote(cat) { const l = D.quotes[famCat(cat)]; return personal(l[Math.floor(Math.random() * l.length)]); }
 
   // ---------- chrome ----------
   const NAV = [['index.html', 'Today'], ['plan.html', 'My day'], ['system-design.html', 'System design'], ['dsa.html', 'DSA'], ['library.html', 'Library'], ['career.html', 'Career kit'], ['why.html', 'My why'], ['progress.html', 'Progress'], ['settings.html', 'Reminders']];
@@ -381,6 +422,13 @@
       const qn = document.getElementById('quote-next');
       if (qn) qn.onclick = () => { quoteShift++; qt.textContent = quoteFor(page, quoteShift); };
     }
+    // Bottom tab bar on phones, like a native app
+    const TABS = [['index.html', 'Today', 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'], ['plan.html', 'My day', 'M7 3v3M17 3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z'], ['system-design.html', 'Learn', 'M4 6l8-3 8 3-8 3-8-3zm0 5l8 3 8-3M4 16l8 3 8-3'], ['career.html', 'Career', 'M9 6V4h6v2M4 7h16v12H4zM4 12h16'], ['progress.html', 'Progress', 'M5 20V10M12 20V4M19 20v-7']];
+    if (page !== 'setup') {
+      const tb = document.createElement('nav'); tb.className = 'tabbar'; tb.setAttribute('aria-label', 'Main');
+      tb.innerHTML = TABS.map(([h, l, d]) => '<a href="' + h + '"' + (h === here || (h === 'system-design.html' && ['dsa.html', 'library.html'].includes(here)) ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg><span>' + l + '</span></a>').join('');
+      document.body.appendChild(tb); document.body.classList.add('has-tabbar');
+    }
     const foot = document.createElement('footer'); foot.className = 'site';
     foot.innerHTML = '<div class="wrap">Your progress is stored only ' + (BR ? 'on this phone' : 'in this browser') + '. Back it up from <a href="progress.html">Progress</a>. Practice happens on NeetCode and the linked videos; DataLeap keeps your time, status, notes and streak.</div>';
     document.body.appendChild(foot);
@@ -395,7 +443,7 @@
   const LABELS = ['Tap', 'Pop', 'For her', 'Why', 'Now'];
   const usedQ = new Set();
   function freshQuote(cats) {
-    const all = cats.flatMap((c) => D.quotes[c]);
+    const all = cats.flatMap((c) => D.quotes[famCat(c)]);
     let pool = all.filter((q) => !usedQ.has(q)); if (!pool.length) { usedQ.clear(); pool = all; }
     const q = pool[Math.floor(Math.random() * pool.length)]; usedQ.add(q); return personal(q);
   }
@@ -548,6 +596,7 @@
       '<div class="links">' + it.links.map((l, i) => '<a class="btn' + (i === 0 ? ' primary' : '') + '" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + (/^Offline/.test(l.p) ? 'Open ' + esc(l.p.toLowerCase()) : 'Open on ' + esc(l.p)) + '</a>').join('') + (it.premium ? '<span class="chip">Premium</span>' : '') + videoLink + '</div>' +
       ((it.text || it.followUps || it.angle) ? '<div class="prompt">' + (it.text ? '<p style="margin:0">' + esc(it.text) + '</p>' : '') + (it.angle ? '<p class="muted small" style="margin:.3rem 0 0">Data engineering angle: ' + esc(it.angle) + '</p>' : '') +
         (it.followUps ? '<p style="margin:.6rem 0 0"><b>Interviewer follow-ups</b></p><ul>' + it.followUps.map((f) => '<li>' + esc(f) + '</li>').join('') + '</ul>' : '') + '</div>' : '') +
+      (it.type === 'case' ? '<p><button class="btn haldi" type="button" data-mocksim="' + id + '">Practise as a 45-minute mock interview</button></p>' : '') +
       (expFor(id) ? '<div class="mine-box"><b>You built this.</b> ' + esc(expFor(id).from) + '. Start your answer from your real system, with its real numbers, then adapt it to the prompt.' + (expFor(id).story ? ' <a href="career.html">Your story for it</a>' : '') + '</div>' : '') +
       (partsDone ? '<p class="small"><b>Parts practised:</b> ' + PARTS.map((p) => '<span class="chip ' + (partsDone.has(p) ? 'st-done' : '') + '">' + p + '</span>').join(' ') + '</p>' : '') +
       '<div class="stats"><span>Time spent <b>' + fmtH(minutesFor(id)) + '</b></span><span>Sessions <b>' + S.sessions.filter((x) => x.itemId === id).length + '</b></span><span>Next review <b>' + (s.next || 'none') + '</b></span>' + (scores.length ? '<span>Last score <b>' + scores[scores.length - 1].total + '/14</b></span><span>Best <b>' + Math.max(...scores.map((x) => x.total)) + '/14</b></span>' : '') + '</div>' +
@@ -673,13 +722,13 @@
   function drawGrid(weeks) { const g = document.getElementById('grid'); g.innerHTML = '<div class="gridscroll">' + runGrid(weeks) + '</div>' + legend; const gw = g.querySelector('.gridscroll'); gw.scrollLeft = gw.scrollWidth; }
 
   function whyStrip() {
-    const p = S.profile; const n = daughter();
+    const p = S.profile; const n = isSelf() ? 'myself' : (motive().relation || daughter() ? who() : '');
     const left = p.targetDate ? daysBetween(today(), p.targetDate) : null;
     const hrs = Math.round(totalMinutes() / 6) / 10; const sk = streak();
     const c = coachMessage();
     return '<div class="coach"><span class="coach-av" aria-hidden="true">' + MARK + '</span><div class="coach-text"><p class="coach-label">Your coach</p><p class="coach-head">' + esc(c.head) + '</p><p class="coach-body">' + esc(c.body) + '</p></div></div>' +
       dayStrip() +
-      '<p class="why-line">' + (p.why ? (n ? '<span>For ' + esc(n) + '</span> ' : '<span>Your why</span> ') + esc(p.why) : '<a href="why.html">Write your why</a>: her name, and what this job changes for her.') + '</p>' +
+      '<p class="why-line">' + (p.why ? (n ? '<span>For ' + esc(n) + '</span> ' : '<span>Your why</span> ') + esc(p.why) : '<a href="why.html">Write your why</a>: who you are doing this for, and what this job changes for them.') + '</p>' +
       '<div class="stats-row"><div class="stat hl"><b>' + sk + '</b><span>day streak</span></div>' +
       (left !== null && left >= 0 ? '<div class="stat"><b>' + left + '</b><span>days to the offer</span></div>' : '<div class="stat"><b>—</b><span>set an offer date</span></div>') +
       '<div class="stat"><b>' + hrs + '</b><span>of ' + p.hoursGoal + ' prep hours</span></div><div class="stat"><b>L' + L().n + '</b><span>' + (S.settings.levelMode === 'manual' ? 'custom targets' : esc(L().name.toLowerCase())) + '</span></div></div>';
@@ -704,7 +753,14 @@
     else if (late) banner = '<div class="banner"><b>Late, but not too late.</b> ' + minNow() + ' minutes on whatever is left still completes today.</div>';
     const rdue = retroDue();
     if (rdue) banner = '<div class="banner"><b>Your weekly retrospective is ready.</b> Three questions about the week of ' + shortDate(rdue) + ', three minutes. <button class="btn small primary" data-retro="' + rdue + '" type="button">Start</button></div>' + banner;
+    const fu = followUpsDue();
+    if (fu.length) banner = '<div class="banner"><b>Follow up today:</b> ' + fu.map((a) => esc(a.company)).join(', ') + '. <a href="career.html#applications">Open applications</a></div>' + banner;
+    if (BR && BR.exactAlarms && !BR.exactAlarms() && !sessionStorage.getItem('dl-exact-dismiss')) banner += '<div class="banner"><b>Reminders may arrive a few minutes late.</b> Allow “Alarms and reminders” so they fire on time. <button class="btn small primary" type="button" id="ex-allow">Allow</button> <button class="btn small quiet" type="button" id="ex-later">Later</button></div>';
     document.getElementById('banner').innerHTML = banner;
+    const exa = document.getElementById('ex-allow'); if (exa) exa.onclick = () => BR.openExactAlarmSettings();
+    const exl = document.getElementById('ex-later'); if (exl) exl.onclick = () => { sessionStorage.setItem('dl-exact-dismiss', '1'); renderHome(); };
+    const qk = document.getElementById('quick');
+    if (qk) { const nd = drillCards().length; qk.innerHTML = '<button class="qa" type="button" data-drill><b>2-minute drill</b><span>' + (nd ? nd + ' card' + (nd > 1 ? 's' : '') + ' due' : 'Recall your notes') + '</span></button><button class="qa" type="button" data-mocksim=""><b>Mock interview</b><span>45 min, system design</span></button><button class="qa" type="button" data-log="sd"><b>Log time</b><span>Studied off the timer?</span></button><a class="qa" href="career.html#applications"><b>Applications</b><span>' + (S.apps || []).filter((a) => !['target', 'closed'].includes(a.stage)).length + ' active</span></a>'; }
     const endTxt = { ok: ['Complete', 'Both done. Close the laptop and go be with family.'], part: ['One to go', 'Even ' + minNow() + ' minutes on the other task completes today.'], miss: ['Not started', 'Start with system design. ' + minNow() + ' minutes is enough to count.'], rest: ['Rest day', 'Streak kept. Back tomorrow.'] }[info.status];
     document.getElementById('run').innerHTML = taskNode('sd', info, tg.sd) + '<div class="edge" aria-hidden="true"></div>' + taskNode('dsa', info, tg.dsa) + '<div class="edge" aria-hidden="true"></div>' +
       '<div class="dayend' + (info.status === 'ok' ? ' done' : '') + '"><span class="muted small">Day result</span><strong>' + endTxt[0] + '</strong><span class="small muted">' + endTxt[1] + '</span>' +
@@ -818,7 +874,7 @@
       '<div class="kpi"><div class="v">' + (avg ? avg + '/14' : 'none') + '</div><div class="l">Design rubric, last 5 scores</div></div>' +
       '<div class="kpi"><div class="v">L' + L().n + '</div><div class="l">' + (S.settings.levelMode === 'manual' ? 'Custom targets' : L().name) + '</div></div>';
     const tot = ws + wd || 1;
-    document.getElementById('split').innerHTML = '<p class="coach-week">' + (ws + wd ? 'This week you gave ' + fmtH(ws + wd) + ' to ' + her() + '’s future: ' + fmtH(ws) + ' of system design, ' + fmtH(wd) + ' of DSA.' + (ws < wd ? ' Shift a little more to system design; it decides staff offers.' : '') : 'Nothing logged this week yet. Ten minutes today changes that.') + '</p><div class="splitbar" role="img" aria-label="System design ' + Math.round((ws / tot) * 100) + ' percent"><span class="a" style="width:' + (ws / tot) * 100 + '%"></span><span class="b" style="width:' + (wd / tot) * 100 + '%"></span></div>';
+    document.getElementById('split').innerHTML = '<p class="coach-week">' + (ws + wd ? 'This week you gave ' + fmtH(ws + wd) + ' to ' + (isSelf() ? 'your future' : her() + '’s future') + ': ' + fmtH(ws) + ' of system design, ' + fmtH(wd) + ' of DSA.' + (ws < wd ? ' Shift a little more to system design; it decides staff offers.' : '') : 'Nothing logged this week yet. Ten minutes today changes that.') + '</p><div class="splitbar" role="img" aria-label="System design ' + Math.round((ws / tot) * 100) + ' percent"><span class="a" style="width:' + (ws / tot) * 100 + '%"></span><span class="b" style="width:' + (wd / tot) * 100 + '%"></span></div>';
     drawGrid(16);
     renderGrowth();
     document.getElementById('topics').innerHTML = '<table class="dtable"><thead><tr><th>Topic</th><th class="num">Items</th><th class="num">Done</th><th class="num">Due</th><th class="num">Time</th></tr></thead><tbody>' +
@@ -841,6 +897,20 @@
   }
 
   // ---------- My why ----------
+  function visionFor(key) {
+    const v = S.profile.vision || {};
+    if (v[key] && v[key].length) return v[key];
+    const r = motive().relation;
+    if (key === 'them') {
+      if (isSelf()) return [];
+      if (isChild()) return ['{Their} education is planned and funded early, so {their} choices never depend on fees.', 'I am home for dinner and bedtime, not stuck on late-night calls.', '{They} grow{s} up watching me set a hard goal and reach it, one day at a time.', 'Holidays where {they} see{s} new places, not just pictures of them.'];
+      if (['parents', 'mother', 'father'].includes(r)) return ['{Their} health care and comfort are never a question of money.', 'I take {them} on the trip {they} always talked about.', '{They} see{s} the years {they} put into me pay off.', 'More time with {them}, without the month-end worry.'];
+      if (['wife', 'husband', 'partner'].includes(r)) return ['Freedom for {them} to pursue what {they} want{s}, with no money worry behind it.', 'More evenings and weekends together.', 'A home we choose together.', '{They} see{s} me keep the promise I made.'];
+      return ['{They} never ha{s} to worry about me.', 'More time together, less month-end worry.', 'I show up for {them} the way {they} showed up for me.'];
+    }
+    if (key === 'family') return ['A safety cushion: insurance, savings and no month-end worry.', 'More evenings and weekends that belong to us.', 'A home we choose, not one we settle for.'];
+    return ['Designing data platforms used by millions, with engineers who raise my bar.', 'A staff role where I set technical direction, not just deliver tickets.', 'Learning is part of the job, not squeezed in at midnight.', 'Proof to myself that a career in services can lead anywhere.'];
+  }
   function phoneCard() {
     const n = her(); const N = n.charAt(0).toUpperCase() + n.slice(1); const pb = buildPlan(); const l = life();
     const weekly = pb.budget.weekday * 5 + pb.budget.sat + pb.budget.sun; const pct = Math.round(420 / weekly * 100);
@@ -849,35 +919,38 @@
       '<li><b>One hour of reels a day is 7 hours a week.</b> That is ' + pct + '% of your whole weekly prep plan (' + fmtH(weekly) + '), gone into someone else’s feed.</li>',
       sc >= 0 ? '<li><b>Skipping one day</b> pushes your finish about ' + halves(sc) + (sc <= 1 ? ' day' : ' days') + ' later, at your current pace.</li>' : '',
       '<li><b>Sleep by ' + ampm(toMin(l.sleep, 30)) + '.</b> Your ' + (sd ? ampm(sd.s) : 'morning') + ' deep work is your sharpest hour only if the night before was sleep, not scrolling.</li>',
-      age ? '<li><b>' + esc(N) + ' will be about ' + age + '</b> when you start the new job. These are the months that decide which life she grows up in.</li>' : '',
+      age ? '<li><b>' + esc(N) + ' will be about ' + age + '</b> when you start the new job. ' + personal('These are the months that decide which life {they} grow{s} up in.') + '</li>' : '',
       S.profile.targetDate ? '<li><b>' + Math.max(0, daysBetween(today(), S.profile.targetDate)) + ' days</b> to your offer date. Each one is either prep or a day you will have to make up.</li>' : ''
     ].filter(Boolean).join('');
     return '<section class="phonecard"><h2>Before you pick up your phone</h2><ul>' + lines + '</ul><p class="phone-rule">The rule: <b>timer first, feed never</b> until the day is complete. Charge the phone outside the bedroom.</p></section>';
   }
   function renderWhyView() {
-    const p = S.profile; const n = daughter() || 'my daughter'; const v = p.vision;
+    const p = S.profile; const n = isSelf() ? 'myself' : who();
     const left = p.targetDate ? daysBetween(today(), p.targetDate) : null;
     const list = (arr) => '<ul>' + arr.filter(Boolean).map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>';
     document.getElementById('whyview').innerHTML =
       '<h1>' + (p.why ? esc(p.why) : 'Why I am doing this') + '</h1>' +
       '<p class="lede">' + esc(p.role) + ' at ' + esc(p.companies) + (p.targetDate ? '. Offer by ' + esc(niceDate(p.targetDate)) + (left !== null && left >= 0 ? ', ' + left + ' days from now' : '') : '') + '.</p>' +
-      '<div class="vision"><section><h2>For ' + esc(n) + '</h2>' + list(v.daughter) + '</section><section><h2>For our family</h2>' + list(v.family) + '</section><section><h2>For me</h2>' + list(v.me) + '</section></div>' +
-      (p.letter ? '<section class="letter"><h2>A letter to ' + esc(n) + ', to read on offer day</h2><p>' + esc(p.letter).replace(/\n/g, '<br>') + '</p></section>' : '') +
+      '<div class="vision">' + (isSelf() ? '' : '<section><h2>For ' + esc(n) + '</h2>' + list(visionFor('them').map(personal)) + '</section>') + '<section><h2>For our family</h2>' + list(visionFor('family').map(personal)) + '</section><section><h2>For me</h2>' + list(visionFor('me').map(personal)) + '</section></div>' +
+      (p.letter ? '<section class="letter"><h2>A letter to ' + esc(isSelf() ? 'yourself' : n) + ', to read on offer day</h2><p>' + esc(p.letter).replace(/\n/g, '<br>') + '</p></section>' : '') +
       phoneCard() +
       '<p class="note">Read this when you feel like skipping. Then start the timer for ' + minNow() + ' minutes. That is all today needs.</p>';
   }
   function initWhy() {
     const f = document.getElementById('whyform'); const p = S.profile;
-    ['me', 'years', 'name', 'why', 'role', 'companies', 'targetDate', 'hoursGoal', 'letter'].forEach((k) => { f.elements[k].value = p[k] || ''; });
-    f.elements.herAge.value = p.herAge === undefined ? '' : p.herAge;
-    ['daughter', 'family', 'me'].forEach((k) => { f.elements['v-' + k].value = (p.vision[k] || []).join('\n'); });
+    ['me', 'years', 'why', 'role', 'companies', 'targetDate', 'hoursGoal', 'letter'].forEach((k) => { f.elements[k].value = p[k] || ''; });
+    ['them', 'family', 'me'].forEach((k) => { f.elements['v-' + k].value = visionFor(k).map(personal).join('\n'); });
+    const m = motive(); f.elements.relation.value = m.relation || ''; f.elements.name.value = m.name || ''; f.elements.pronoun.value = m.pronoun || '';
+    f.elements.herAge.value = m.age === undefined ? '' : m.age;
     f.onsubmit = (e) => {
       e.preventDefault();
-      ['me', 'name', 'why', 'role', 'companies', 'targetDate', 'letter'].forEach((k) => { p[k] = f.elements[k].value.trim(); });
+      ['me', 'why', 'role', 'companies', 'targetDate', 'letter'].forEach((k) => { p[k] = f.elements[k].value.trim(); });
       p.hoursGoal = Math.max(10, parseInt(f.elements.hoursGoal.value, 10) || 250);
-      p.years = Math.max(1, Math.min(40, parseInt(f.elements.years.value, 10) || 10));
-      const ha = f.elements.herAge.value.trim(); if (String(ha) !== String(p.herAge)) { p.herAge = ha === '' ? '' : Math.max(0, Math.min(25, +ha)); p.herAgeAt = Date.now(); }
-      ['daughter', 'family', 'me'].forEach((k) => { p.vision[k] = f.elements['v-' + k].value.split('\n').map((x) => x.trim()).filter(Boolean); });
+      p.years = f.elements.years.value.trim() === '' ? '' : Math.max(1, Math.min(45, parseInt(f.elements.years.value, 10) || 1));
+
+      p.motive = Object.assign({}, motive(), { relation: f.elements.relation.value, name: f.elements.name.value.trim(), pronoun: f.elements.pronoun.value });
+      const ag = f.elements.herAge.value.trim(); if (String(ag) !== String(motive().age)) { p.motive.age = ag === '' ? '' : Math.max(0, Math.min(25, +ag)); p.motive.ageAt = Date.now(); }
+      ['them', 'family', 'me'].forEach((k) => { const lines = f.elements['v-' + k].value.split('\n').map((x) => x.trim()).filter(Boolean); if (lines.join('|') !== visionFor(k).map(personal).join('|')) p.vision[k] = lines; });
       save(); renderWhyView(); document.getElementById('quote-text').textContent = quoteFor('why', quoteShift); window.scrollTo({ top: 0, behavior: 'smooth' }); toast('Saved. This is why.');
     };
     renderWhyView();
@@ -1200,7 +1273,7 @@
     { id: 'h10', g: 'Hours', icon: '⏱️', t: '10 hours', d: '10 hours of focused prep', ok: (c) => c.hours >= 10, msg: 'Ten hours. The habit is real now; protect it.' },
     { id: 'h25', g: 'Hours', icon: '⏱️', t: '25 hours', d: '25 hours of focused prep', ok: (c) => c.hours >= 25, msg: '25 hours: a full extra work week of preparation, done around a full-time job and a family.' },
     { id: 'h50', g: 'Hours', icon: '🔥', t: '50 hours', d: '50 hours of focused prep', ok: (c) => c.hours >= 50, msg: 'Fifty hours. You now prepare like the people who sit across the interview table.' },
-    { id: 'h100', g: 'Hours', icon: '🔥', t: '100 hours', d: '100 hours of focused prep', ok: (c) => c.hours >= 100, msg: 'A hundred hours. This is what serious looks like. {her} has a father who doesn’t quit.' },
+    { id: 'h100', g: 'Hours', icon: '🔥', t: '100 hours', d: '100 hours of focused prep', ok: (c) => c.hours >= 100, msg: 'A hundred hours. This is what serious looks like, and you did not quit.' },
     { id: 'h150', g: 'Hours', icon: '🔥', t: '150 hours', d: '150 hours of focused prep', ok: (c) => c.hours >= 150, msg: '150 hours. The gap between service and product is closing, session by session.' },
     { id: 'h200', g: 'Hours', icon: '🏔️', t: '200 hours', d: '200 hours of focused prep', ok: (c) => c.hours >= 200, msg: '200 hours. Few engineers in India prepare this deliberately for anything.' },
     { id: 'hgoal', g: 'Hours', icon: '🏁', t: 'Plan complete', d: 'Reached your prep-hours goal', ok: (c) => c.hours >= c.goal, msg: 'You did the whole plan. Now walk into those interviews like the staff engineer you trained to be.' },
@@ -1224,6 +1297,8 @@
     { id: 'mock1', g: 'Career', icon: '🎙️', t: 'First mock', d: 'Did your first mock interview', ok: (c) => c.mocks >= 1, msg: 'The first mock is the hardest one to book. You did it.' },
     { id: 'mock5', g: 'Career', icon: '🎙️', t: 'Interview-hardened', d: '5 mock interviews', ok: (c) => c.mocks >= 5, msg: 'Five mocks. The real loop will feel familiar now.' },
     { id: 'mockhire', g: 'Career', icon: '✅', t: 'Hire signal', d: 'A “strong hire” in a mock', ok: (c) => c.strongHire, msg: 'Strong hire. Remember exactly how you did that; it is your interview style now.' },
+    { id: 'loop1', g: 'Career', icon: '🚪', t: 'In the loop', d: 'Reached interviews at a company', ok: (c) => c.loops >= 1, msg: 'You are in a product-company interview loop. A year ago this was a plan; now it is a calendar invite.' },
+    { id: 'offer1', g: 'Career', icon: '🎉', t: 'The offer', d: 'Received an offer', ok: (c) => c.offers >= 1, msg: 'An offer. Every early morning and every skipped scroll led here. Now choose well.' },
     { id: 'lvl2', g: 'Levels', icon: '🪜', t: 'Level 2', d: 'Unlocked “build the habit”', ok: (c) => c.level >= 2, quiet: true },
     { id: 'lvl3', g: 'Levels', icon: '🪜', t: 'Level 3', d: 'Unlocked “go deeper”', ok: (c) => c.level >= 3, quiet: true },
     { id: 'lvl4', g: 'Levels', icon: '🪜', t: 'Level 4', d: 'Unlocked “interview pace”', ok: (c) => c.level >= 4, quiet: true },
@@ -1243,7 +1318,7 @@
       sdDone: D.items.filter((i) => i.track === 'sd' && ['done', 'mastered'].includes(st(i.id).status)).length,
       dsaOwn: D.items.filter((i) => i.track === 'dsa' && ['solved', 'mastered'].includes(st(i.id).status)).length,
       scored: scores.length, best: scores.reduce((a, x) => Math.max(a, x.total), 0), staffCases, level: S.settings.level, retros: (S.retros || []).length,
-      stories: (S.stories || []).filter((x) => storyStrength(x) >= 80).length, mocks: (S.mocks || []).length, strongHire: (S.mocks || []).some((m) => m.score === 4)
+      stories: (S.stories || []).filter((x) => storyStrength(x) >= 80).length, loops: (S.apps || []).filter((a) => ['loop', 'offer'].includes(a.stage)).length, offers: (S.apps || []).filter((a) => a.stage === 'offer').length, mocks: (S.mocks || []).length, strongHire: (S.mocks || []).some((m) => m.score === 4)
     };
   }
   function nextMilestone(c) {
@@ -1257,7 +1332,7 @@
     const o = opts[0]; if (!o) return null;
     return o.txt + ': ' + (o.unit === 'h' ? (Math.round(o.left * 10) / 10) + ' h to go' : o.left + (o.left > 1 ? ' days' : ' day') + ' to go');
   }
-  function persona(t) { return personal(t.replace('{years}', String(S.profile.years || 10)).replace('{her}', her().charAt(0).toUpperCase() + her().slice(1))); }
+  function persona(t) { return personal(t.replace(/\{her\}/g, '{Name}')); }
   let awardQueue = [];
   function checkAchievements() {
     S.ach = S.ach || {};
@@ -1343,9 +1418,10 @@
   }
   const halves = (v) => { const r = Math.max(0.5, Math.round(v * 2) / 2); const w = Math.floor(r); return (r === w ? String(w) : (w ? w : '') + '½'); };
   function herAgeAtOffer() {
-    const p = S.profile; if (!p.targetDate || p.herAge === '' || p.herAge === null || p.herAge === undefined || isNaN(+p.herAge)) return '';
-    const asOf = p.herAgeAt || Date.now(); const [y, m, d] = p.targetDate.split('-').map(Number);
-    return halves(+p.herAge + (new Date(y, m - 1, d) - asOf) / (365.25 * 864e5));
+    const p = S.profile; const mv = motive();
+    if (!isChild() || !p.targetDate || mv.age === '' || mv.age === null || mv.age === undefined || isNaN(+mv.age)) return '';
+    const asOf = mv.ageAt || Date.now(); const [y, m, d] = p.targetDate.split('-').map(Number);
+    return halves(+mv.age + (new Date(y, m - 1, d) - asOf) / (365.25 * 864e5));
   }
 
   // ---------- career mentor: the day plan ----------
@@ -1353,77 +1429,119 @@
   const toHM = (m) => { m = ((m % 1440) + 1440) % 1440; return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
   const ampm = (m) => { m = ((m % 1440) + 1440) % 1440; const h = Math.floor(m / 60), mm = m % 60; return ((h + 11) % 12 + 1) + (mm ? ':' + pad(mm) : '') + (h < 12 ? ' am' : ' pm'); };
   function life() {
-    return Object.assign({ officeStart: '14:30', officeEnd: '23:30', commute: 30, wake: '07:30', sleep: '00:30', weekendOff: true }, S.profile.life || {});
+    const l = Object.assign({ officeStart: '09:30', officeEnd: '18:30', commute: 30, wake: '06:30', sleep: '23:00', workDays: [1, 2, 3, 4, 5] }, S.profile.life || {});
+    if (!Array.isArray(l.workDays) || !l.workDays.length) l.workDays = [1, 2, 3, 4, 5];
+    return l;
   }
-  /** Weekday and weekend blocks, built from office hours, commute, wake and sleep times. Minutes from midnight. */
+  /**
+   * The day plan, for any shift. Minutes from midnight (values past 1440 run into the next day).
+   * Late shifts (3+ free hours before office): family first, deep work, DSA, then family again before office.
+   * Day shifts: deep work early, family in the evening, then DSA and revision before sleep.
+   */
   function buildPlan() {
-    const l = life(); const n = her();
-    const W = toMin(l.wake, 450), O = toMin(l.officeStart, 870), E = toMin(l.officeEnd, 1410);
-    let SL = toMin(l.sleep, 30); if (SL < W) SL += 1440;
-    const leave = O - (+l.commute || 0), ready = leave - 30;
-    const lunch = ready - 75;
-    const b = [];
-    const add = (s, e, kind, title, why) => { if (e > s) b.push({ s, e, kind, title, why }); };
-    let t = W;
-    add(t, t + 75, 'family', 'Family morning', n.charAt(0).toUpperCase() + n.slice(1) + ' is awake and fresh, and so are you. On office days this is your time with her. Phone stays away.'); t += 75;
-    const sdLen = Math.max(30, Math.min(75, lunch - t - 150));
-    add(t, t + sdLen, 'sd', 'Deep work: system design', 'Your sharpest hour goes to the round that decides staff offers. Today’s item is ready on the Today screen.'); t += sdLen;
-    add(t, t + 10, 'break', 'Break', 'Water, stretch, check on the family.'); t += 10;
-    add(t, t + 30, 'dsa', 'DSA: one question', 'One data-engineering question, 25 minutes, out loud.'); t += 30;
-    add(t, t + 30, 'health', 'Walk or exercise', 'A 9-hour shift needs a body that can carry it. Take her along in the stroller if you can.'); t += 30;
-    add(t, lunch, 'family', 'Time with ' + n, 'Play, stories, the park. This is the time she will remember.');
-    add(lunch, ready - 15, 'family', 'Family lunch', 'Eat together. Then she naps and you get ready.');
-    add(ready - 15, ready, 'rev', 'Revision: pinned notes', '15 minutes reading your key notes. Easy, and it compounds.');
-    add(ready, leave, 'life', 'Get ready', '');
-    if (leave < O) add(leave, O, 'life', 'Commute', 'Audio only: a system design video or podcast if you like. Never on a bike.');
-    add(O, E, 'office', 'Office', 'Do your job well. It pays for everything else, and your next manager will ask about it.');
-    add(E, E + 20, 'wind', 'Wind down', 'Only if today is incomplete: the 10-minute version. Then log, close the laptop.');
-    add(E + 20, SL, 'life', 'Dinner, unwind', 'No studying after a 9-hour shift. Tired study builds nothing.');
+    const l = life(); const self = isSelf();
+    const W = toMin(l.wake, 390); const O = toMin(l.officeStart, 570); let E = toMin(l.officeEnd, 1110); if (E <= O) E += 1440;
+    let SL = toMin(l.sleep, 1380); if (SL <= W) SL += 1440;
+    const C = Math.max(0, +l.commute || 0); const leave = O - C, ready = leave - 30, back = E + C;
+    const famT = (title, selfTitle) => (self ? selfTitle : personal(title));
+    const b = []; const add = (s, e, kind, title, why) => { if (e - s >= 5) b.push({ s, e, kind, title, why }); };
+    let mode;
+    if (ready - W >= 210) {
+      mode = 'late';
+      const lunch = ready - 75; let t = W;
+      add(t, t + 75, 'family', famT('Morning with {name}', 'Slow start'), self ? 'No phone for the first 30 minutes: water, a walk, a plan for the day.' : personal('{Name} first. On office days this is your best time together. Phone stays away.')); t += 75;
+      const sdLen = Math.max(30, Math.min(75, lunch - t - 150));
+      add(t, t + sdLen, 'sd', 'Deep work: system design', 'Your sharpest hour goes to the round that decides staff offers. Today’s item is ready on the Today screen.'); t += sdLen;
+      add(t, t + 10, 'break', 'Break', 'Water, stretch.'); t += 10;
+      add(t, t + 30, 'dsa', 'DSA: one question', 'One data-engineering question, 25 minutes, out loud.'); t += 30;
+      add(t, t + 30, 'health', 'Walk or exercise', 'A long shift needs a body that can carry it.'); t += 30;
+      add(t, lunch, 'family', famT('Time with {name}', 'Personal time'), self ? 'Read, call a friend, rest. Recovery makes the deep work stick.' : personal('Be fully present. This is the time {they} will remember.'));
+      add(lunch, ready - 15, 'family', self ? 'Lunch' : 'Lunch together', 'Eat properly, then get ready.');
+      add(ready - 15, ready, 'rev', 'Revision: pinned notes', '15 minutes reading your key notes. Easy, and it compounds.');
+      add(ready, leave, 'life', 'Get ready', '');
+      add(leave, O, 'life', 'Commute', 'Audio only: a system design video or podcast if you like.');
+      add(O, E, 'office', 'Office', 'Do your job well. It pays for everything else, and your next manager will ask about it.');
+      add(back, back + 20, 'wind', 'Wind down', 'Only if today is incomplete: the 10-minute version. Then log and close the laptop.');
+      add(back + 20, SL, 'life', 'Dinner, unwind', 'No studying after a full shift. Tired study builds nothing.');
+    } else {
+      mode = 'day';
+      let t = W;
+      add(t, t + 15, 'life', 'Wake up, no phone', 'Water and daylight before any screen.'); t += 15;
+      const sdLen = Math.max(0, Math.min(60, ready - t - 20));
+      if (sdLen >= 20) { add(t, t + sdLen, 'sd', 'Deep work: system design', 'Before the day takes over: your sharpest, quietest time goes to system design.'); t += sdLen; }
+      add(t, ready, 'family', famT('Breakfast with {name}', 'Breakfast'), self ? 'Eat properly. The day is long.' : 'Phones away at the table.');
+      add(ready, leave, 'life', 'Get ready', '');
+      add(leave, O, 'life', 'Commute', 'Audio only: revise your pinned notes or a system design podcast.');
+      add(O, E, 'office', 'Office', 'Do your job well. It pays for everything else, and your next manager will ask about it.');
+      if (back > E) add(E, back, 'life', 'Commute home', 'No study on the road. Call home, decompress.');
+      const eveEnd = SL - 40; let t2 = back;
+      const needStudy = (sdLen >= 20 ? 0 : 45) + 30 + 15;
+      const famLen = Math.max(45, Math.min(120, eveEnd - t2 - needStudy - 40));
+      add(t2, t2 + famLen, 'family', famT('Time with {name}', 'Personal time'), self ? 'Walk, cook, rest. Recharge before the evening block.' : personal('Laptop closed. {Name} first; this is your time together.')); t2 += famLen;
+      add(t2, t2 + 40, 'family', self ? 'Dinner' : 'Dinner together', ''); t2 += 40;
+      if (sdLen < 20) { add(t2, t2 + 45, 'sd', 'Deep work: system design', 'Your one quiet block today. Phone in another room.'); t2 += 45; }
+      add(t2, t2 + 30, 'dsa', 'DSA: one question', 'One data-engineering question, 25 minutes, out loud.'); t2 += 30;
+      add(t2, t2 + 15, 'rev', 'Revision: pinned notes', '15 minutes on your key notes, then stop.'); t2 += 15;
+      add(Math.max(t2, SL - 40), SL - 20, 'wind', 'Wind down', 'Only if today is incomplete: the 10-minute version. Then phone away.');
+      add(Math.max(t2, SL - 20), SL, 'life', 'Screens off', 'Charge the phone outside the bedroom.');
+    }
     add(SL, W + 1440, 'sleep', 'Sleep', 'Seven hours. Tomorrow’s deep work depends on tonight’s sleep.');
-    const sat = [];
-    const sw = W + 30; const addS = (s, e, kind, title, why) => sat.push({ s, e, kind, title, why });
-    addS(sw, sw + 90, 'family', 'Slow family morning', 'No alarms beyond this one. Breakfast together.');
+    const sw = W + 30; const sat = []; const addS = (s, e, kind, title, why) => sat.push({ s, e, kind, title, why });
+    addS(sw, sw + 90, 'family', self ? 'Slow morning' : famT('Slow morning with {name}', ''), 'No alarms beyond this one. Breakfast without screens.');
     addS(sw + 90, sw + 180, 'sd', 'Full design case or mock interview', '90 minutes, timed, scored with the staff rubric. This is where offers are won.');
     addS(sw + 180, sw + 195, 'break', 'Break', '');
     addS(sw + 195, sw + 240, 'dsa', 'Two DSA questions', 'Interview conditions: 25 minutes each.');
-    addS(sw + 240, sw + 600, 'family', 'Family afternoon', 'Outing, park, family visits. Fully present: the work is done.');
+    addS(sw + 240, sw + 600, 'family', self ? 'Your afternoon' : 'Family afternoon', self ? 'Go outside, see people. The work is done.' : 'Outings, visits, play. Fully present: the work is done.');
     const sun = [
-      { s: sw, e: sw + 600, kind: 'family', title: 'Family day', why: 'Rest is part of the plan. Use your rest day if you want the whole day.' },
+      { s: sw, e: sw + 600, kind: 'family', title: self ? 'Rest day' : 'Family day', why: 'Rest is part of the plan. Use your rest day if you want the whole day.' },
       { s: 1080, e: 1110, kind: 'rev', title: 'Weekly retrospective + revision', why: 'Three questions about the week, then 20 minutes of pinned notes.' }
     ];
-    return { weekday: b, sat, sun, l, budget: { weekday: sdLen + 30 + 15, sat: 135, sun: 20 } };
+    const sum = (k) => b.filter((x) => x.kind === k).reduce((a, x) => a + x.e - x.s, 0);
+    return { weekday: b, sat, sun, l, mode, back, budget: { weekday: sum('sd') + sum('dsa') + sum('rev'), sat: 135, sun: 20 } };
   }
-  /** Reminders that follow the plan. Replaces the reminder list (max 12). */
+  /** Reminders that follow the plan (max 12). Office days come from your settings. */
   function planReminders(p) {
-    const wk = [1, 2, 3, 4, 5]; const find = (k, list) => (list || p.weekday).find((x) => x.kind === k);
-    const fam = p.weekday[0], sd = find('sd'), dsa = find('dsa'), rev = find('rev'), wind = find('wind'), sleep = find('sleep');
-    const daughterBlock = p.weekday.find((x) => x.kind === 'family' && x.title.indexOf('Time with') === 0);
+    const wk = p.l.workDays; const all = [0, 1, 2, 3, 4, 5, 6]; const off = all.filter((d) => !wk.includes(d));
+    const find = (k, list) => (list || p.weekday).find((x) => x.kind === k);
+    const fam = find('family'), sd = find('sd'), dsa = find('dsa'), rev = find('rev'), wind = find('wind'), sleep = find('sleep');
+    const together = p.weekday.find((x) => x.kind === 'family' && /^(Time with|Personal time)/.test(x.title));
     const satSd = find('sd', p.sat), satDsa = find('dsa', p.sat), sunRev = find('rev', p.sun);
-    const r = (id, m, days, focus, msg, extra) => Object.assign({ id, time: toHM(m), days, focus, msg, skip: true, last: false, on: true }, extra || {});
-    return [
-      r('p-fam', fam.s + 5, [0, 1, 2, 3, 4, 5, 6], 'family', 'Family morning: phone down. Be with {name}.'),
-      r('p-sd', sd.s - 5, wk, 'sd', 'Deep work in 5 minutes: system design. Your sharpest hour.'),
-      r('p-dsa', dsa.s, wk, 'dsa', 'DSA: one question, 25 minutes, out loud.'),
-      r('p-kid', daughterBlock ? daughterBlock.s : dsa.e + 30, wk, 'family', 'Laptop closed. Time with {name}.'),
-      r('p-rev', rev.s, wk, 'either', '15-minute revision before you get ready for office.'),
-      r('p-last', wind.s + 10, wk, 'either', 'Office done. Only if today is incomplete: the 10-minute version, then rest.', { last: true }),
-      r('p-night', wind.s + 25, wk, 'night', 'Office is over. Phone down: dinner, family, sleep.'),
-      r('p-sleep', sleep.s - 15, [0, 1, 2, 3, 4, 5, 6], 'sleep', 'Wind down in 15 minutes. Sleep by ' + ampm(sleep.s) + '.'),
-      r('p-late', sleep.s + 20, [0, 1, 2, 3, 4, 5, 6], 'late', 'Silent check if you are still on your phone after bedtime.'),
-      r('p-sat', satSd.s - 5, [6], 'sd', 'Saturday deep work: one full design case or a mock interview.'),
-      r('p-satdsa', satDsa.s, [6], 'dsa', 'Two DSA questions under interview conditions.'),
-      r('p-sun', sunRev.s, [0], 'either', 'Sunday: weekly retrospective and 20 minutes of revision. Then back to family.')
-    ].map((x) => Object.assign(x, { msg: x.msg.replace('{name}', her()) }));
+    const r = (id, m, days, focus, msg, extra) => ({ id, time: toHM(m), days, focus, msg, skip: true, last: false, on: true, ...(extra || {}) });
+    const nightAt = p.back + 5; // as you get home
+    const lastOk = wind && sleep && (p.mode === 'day' || sleep.s - p.back >= 45);
+    const out = [
+      fam && r('p-fam', p.mode === 'late' ? fam.s + 5 : p.weekday[0].s + 5, all, 'family', isSelf() ? 'Good morning: no phone for the first 30 minutes.' : 'Morning: phone down. ' + Cap(who()) + ' first.'),
+      sd && r('p-sd', sd.s - 5, wk, 'sd', 'Deep work in 5 minutes: system design.'),
+      dsa && r('p-dsa', dsa.s, wk, 'dsa', 'DSA: one question, 25 minutes, out loud.'),
+      together && r('p-kid', together.s, wk, 'family', isSelf() ? 'Laptop closed. Personal time.' : 'Laptop closed. Time with ' + who() + '.'),
+      rev && r('p-rev', rev.s, wk, 'either', '15-minute revision of your pinned notes.'),
+      lastOk && r('p-last', p.mode === 'late' ? p.back + 15 : wind.s + 5, wk, 'either', 'Only if today is incomplete: the 10-minute version, then rest.', { last: true }),
+      r('p-night', nightAt, wk, 'night', 'Office is over. Phone down.'),
+      sleep && r('p-sleep', sleep.s - 15, all, 'sleep', 'Wind down in 15 minutes. Sleep by ' + ampm(sleep.s) + '.'),
+      sleep && r('p-late', sleep.s + 20, all, 'late', 'Silent check if you are still on your phone after bedtime.'),
+      off.length && r('p-sat', satSd.s - 5, off.length === 1 ? off : off.filter((d) => d !== 0), 'sd', 'Day off deep work: one full design case or a mock interview.'),
+      off.length && r('p-satdsa', satDsa.s, off.length === 1 ? off : off.filter((d) => d !== 0), 'dsa', 'Two DSA questions under interview conditions.'),
+      r('p-sun', sunRev.s, off.length === 1 ? off : [0], 'either', 'Weekly retrospective and 20 minutes of revision.')
+    ].filter(Boolean);
+    return out.slice(0, 12);
   }
   function applyPlan(silent) {
     const p = buildPlan();
     S.reminders = planReminders(p);
-    S.settings.motiv = Object.assign({}, S.settings.motiv, { on: true, count: 3, start: toHM(toMin(p.l.wake, 450) + 20), end: toHM(toMin(p.l.officeStart, 870) - 30) });
+    const firstStudy = p.weekday.find((x) => x.kind === 'sd') || p.weekday[0];
+    const wake = toMin(p.l.wake, 390); const endWin = p.mode === 'late' ? toMin(p.l.officeStart, 570) - 30 : Math.max(wake + 120, firstStudy.e + 120);
+    S.settings.motiv = Object.assign({}, S.settings.motiv, { start: toHM(wake + 20), end: toHM(Math.min(endWin, wake + 480)) });
     S.settings.restPerWeek = Math.max(1, S.settings.restPerWeek);
-    S.planApplied = Date.now(); S.planVersion = 2; save(); syncNative();
-    if (!silent) showCoachCard('Done. Your reminders now follow your day: family first in the morning, deep work at ' + ampm(p.weekday.find((x) => x.kind === 'sd').s) + ', nothing heavy after office, sleep by ' + ampm(p.weekday.find((x) => x.kind === 'sleep').s) + '.');
+    S.planApplied = Date.now(); S.planVersion = 3; save(); syncNative();
+    if (!silent) { const sd = p.weekday.find((x) => x.kind === 'sd'); const sl = p.weekday.find((x) => x.kind === 'sleep'); showCoachCard('Done. Your reminders now follow your day: deep work at ' + (sd ? ampm(sd.s) : 'your study time') + ', ' + (isSelf() ? 'personal time protected' : 'time with ' + who() + ' protected') + ', nothing heavy after office, sleep by ' + (sl ? ampm(sl.s) : 'your bedtime') + '.'); }
   }
-  function blocksFor(date) { const p = buildPlan(); const d = dow(date); return d === 6 ? p.sat : d === 0 ? p.sun : p.weekday; }
+  function blocksFor(date) {
+    const p = buildPlan(); const d = dow(date);
+    if (p.l.workDays.includes(d)) return p.weekday;
+    const off = [0, 1, 2, 3, 4, 5, 6].filter((x) => !p.l.workDays.includes(x));
+    if (off.length === 1) return p.sat.concat(p.sun.filter((x) => x.kind === 'rev'));
+    return d === 0 ? p.sun : p.sat;
+  }
   function nowBlock() {
     const now = new Date(); let m = now.getHours() * 60 + now.getMinutes();
     const bl = blocksFor(ymd(now)); let cur = null, next = null;
@@ -1445,7 +1563,7 @@
     const { cur, next } = nowBlock(); if (!cur) return null;
     const p = buildPlan(); const sd = p.weekday.find((x) => x.kind === 'sd');
     if (cur.kind === 'office') return 'You’re at work until ' + ampm(cur.e) + '. Do it well; it pays for everything else. ' + (i.status === 'ok' ? 'Today’s prep is already done.' : 'If today is still open, the 10-minute version after office is enough. Tomorrow, deep work at ' + ampm(sd.s) + '.');
-    if (cur.kind === 'family') return 'Family time. ' + her().charAt(0).toUpperCase() + her().slice(1) + ' first; the laptop can wait' + (next && (next.kind === 'sd' || next.kind === 'dsa') ? ' until ' + ampm(next.s) + '.' : '.');
+    if (cur.kind === 'family') return (isSelf() ? 'Personal time. Rest counts too; the laptop can wait' : 'Family time. ' + Cap(who()) + ' first; the laptop can wait') + (next && (next.kind === 'sd' || next.kind === 'dsa') ? ' until ' + ampm(next.s) + '.' : '.');
     if (cur.kind === 'sleep' || cur.kind === 'life' && new Date().getHours() < 5) return 'It’s late. Sleep is part of the plan. Tomorrow’s deep work needs it.';
     if (cur.kind === 'sd' && !i.sdDone) return 'This is your system design block. Start now; the timer stops by itself at ' + cap() + ' minutes.';
     if (cur.kind === 'dsa' && !i.dsaDone) return 'DSA block: one question, 25 minutes, out loud.';
@@ -1463,7 +1581,7 @@
       { id: 'c-resume', from: w(14), to: w(12), title: 'Resume and LinkedIn', d: 'Rewrite your resume around impact and scale, not client names. Product recruiters search LinkedIn; make yours say “data platform”, “streaming”, “staff”.', task: 'Resume and LinkedIn rewritten' },
       { id: 'c-refer', from: w(12), to: w(6), title: 'Referrals and mocks', d: 'Message ex-colleagues now at product companies; referrals move faster than job portals. One mock interview a week.', task: '5 referral conversations started' },
       { id: 'c-apply', from: w(6), to: T, title: 'Apply and interview', d: 'Apply in one batch so loops land together and offers can compete. Keep the daily habit at level 2 pace.', task: 'Applications sent' },
-      { id: 'c-offer', from: T, to: null, title: 'Offer, negotiate, notice period', d: 'Compare offers on total compensation. Notice periods in India are often 60 to 90 days: plan the joining date with your family.' }
+      { id: 'c-offer', from: T, to: null, title: 'Offer, negotiate, notice period', d: 'Compare offers on total compensation. Notice periods in India are often 60 to 90 days: plan the joining date with the people it affects.' }
     ];
   }
   function careerTimeline() {
@@ -1482,24 +1600,38 @@
   }
   function renderPlan() {
     const p = buildPlan(); const l = p.l;
-    const lh = document.getElementById('lede-hours'); if (lh) lh.textContent = ampm(toMin(l.officeStart, 870)) + ' to ' + ampm(toMin(l.officeEnd, 1410));
+    const lede = document.getElementById('plan-lede');
+    if (lede) {
+      const shift = ampm(toMin(l.officeStart, 570)) + ' to ' + ampm(toMin(l.officeEnd, 1110));
+      lede.innerHTML = 'You work <b>' + shift + '</b>. ' + (p.mode === 'late'
+        ? 'Your mornings are free and your mind is sharpest then, so this plan gives the morning to ' + esc(isSelf() ? 'your own start' : who()) + ' first, the next hours to deep work, keeps nothing heavy after office, and protects your sleep.'
+        : 'Your quietest time is early morning, so deep work happens before office, evenings belong to ' + esc(isSelf() ? 'you' : who()) + ' first, DSA comes after dinner, and sleep is protected.') + ' Your reminders follow this plan.';
+    }
     const f = document.getElementById('lifeform');
     if (f && !f.dataset.ready) {
       ['officeStart', 'officeEnd', 'wake', 'sleep'].forEach((k) => { f.elements[k].value = l[k]; });
       f.elements.commute.value = l.commute;
+      f.querySelectorAll('input[name=wd]').forEach((c) => { c.checked = l.workDays.includes(+c.value); });
       f.dataset.ready = '1';
       f.onsubmit = (e) => {
         e.preventDefault();
-        S.profile.life = { officeStart: f.elements.officeStart.value || '14:30', officeEnd: f.elements.officeEnd.value || '23:30', commute: Math.max(0, Math.min(180, +f.elements.commute.value || 0)), wake: f.elements.wake.value || '07:30', sleep: f.elements.sleep.value || '00:30', weekendOff: true };
+        const wd = [...f.querySelectorAll('input[name=wd]:checked')].map((c) => +c.value);
+        S.profile.life = { officeStart: f.elements.officeStart.value || '09:30', officeEnd: f.elements.officeEnd.value || '18:30', commute: Math.max(0, Math.min(180, +f.elements.commute.value || 0)), wake: f.elements.wake.value || '06:30', sleep: f.elements.sleep.value || '23:00', workDays: wd.length ? wd : [1, 2, 3, 4, 5] };
         applyPlan(false); renderPlan();
       };
     }
     const tl = (blocks) => '<ol class="tline">' + blocks.map((b) => '<li class="k-' + b.kind + '"><span class="tl-t">' + ampm(b.s) + '</span><div><b>' + esc(b.title) + '</b><span class="tl-d">' + dur(b) + '</span>' + (b.why ? '<p>' + esc(b.why) + '</p>' : '') + '</div></li>').join('') + '</ol>';
     document.getElementById('weekday').innerHTML = tl(p.weekday);
-    document.getElementById('weekend').innerHTML = '<h3>Saturday</h3>' + tl(p.sat) + '<h3 style="margin-top:18px">Sunday</h3>' + tl(p.sun);
+    const offDays = [0, 1, 2, 3, 4, 5, 6].filter((x) => !l.workDays.includes(x)); const DN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    document.getElementById('weekend').innerHTML = offDays.length === 1
+      ? '<h3>' + DN[offDays[0]] + ', your one day off</h3>' + tl(p.sat.concat(p.sun.filter((x) => x.kind === 'rev')).sort((a, b) => a.s - b.s))
+      : offDays.length ? '<h3>Saturday and other days off</h3>' + tl(p.sat) + '<h3 style="margin-top:18px">Sunday</h3>' + tl(p.sun) : '<p class="muted">No days off set. Everyone needs at least one: add it under Office days.</p>';
+    const wkh = document.querySelector('#weekend'); if (wkh && wkh.previousElementSibling) { const h = wkh.parentElement.querySelector('.sec-head h2'); if (h) h.textContent = offDays.length === 1 ? 'Your day off' : 'Days off'; }
+    const wdh = document.querySelector('#weekday'); if (wdh) { const sub = wdh.parentElement.querySelector('.sec-head p'); if (sub) sub.textContent = l.workDays.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map((x) => DN[x].slice(0, 3)).join(', '); }
     const wkMin = p.budget.weekday * 5 + p.budget.sat + p.budget.sun;
     const famMin = p.weekday.filter((b) => b.kind === 'family').reduce((a, b) => a + b.e - b.s, 0);
-    document.getElementById('budget').innerHTML = '<div class="bud"><b>' + fmtH(wkMin) + '</b><span>prep a week at full pace</span></div><div class="bud"><b>' + fmtH(famMin) + '</b><span>with family every office day</span></div><div class="bud"><b>' + fmtH(((toMin(l.wake, 450) + 1440 - toMin(l.sleep, 30)) % 1440)) + '</b><span>sleep a night</span></div>';
+    const famLabel = isSelf() ? 'of personal time every office day' : 'with ' + who() + ' every office day';
+    document.getElementById('budget').innerHTML = '<div class="bud"><b>' + fmtH(wkMin) + '</b><span>prep a week at full pace</span></div><div class="bud"><b>' + fmtH(famMin) + '</b><span>' + esc(famLabel) + '</span></div><div class="bud"><b>' + fmtH(((toMin(l.wake, 450) + 1440 - toMin(l.sleep, 30)) % 1440)) + '</b><span>sleep a night</span></div>';
     document.getElementById('applied').innerHTML = S.planApplied ? 'Your reminders follow this plan since ' + new Date(S.planApplied).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + '. <a href="settings.html">See them</a>.' : '';
     document.getElementById('career').innerHTML = careerTimeline();
     document.querySelectorAll('[data-ctask]').forEach((c) => { c.onchange = () => { S.career = S.career || {}; S.career[c.dataset.ctask] = c.checked ? Date.now() : 0; save(); if (c.checked) showCoachCard('Ticked off. Every checkpoint brings the offer closer, one step at a time.'); }; });
@@ -1579,7 +1711,7 @@
   function weeklyReportText() {
     const w = weekStats(weekStart(today())); const lw = weekStats(addDays(weekStart(today()), -7)); const r = readiness(); const pc = pace();
     const plan = latestPlan();
-    return 'DataLeap weekly check-in, ' + (me() || 'Sourav') + '\n' +
+    return 'DataLeap weekly check-in' + (me() ? ', ' + me() : '') + '\n' +
       'Last week: ' + fmtH(lw.min) + ', ' + lw.complete + '/7 days complete (system design ' + fmtH(lw.sd) + ', DSA ' + fmtH(lw.dsa) + ')\n' +
       'This week so far: ' + fmtH(w.min) + ', ' + w.complete + ' days\n' +
       'Streak: ' + streak() + ' days · Total: ' + (Math.round(pc.doneH * 10) / 10) + ' of ' + pc.goal + ' hours\n' +
@@ -1609,9 +1741,10 @@
   function renderCareer() {
     const p = S.profile; S.stories = S.stories || []; S.mocks = S.mocks || [];
     const cpl = document.getElementById('coachplan'); if (cpl) cpl.innerHTML = coachPlanHTML();
+    const apb = document.getElementById('apps'); if (apb) apb.innerHTML = appsBoard();
     const cm = document.getElementById('commit');
     if (cm) {
-      const def = 'For the next 12 months I will put about 10 hours a week into preparation, protect my mornings with ' + her() + ', keep my sleep, and start applying by ' + (pace().applyBy ? niceDate(pace().applyBy) : 'my apply date') + '. I will not quit on a bad week.';
+      const def = 'For the next 12 months I will put about ' + (S.profile.weeklyHours || 8) + ' hours a week into preparation, ' + (isSelf() ? 'protect my health' : 'protect my time with ' + her()) + ', keep my sleep, and start applying by ' + (pace().applyBy ? niceDate(pace().applyBy) : 'my apply date') + '. I will not quit on a bad week.';
       cm.innerHTML = p.committedAt
         ? '<blockquote class="commitq">' + esc(p.commitment) + '<footer>Signed by ' + esc(me() || 'you') + ', ' + new Date(p.committedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) + '</footer></blockquote><button class="btn small" type="button" id="cm-edit">Edit commitment</button>'
         : '<form id="cmform"><div class="field"><label for="cm-t">My commitment</label><textarea id="cm-t" name="t" rows="4">' + esc(p.commitment || def) + '</textarea></div><button class="btn haldi" type="submit">Sign it</button></form>';
@@ -1778,7 +1911,11 @@
     add('milestones.csv', csv(['milestone_id', 'group', 'title', 'description', 'unlocked_at'],
       ACH.map((a) => [a.id, a.g, a.t, a.d, S.ach && S.ach[a.id] ? iso(S.ach[a.id]) : ''])));
 
-    // 11. the guide for Claude
+    // 11. applications
+    add('applications.csv', csv(['company', 'role', 'level', 'stage', 'source', 'next_action', 'next_by', 'fixed_lakh', 'variable_lakh', 'stock_per_year_lakh', 'joining_bonus_lakh', 'first_year_total_lakh', 'notes', 'updated'],
+      (S.apps || []).map((a) => [a.company, a.role, a.level, (APP_STAGES.find((x) => x[0] === a.stage) || [, a.stage])[1], a.source, a.next, a.nextAt, a.fixed, a.variable, a.stockYr, a.joining, firstYear(a) || '', a.notes, iso(a.updated)])));
+
+    // 12. the guide for Claude
     add('README_for_Claude.md', analysisGuide(), 'text/markdown');
     return files;
   }
@@ -1788,9 +1925,9 @@
     return [
       '# DataLeap export for analysis',
       '',
-      'Exported ' + iso(Date.now()) + '. I am ' + (me() || 'a data engineer') + ', with ' + (p.years || 10) + ' years in software, preparing to move from a service company to a ' + (p.role || 'Staff Data Engineer') + ' role at ' + (p.companies || 'top product companies') + '.',
+      'Exported ' + iso(Date.now()) + '. I am ' + (me() || 'a data engineer') + ', with ' + (p.years ? p.years + ' years' : 'several years') + ' in software, preparing to move from a service company to a ' + (p.role || 'Staff Data Engineer') + ' role at ' + (p.companies || 'top product companies') + '.',
       p.targetDate ? 'Target offer date: ' + p.targetDate + '. Plan: ' + pc.goal + ' prep hours; done so far: ' + (Math.round(pc.doneH * 10) / 10) + ' h. Last-4-week average: ' + (Math.round(pc.avgWeekH * 10) / 10) + ' h a week; needed: ' + (Math.round((pc.needWeekH || 0) * 10) / 10) + ' h a week.' : '',
-      'Office hours ' + life().officeStart + ' to ' + life().officeEnd + ' IST; I study in the morning before office and protect family time with my young daughter.',
+      'Office hours ' + life().officeStart + ' to ' + life().officeEnd + ' (' + (life().workDays || [1, 2, 3, 4, 5]).length + ' days a week). I study around my shift' + (isSelf() ? '.' : ' and protect time with ' + who() + '.') + (motive().relation ? ' I am doing this for ' + (isSelf() ? 'myself' : who()) + '.' : ''),
       'Interview readiness (DataLeap score): ' + r.score + '% (' + r.label + '). ' + r.parts.map((x) => x.label + ' ' + Math.round(x.v * 100) + '%').join('; ') + '.',
       c && c.gaps ? 'My known gaps, in priority order: ' + c.gaps.map((g) => g.title).join('; ') + '.' : '',
       '',
@@ -1866,12 +2003,295 @@
     const n = her(); const N = n.charAt(0).toUpperCase() + n.slice(1); const pb = buildPlan(); const sd = pb.weekday.find((b) => b.kind === 'sd');
     const d = document.createElement('dialog'); d.className = 'award bedtime';
     d.innerHTML = '<div class="award-in"><p class="award-kicker">Past your bedtime</p><div class="award-badge" aria-hidden="true">🌙</div><h2>It’s ' + esc(now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })) + (me() ? ', ' + esc(me()) : '') + '</h2>' +
-      '<p class="award-msg"><span class="coach-av sm" aria-hidden="true">' + MARK + '</span><span>Nothing in this app is worth losing sleep over. ' + esc(N) + ' will be up early, and your ' + (sd ? ampm(sd.s) : 'morning') + ' deep work needs a clear head. ' + (dayInfo(today()).status === 'ok' ? 'Today is already complete.' : 'Whatever is left, tomorrow morning covers it.') + '</span></p>' +
+      '<p class="award-msg"><span class="coach-av sm" aria-hidden="true">' + MARK + '</span><span>Nothing in this app is worth losing sleep over. ' + (isSelf() ? '' : esc(personal('{Name} need{s} you rested, and '))) + 'your ' + (sd ? ampm(sd.s) : 'morning') + ' deep work needs a clear head. ' + (dayInfo(today()).status === 'ok' ? 'Today is already complete.' : 'Whatever is left, tomorrow morning covers it.') + '</span></p>' +
       '<button class="btn haldi" type="button" id="bed-go">I’m going to sleep</button><button class="btn quiet" type="button" id="bed-two">Two minutes, then sleep</button></div>';
     document.body.appendChild(d); d.showModal();
     document.getElementById('bed-go').onclick = () => { sessionStorage.setItem('dl-bed-ok', today()); d.close(); if (BR && BR.closeApp) BR.closeApp(); else toast('Good night.'); };
     document.getElementById('bed-two').onclick = () => { sessionStorage.setItem('dl-bed-ok', today()); d.close(); };
   }
+
+  // ---------- first-run setup: everything optional, everything editable later ----------
+  const PRESETS = [
+    { id: 'gen', label: '9:30 am – 6:30 pm', os: '09:30', oe: '18:30', wake: '06:30', sleep: '23:00' },
+    { id: 'mid', label: '11 am – 8 pm', os: '11:00', oe: '20:00', wake: '07:00', sleep: '23:30' },
+    { id: 'us', label: '2:30 pm – 11:30 pm', os: '14:30', oe: '23:30', wake: '07:30', sleep: '00:30' },
+    { id: 'night', label: '9 pm – 6 am (night)', os: '21:00', oe: '06:00', wake: '14:00', sleep: '08:30' }
+  ];
+  const WHY_HINT = {
+    daughter: 'So she grows up with every door open', son: 'So he grows up with every door open', children: 'So my children grow up with every door open',
+    parents: 'So my parents never have to worry about anything again', mother: 'So my mother sees her sacrifices pay off', father: 'So my father sees his sacrifices pay off',
+    wife: 'So we build the life we keep talking about', husband: 'So we build the life we keep talking about', partner: 'So we build the life we keep talking about',
+    family: 'So my family never has to worry about money', myself: 'So I do work I am proud of, at the level I know I can reach', other: 'So the people I love never have to worry'
+  };
+  function initSetup() {
+    const box = document.getElementById('setup'); if (!box) return;
+    const p = S.profile; const l = life();
+    const d = {
+      me: p.me || '', years: p.years || '', companyType: p.companyType || 'service', role: p.role || 'Staff Data Engineer', companies: p.companies || '',
+      targetDate: p.targetDate || addDays(today(), 300), relation: motive().relation || '', name: motive().name || '', age: motive().age === undefined ? '' : motive().age, pronoun: motive().pronoun || '',
+      why: p.why || '', os: l.officeStart, oe: l.officeEnd, commute: l.commute, wake: l.wake, sleep: l.sleep, workDays: l.workDays.slice(),
+      weekly: p.weeklyHours || 8, level: S.settings.level || 1, rest: S.settings.restPerWeek, motiv: S.settings.motiv.on ? S.settings.motiv.count : 0
+    };
+    let step = 0;
+    const chip = (name, value, label, on) => '<label class="pick"><input type="radio" name="' + name + '" value="' + value + '"' + (on ? ' checked' : '') + '><span>' + label + '</span></label>';
+    const steps = [
+      () => '<div class="st-hero"><p class="st-big">You already have the experience. DataLeap gives you the daily habit to show it in a product-company interview.</p>' +
+        '<ul class="st-list"><li>System design first, data-engineering DSA second, starting at 10 minutes a day</li><li>A day plan and reminders built around <b>your</b> shift</li><li>A coach and notifications built around <b>your</b> reason for doing this</li><li>Everything stays on your phone</li></ul></div>',
+      () => '<h2>About you</h2><div class="row"><div class="field"><label for="s-me">Your first name</label><input id="s-me" value="' + esc(d.me) + '" autocomplete="given-name"></div>' +
+        '<div class="field"><label for="s-y">Years of experience</label><input id="s-y" type="number" min="1" max="45" value="' + esc(d.years) + '"></div></div>' +
+        '<div class="field"><label>Where you work now</label><div class="picks">' + [['service', 'Service company'], ['product', 'Product company'], ['startup', 'Startup'], ['other', 'Other']].map(([v, t]) => chip('ct', v, t, d.companyType === v)).join('') + '</div></div>' +
+        '<div class="row"><div class="field"><label for="s-role">Role you are aiming for</label><select id="s-role">' + ['Senior Data Engineer', 'Staff Data Engineer', 'Lead Data Engineer', 'Principal Data Engineer', 'Data Engineering Manager'].map((r) => '<option' + (r === d.role ? ' selected' : '') + '>' + r + '</option>').join('') + '</select></div>' +
+        '<div class="field"><label for="s-co">Target companies (optional)</label><input id="s-co" value="' + esc(d.companies) + '" placeholder="e.g. Google, Uber, Databricks"></div>' +
+        '<div class="field"><label for="s-td">Offer by</label><input id="s-td" type="date" value="' + esc(d.targetDate) + '"></div></div>',
+      () => '<h2>Who are you doing this for?</h2><p class="muted">This is what your coach, quotes and reminders will come back to on hard days. Pick what is true for you.</p>' +
+        '<div class="picks">' + Object.keys(REL).map((k) => chip('rel', k, REL[k].label, d.relation === k)).join('') + '</div>' +
+        '<div class="row" id="s-who"><div class="field"><label for="s-nm">Their name(s), optional</label><input id="s-nm" value="' + esc(d.name) + '" placeholder="e.g. Riya, or Amma and Appa"></div>' +
+        '<div class="field" id="s-agef" style="flex:0 1 150px"><label for="s-age">Age now (for children)</label><input id="s-age" type="number" min="0" max="25" step="0.5" value="' + esc(d.age) + '"></div>' +
+        '<div class="field" style="flex:0 1 170px"><label for="s-pr">Refer to them as</label><select id="s-pr"><option value="">Automatic</option><option value="she"' + (d.pronoun === 'she' ? ' selected' : '') + '>she / her</option><option value="he"' + (d.pronoun === 'he' ? ' selected' : '') + '>he / him</option><option value="they"' + (d.pronoun === 'they' ? ' selected' : '') + '>they / them</option></select></div></div>' +
+        '<div class="field"><label for="s-why">Your why, in one sentence (optional)</label><input id="s-why" value="' + esc(d.why) + '" placeholder="' + esc(WHY_HINT[d.relation] || WHY_HINT.other) + '"></div>',
+      () => '<h2>Your day</h2><p class="muted">Your plan and reminders are built around this. Study goes where you are fresh; family and sleep are protected.</p>' +
+        '<div class="field"><label>Office hours</label><div class="picks">' + PRESETS.map((x) => chip('pre', x.id, x.label, d.os === x.os && d.oe === x.oe)).join('') + chip('pre', 'custom', 'Custom', !PRESETS.some((x) => d.os === x.os && d.oe === x.oe)) + '</div></div>' +
+        '<div class="row"><div class="field"><label for="s-os">Office starts</label><input id="s-os" type="time" value="' + d.os + '"></div><div class="field"><label for="s-oe">Office ends</label><input id="s-oe" type="time" value="' + d.oe + '"></div>' +
+        '<div class="field"><label for="s-c">Commute (min, 0 if from home)</label><input id="s-c" type="number" min="0" max="180" value="' + d.commute + '"></div></div>' +
+        '<div class="row"><div class="field"><label for="s-w">Wake up</label><input id="s-w" type="time" value="' + d.wake + '"></div><div class="field"><label for="s-s">Sleep</label><input id="s-s" type="time" value="' + d.sleep + '"></div></div>' +
+        '<fieldset class="field" style="border:0;padding:0;margin:0"><legend style="font-weight:700;font-size:14px;margin-bottom:6px">Office days</legend><div class="row" style="gap:16px">' +
+        [[1, 'Mon'], [2, 'Tue'], [3, 'Wed'], [4, 'Thu'], [5, 'Fri'], [6, 'Sat'], [0, 'Sun']].map(([v, t]) => '<label class="inline"><input type="checkbox" name="swd" value="' + v + '"' + (d.workDays.includes(v) ? ' checked' : '') + '>' + t + '</label>').join('') + '</div></fieldset>',
+      () => '<h2>Your pace</h2><p class="muted">Start smaller than you think. The habit matters more than the hours in the first weeks.</p>' +
+        '<div class="field"><label>Hours a week you can give</label><div class="picks">' + [5, 8, 10, 12, 15].map((h) => chip('wk', h, h + ' h', +d.weekly === h)).join('') + '</div></div>' +
+        '<div class="field"><label>Start at</label><div class="picks">' + D.levels.map((lv) => chip('lv', lv.n, 'Level ' + lv.n + ': ' + lv.name + ' (' + lv.sd + '+' + lv.dsa + ' min)', +d.level === lv.n)).join('') + '</div><p class="small muted">Level 1 is recommended even if it feels easy.</p></div>' +
+        '<div class="row"><div class="field"><label>Rest days a week</label><div class="picks">' + [0, 1, 2].map((r) => chip('rs', r, String(r), +d.rest === r)).join('') + '</div></div>' +
+        '<div class="field"><label>Motivating notifications a day</label><div class="picks">' + [[0, 'Off'], [3, '3'], [4, '4']].map(([v, t]) => chip('mo', v, t, +d.motiv === v)).join('') + '</div></div></div>',
+      () => {
+        commitDraft(false);
+        const pb = buildPlan(); const sd = pb.weekday.find((x) => x.kind === 'sd'); const dsa = pb.weekday.find((x) => x.kind === 'dsa'); const sl = pb.weekday.find((x) => x.kind === 'sleep');
+        return '<h2>Your plan is ready' + (d.me ? ', ' + esc(d.me) : '') + '</h2>' +
+          '<ul class="st-list"><li>Doing this for <b>' + esc(isSelf() ? 'yourself' : who()) + '</b>' + (d.why ? ': “' + esc(d.why) + '”' : '') + '</li>' +
+          '<li>Deep work at <b>' + (sd ? ampm(sd.s) : '—') + '</b>, DSA at <b>' + (dsa ? ampm(dsa.s) : '—') + '</b>, sleep by <b>' + (sl ? ampm(sl.s) : '—') + '</b></li>' +
+          '<li>' + esc(d.weekly) + ' hours a week, starting at level ' + esc(d.level) + '</li>' +
+          (d.targetDate ? '<li>Offer by <b>' + esc(niceDate(d.targetDate)) + '</b></li>' : '') + '</ul>' +
+          '<p class="muted">Change anything later on My why, My day and Reminders.</p>';
+      }
+    ];
+    function read() {
+      const v = (id) => { const e = document.getElementById(id); return e ? e.value.trim() : undefined; };
+      const r = (n) => { const e = box.querySelector('input[name=' + n + ']:checked'); return e ? e.value : undefined; };
+      if (step === 1) { d.me = v('s-me'); d.years = v('s-y'); d.companyType = r('ct') || d.companyType; d.role = v('s-role'); d.companies = v('s-co'); d.targetDate = v('s-td'); }
+      if (step === 2) { d.relation = r('rel') || d.relation; d.name = v('s-nm'); d.age = v('s-age'); d.pronoun = v('s-pr'); d.why = v('s-why'); }
+      if (step === 3) { d.os = v('s-os') || d.os; d.oe = v('s-oe') || d.oe; d.commute = +v('s-c') || 0; d.wake = v('s-w') || d.wake; d.sleep = v('s-s') || d.sleep; const wd = [...box.querySelectorAll('input[name=swd]:checked')].map((x) => +x.value); d.workDays = wd.length ? wd : [1, 2, 3, 4, 5]; }
+      if (step === 4) { d.weekly = +(r('wk') || d.weekly); d.level = +(r('lv') || d.level); d.rest = +(r('rs') !== undefined ? r('rs') : d.rest); d.motiv = +(r('mo') !== undefined ? r('mo') : d.motiv); }
+    }
+    function commitDraft(final) {
+      p.me = d.me; p.years = d.years === '' ? '' : Math.max(1, Math.min(45, parseInt(d.years, 10) || 1)); p.companyType = d.companyType; p.role = d.role; p.companies = d.companies; p.targetDate = d.targetDate;
+      const old = motive();
+      p.motive = { relation: d.relation, name: d.name, age: d.age === '' ? '' : Math.max(0, Math.min(25, +d.age)), ageAt: String(old.age) === String(d.age) && old.ageAt ? old.ageAt : Date.now(), pronoun: d.pronoun };
+      p.why = d.why;
+      p.life = { officeStart: d.os, officeEnd: d.oe, commute: d.commute, wake: d.wake, sleep: d.sleep, workDays: d.workDays };
+      p.weeklyHours = d.weekly;
+      const weeks = d.targetDate ? Math.max(4, daysBetween(today(), d.targetDate) / 7) : 40;
+      p.hoursGoal = Math.max(50, Math.round(d.weekly * weeks * 0.85 / 10) * 10);
+      if (final) {
+        if (S.settings.level !== d.level) { S.settings.level = d.level; S.settings.levelSince = today(); }
+        S.settings.restPerWeek = d.rest;
+        S.settings.motiv = Object.assign({}, S.settings.motiv, { on: d.motiv > 0, count: d.motiv || 3 });
+        S.setupDone = true; applyPlan(true);
+      }
+    }
+    function draw() {
+      const last = step === steps.length - 1;
+      box.innerHTML = '<div class="st-prog" aria-hidden="true">' + steps.map((_, k) => '<i class="' + (k <= step ? 'on' : '') + '"></i>').join('') + '</div>' +
+        '<div class="st-body">' + steps[step]() + '</div>' +
+        '<div class="st-nav">' + (step ? '<button class="btn" type="button" id="st-back">Back</button>' : '<button class="btn quiet" type="button" id="st-skip">Skip setup</button>') +
+        '<button class="btn ' + (last ? 'haldi' : 'primary') + '" type="button" id="st-next">' + (step === 0 ? 'Make it mine' : last ? 'Start' : 'Next') + '</button></div>';
+      const nb = document.getElementById('st-next'), bb = document.getElementById('st-back'), sk = document.getElementById('st-skip');
+      nb.onclick = () => { read(); if (last) { commitDraft(true); location.href = 'index.html'; } else { step++; draw(); window.scrollTo({ top: 0 }); } };
+      if (bb) bb.onclick = () => { read(); step--; draw(); };
+      if (sk) sk.onclick = () => { commitDraft(true); location.href = 'index.html'; };
+      box.querySelectorAll('input[name=pre]').forEach((x) => { x.onchange = () => { const ps = PRESETS.find((q) => q.id === x.value); if (ps) { document.getElementById('s-os').value = ps.os; document.getElementById('s-oe').value = ps.oe; document.getElementById('s-w').value = ps.wake; document.getElementById('s-s').value = ps.sleep; } }; });
+      box.querySelectorAll('input[name=rel]').forEach((x) => { x.onchange = () => { const why = document.getElementById('s-why'); if (why) why.placeholder = WHY_HINT[x.value] || WHY_HINT.other; const self = x.value === 'myself'; document.getElementById('s-who').style.display = self ? 'none' : ''; document.getElementById('s-agef').style.display = REL[x.value] && REL[x.value].child ? '' : 'none'; }; });
+      const sel = box.querySelector('input[name=rel]:checked');
+      if (document.getElementById('s-who')) { document.getElementById('s-who').style.display = sel && sel.value === 'myself' ? 'none' : ''; document.getElementById('s-agef').style.display = sel && REL[sel.value] && REL[sel.value].child ? '' : 'none'; }
+    }
+    draw();
+  }
+
+  // ---------- mock interview simulator: a 45-minute system design round, phase by phase ----------
+  const MOCK_PHASES = [
+    { k: 'req', t: 'Clarify requirements', min: 5, ask: ['Who consumes this data, and how fresh must it be?', 'What must never be wrong: counts, money, order?', 'What scale are we designing for, today and in two years?'] },
+    { k: 'est', t: 'Estimate the scale', min: 5, ask: ['Events per second at peak?', 'Storage per day and per year, after compression?', 'How many partitions or workers does that imply?'] },
+    { k: 'hld', t: 'High-level design', min: 15, ask: ['Walk me through ingestion, processing, storage and serving.', 'Batch, streaming or both, and why?', 'What does the data model look like?'] },
+    { k: 'deep', t: 'Deep dive', min: 12, ask: [] },
+    { k: 'ops', t: 'Failures, operations, trade-offs', min: 5, ask: ['A job fails at 3 am and replays an hour. What happens to correctness?', 'How do you backfill a year without hurting production?', 'What did you trade away, and when would you choose differently?'] },
+    { k: 'wrap', t: 'Wrap-up', min: 3, ask: ['Summarise your design in 60 seconds, as if to the interviewer’s manager.'] }
+  ];
+  let MK = null; // running mock
+  function pickMockCase() {
+    const cases = D.items.filter((i) => i.type === 'case');
+    const mine = cases.filter((i) => typeof expFor === 'function' && expFor(i.id));
+    const weak = cases.filter((i) => !(st(i.id).scores || []).length);
+    const pool = (Math.random() < 0.5 && mine.length ? mine : weak.length ? weak : cases);
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function openMockSim(caseId) {
+    let d = document.getElementById('mocksim');
+    if (!d) { d = document.createElement('dialog'); d.id = 'mocksim'; d.className = 'mocksim'; document.body.appendChild(d); d.addEventListener('cancel', (e) => { if (MK && MK.phase >= 0) { e.preventDefault(); if (confirm('Leave the mock? Your answers so far are kept as a note.')) finishMock(true); } }); }
+    const c = byId[caseId] || pickMockCase();
+    const cases = D.items.filter((i) => i.type === 'case');
+    d.innerHTML = '<div class="dlg"><div class="dlg-head"><div><p class="muted small" style="margin:0">Mock interview · 45 minutes</p><h2>System design round</h2></div><button class="btn quiet" type="button" data-close>Close</button></div>' +
+      '<div class="field"><label for="mk-case">Case</label><select id="mk-case">' + cases.map((i) => '<option value="' + i.id + '"' + (i.id === c.id ? ' selected' : '') + '>' + esc(i.title) + (typeof expFor === 'function' && expFor(i.id) ? ' (you built this)' : '') + '</option>').join('') + '</select></div>' +
+      '<div class="prompt"><p style="margin:0" id="mk-prompt">' + esc(c.text) + '</p></div>' +
+      '<ol class="mk-plan">' + MOCK_PHASES.map((p) => '<li><b>' + p.t + '</b><span>' + p.min + ' min</span></li>').join('') + '</ol>' +
+      '<p class="small muted">Treat it like the real room: answer out loud, use the 🎤 to capture key points in each phase, and keep moving when the phase time is up. The interviewer’s follow-ups arrive during the deep dive.</p>' +
+      '<div class="actions"><button class="btn haldi" type="button" id="mk-go">Start the interview</button></div></div>';
+    d.querySelector('#mk-case').onchange = (e) => { d.querySelector('#mk-prompt').textContent = byId[e.target.value].text; };
+    d.querySelector('#mk-go').onclick = () => {
+      const cs = byId[d.querySelector('#mk-case').value];
+      MK = { id: cs.id, phase: 0, phaseStart: Date.now(), start: Date.now(), answers: {}, used: {} };
+      drawMock();
+    };
+    if (!d.open) d.showModal();
+  }
+  function drawMock() {
+    const d = document.getElementById('mocksim'); if (!d || !MK) return;
+    const c = byId[MK.id]; const p = MOCK_PHASES[MK.phase];
+    const asks = p.k === 'deep' ? (c.followUps || []).concat(['What is the single biggest risk in your design?']) : p.ask;
+    d.innerHTML = '<div class="dlg mk-run"><div class="mk-top"><div><p class="muted small" style="margin:0">Phase ' + (MK.phase + 1) + ' of ' + MOCK_PHASES.length + ' · ' + esc(c.title) + '</p><h2>' + p.t + '</h2></div><div class="mk-clock" id="mk-clock">' + pad(p.min) + ':00</div></div>' +
+      '<div class="mk-bar"><i id="mk-bar"></i></div>' +
+      '<div class="mk-ask"><span class="coach-av sm" aria-hidden="true">' + MARK + '</span><div><small>Interviewer</small><p id="mk-q">' + esc(asks[0]) + '</p></div></div>' +
+      '<div class="field"><label for="mk-ans">Your key points (speak them with the 🎤 or type)</label><textarea id="mk-ans" rows="6">' + esc(MK.answers[p.k] || '') + '</textarea></div>' +
+      '<div class="actions"><button class="btn" type="button" id="mk-quit">End early</button><button class="btn primary" type="button" id="mk-next">' + (MK.phase === MOCK_PHASES.length - 1 ? 'Finish and score' : 'Next phase') + '</button></div></div>';
+    MK.asks = asks; MK.askIdx = 0;
+    d.querySelector('#mk-ans').oninput = (e) => { MK.answers[p.k] = e.target.value; };
+    d.querySelector('#mk-next').onclick = () => { MK.answers[p.k] = d.querySelector('#mk-ans').value; MK.used[p.k] = Math.round((Date.now() - MK.phaseStart) / 1000); if (MK.phase === MOCK_PHASES.length - 1) finishMock(false); else { MK.phase++; MK.phaseStart = Date.now(); drawMock(); } };
+    d.querySelector('#mk-quit').onclick = () => { MK.answers[p.k] = d.querySelector('#mk-ans').value; MK.used[p.k] = Math.round((Date.now() - MK.phaseStart) / 1000); finishMock(true); };
+  }
+  function mockTick() {
+    if (!MK || MK.phase < 0) return;
+    const p = MOCK_PHASES[MK.phase]; const el = (Date.now() - MK.phaseStart) / 1000; const left = p.min * 60 - el;
+    const ck = document.getElementById('mk-clock'); const bar = document.getElementById('mk-bar'); if (!ck) return;
+    const a = Math.abs(Math.round(left)); ck.textContent = (left < 0 ? '+' : '') + pad(Math.floor(a / 60)) + ':' + pad(a % 60);
+    ck.classList.toggle('over', left < 0); if (bar) bar.style.width = Math.min(100, (el / (p.min * 60)) * 100) + '%';
+    // the interviewer asks the next follow-up as the phase moves on
+    const step = (p.min * 60) / Math.max(1, MK.asks.length);
+    const want = Math.min(MK.asks.length - 1, Math.floor(el / step));
+    if (want > MK.askIdx) { MK.askIdx = want; const q = document.getElementById('mk-q'); if (q) { q.textContent = MK.asks[want]; q.parentElement.parentElement.classList.remove('pulse'); void q.offsetWidth; q.parentElement.parentElement.classList.add('pulse'); } }
+  }
+  function finishMock(early) {
+    const c = byId[MK.id]; const total = Math.max(1, Math.round((Date.now() - MK.start) / 60000));
+    const d = document.getElementById('mocksim');
+    const rows = MOCK_PHASES.filter((p) => MK.used[p.k] !== undefined).map((p) => { const u = Math.round(MK.used[p.k] / 60); return '<tr><td>' + p.t + '</td><td class="num">' + p.min + '</td><td class="num' + (u > p.min + 1 ? ' over' : '') + '">' + u + '</td></tr>'; }).join('');
+    d.innerHTML = '<form class="dlg" id="mk-score"><div class="dlg-head"><div><p class="muted small" style="margin:0">' + (early ? 'Ended early' : 'Mock complete') + ' · ' + total + ' min</p><h2>' + esc(c.title) + '</h2></div></div>' +
+      '<div class="tablewrap"><table class="dtable"><thead><tr><th>Phase</th><th class="num">Plan (min)</th><th class="num">You (min)</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<h3 style="margin-top:16px">Score yourself like the interviewer would</h3>' + D.rubric.map((r, i) => '<div class="rubric-row"><span>' + esc(r) + '</span><select name="r' + i + '"><option value="0">0 Missed</option><option value="1" selected>1 Partly</option><option value="2">2 Clearly</option></select></div>').join('') +
+      '<div class="actions" style="margin-top:14px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" id="mk-export">Save and export for AI review</button></div></form>';
+    const saveMock = (exportIt) => {
+      const f = d.querySelector('#mk-score'); const vals = D.rubric.map((_, i) => +f.elements['r' + i].value); const tot = vals.reduce((a, b) => a + b, 0);
+      const s2 = st(c.id); s2.scores = (s2.scores || []).concat([{ at: Date.now(), vals, total: tot }]);
+      s2.notes = (s2.notes || []).concat([{ id: 'n' + Date.now(), type: 'Summary', body: 'Mock interview (' + total + ' min):\n' + MOCK_PHASES.filter((p) => MK.answers[p.k]).map((p) => p.t + ': ' + MK.answers[p.k]).join('\n'), at: Date.now() }]);
+      S.items[c.id] = s2;
+      S.sessions.push({ id: 's' + Date.now(), date: today(), track: 'sd', itemId: c.id, minutes: Math.min(total, 60), min: minNow(), activity: 'full', part: 'Mock interview', source: 'mock', at: Date.now() });
+      S.mocks = (S.mocks || []).concat([{ id: 'mk' + Date.now(), date: today(), type: 'sd', with: 'DataLeap simulator: ' + c.title, score: tot >= 12 ? 4 : tot >= 10 ? 3 : tot >= 7 ? 2 : 1, well: '', fix: D.rubric.filter((_, i) => vals[i] === 0).join('; '), at: Date.now() }]);
+      if (tot >= 10 && !['done', 'mastered'].includes(s2.status)) setStatus(c.id, 'done');
+      save();
+      if (exportIt) {
+        const md = '# Mock system design interview: ' + c.title + '\n\nPrompt: ' + c.text + '\n\nFollow-ups asked: ' + (c.followUps || []).join(' | ') + '\n\nTotal time: ' + total + ' min. Self-score ' + tot + '/14.\n\n' +
+          MOCK_PHASES.map((p) => '## ' + p.t + ' (plan ' + p.min + ' min, used ' + Math.round((MK.used[p.k] || 0) / 60) + ' min)\n\n' + (MK.answers[p.k] || '(no notes)')).join('\n\n') +
+          '\n\n## Ask Claude\n\nAct as a staff data engineer interviewer at a top product company. Grade this answer on the staff rubric (scoping, sizing, trade-offs, correctness under failure, operability, platform view, migration path), say what a strong-hire answer would add, and give me the 3 most important fixes.';
+        if (BR && BR.saveFile) BR.saveFile('mock-' + today() + '.md', 'text/markdown', md); else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' })); a.download = 'mock-' + today() + '.md'; a.click(); }
+      }
+      MK = null; d.close();
+      showCoachCard(tot >= 10 ? tot + '/14: a hire signal. Do one more this week on a case you did not build.' : tot + '/14. The cheapest place to learn this is here. Redo the weakest phase tomorrow, then try another case.');
+      checkProgress(); refresh();
+    };
+    d.querySelector('#mk-score').onsubmit = (e) => { e.preventDefault(); saveMock(false); };
+    d.querySelector('#mk-export').onclick = () => saveMock(true);
+    MK.phase = -1;
+  }
+  setInterval(mockTick, 500);
+  document.addEventListener('click', (e) => { const b = e.target.closest('[data-mocksim]'); if (b) { e.preventDefault(); const dl = document.getElementById('itemdlg'); if (dl && dl.open) dl.close(); openMockSim(b.dataset.mocksim); } });
+  // ---------- 2-minute recall drill: spaced repetition on YOUR notes ----------
+  function drillCards() {
+    S.drill = S.drill || {};
+    const withNotes = D.items.filter((i) => (st(i.id).notes || []).length);
+    const fresh = D.items.filter((i) => i.track === 'sd' && i.type !== 'lesson' && ['done', 'in_progress', 'revise'].includes(st(i.id).status) && !(st(i.id).notes || []).length);
+    const due = (id) => !S.drill[id] || S.drill[id].due <= today();
+    const cards = withNotes.filter((i) => due(i.id)).sort((a, b) => ((S.drill[a.id] || {}).due || '') > ((S.drill[b.id] || {}).due || '') ? 1 : -1);
+    return cards.concat(fresh.filter((i) => due(i.id))).slice(0, 5);
+  }
+  function openDrill() {
+    const cards = drillCards(); const start = Date.now(); let k = 0;
+    let d = document.getElementById('drilldlg'); if (!d) { d = document.createElement('dialog'); d.id = 'drilldlg'; d.className = 'drill'; document.body.appendChild(d); }
+    if (!cards.length) {
+      d.innerHTML = '<div class="dlg"><h2>Nothing to recall yet</h2><p>The drill uses your own notes. Add a key note to a few items you have studied (a 🎤 makes it quick), and they come back here on a schedule.</p><div class="actions"><button class="btn primary" type="button" data-close>OK</button></div></div>';
+      d.showModal(); return;
+    }
+    const show = (revealed) => {
+      const i = cards[k]; const s = st(i.id); const note = (s.notes || []).find((n) => n.id === s.pinned) || (s.notes || []).slice(-1)[0];
+      d.innerHTML = '<div class="dlg"><div class="dlg-head"><p class="muted small" style="margin:0">Recall drill · ' + (k + 1) + ' of ' + cards.length + '</p><button class="btn quiet" type="button" data-close>Stop</button></div>' +
+        '<div class="card-face"><p class="muted small">' + esc((topicBy[i.topic] || {}).name || '') + '</p><h2>' + esc(i.title) + '</h2><p class="hint">' + (note ? 'Say your answer out loud in 30 seconds, then check it against your note.' : 'Explain it out loud in 60 seconds: what it is, when to use it, the main trade-off.') + '</p>' +
+        (revealed ? (note ? '<div class="reveal"><small>' + esc(note.type) + '</small><p>' + esc(note.body) + '</p></div>' : '<div class="reveal"><p>No note yet. Open the item and write the one thing you want to remember.</p></div>') : '') + '</div>' +
+        (revealed ? '<p class="small muted">How well did you recall it?</p><div class="actions grade"><button class="btn" data-g="0" type="button">Missed it</button><button class="btn" data-g="1" type="button">Partly</button><button class="btn primary" data-g="2" type="button">Got it</button></div>'
+          : '<div class="actions"><button class="btn haldi" type="button" id="dr-show">Show my note</button></div>') + '</div>';
+      const sb = d.querySelector('#dr-show'); if (sb) sb.onclick = () => show(true);
+      d.querySelectorAll('[data-g]').forEach((b) => { b.onclick = () => {
+        const g = +b.dataset.g; const cur = S.drill[i.id] || { iv: 1 };
+        const iv = g === 0 ? 1 : g === 1 ? Math.max(2, Math.round(cur.iv * 1.5)) : Math.min(60, Math.round(cur.iv * 2.5) || 3);
+        S.drill[i.id] = { iv, due: addDays(today(), iv), last: g };
+        k++;
+        if (k < cards.length) show(false); else done();
+      }; });
+    };
+    const done = () => {
+      const mins = Math.max(1, Math.round((Date.now() - start) / 60000));
+      S.sessions.push({ id: 's' + Date.now(), date: today(), track: 'sd', itemId: null, minutes: mins, min: minNow(), activity: 'revise', part: 'Recall drill', source: 'drill', at: Date.now() });
+      save(); d.close(); refresh();
+      showCoachCard(cards.length + ' recalled in ' + mins + ' min. Recall, not rereading, is what makes it stick in the interview room.');
+      checkProgress();
+    };
+    show(false); if (!d.open) d.showModal();
+  }
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-drill]')) { e.preventDefault(); openDrill(); } });
+
+  // ---------- applications: from referral to offer ----------
+  const APP_STAGES = [['target', 'Target'], ['referral', 'Referral asked'], ['applied', 'Applied'], ['screen', 'Recruiter screen'], ['loop', 'Interviews'], ['offer', 'Offer'], ['closed', 'Closed']];
+  const inr = (v) => { const n = +v || 0; return n >= 100 ? (n / 100).toFixed(2).replace(/\.00$/, '') + ' Cr' : n + ' L'; };
+  const firstYear = (a) => (+a.fixed || 0) + (+a.variable || 0) + (+a.stockYr || 0) + (+a.joining || 0);
+  function followUpsDue() { return (S.apps || []).filter((a) => a.next && a.nextAt && a.nextAt <= today() && !['closed'].includes(a.stage)); }
+  function openApp(id) {
+    S.apps = S.apps || [];
+    const a = S.apps.find((x) => x.id === id) || { id: 'ap' + Date.now(), company: '', role: S.profile.role || '', level: '', stage: 'target', source: 'referral', next: '', nextAt: '', notes: '' };
+    let d = document.getElementById('appdlg'); if (!d) { d = document.createElement('dialog'); d.id = 'appdlg'; document.body.appendChild(d); }
+    d.innerHTML = '<form class="dlg" id="appform"><div class="dlg-head"><h2>' + (a.company ? esc(a.company) : 'New application') + '</h2><button class="btn quiet" type="button" data-close>Close</button></div>' +
+      '<div class="row"><div class="field"><label for="ap-co">Company</label><input id="ap-co" name="company" value="' + esc(a.company) + '" required></div><div class="field"><label for="ap-role">Role</label><input id="ap-role" name="role" value="' + esc(a.role) + '"></div><div class="field" style="flex:0 1 140px"><label for="ap-lv">Level</label><input id="ap-lv" name="level" value="' + esc(a.level) + '" placeholder="e.g. L6, IC5"></div></div>' +
+      '<div class="row"><div class="field"><label for="ap-st">Stage</label><select id="ap-st" name="stage">' + APP_STAGES.map(([v, t]) => '<option value="' + v + '"' + (v === a.stage ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></div>' +
+      '<div class="field"><label for="ap-src">Source</label><select id="ap-src" name="source">' + [['referral', 'Referral'], ['recruiter', 'Recruiter reached out'], ['portal', 'Careers site / portal'], ['other', 'Other']].map(([v, t]) => '<option value="' + v + '"' + (v === a.source ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></div></div>' +
+      '<div class="row"><div class="field"><label for="ap-nx">Next action</label><input id="ap-nx" name="next" value="' + esc(a.next) + '" placeholder="e.g. Follow up with recruiter"></div><div class="field" style="flex:0 1 170px"><label for="ap-nd">By</label><input id="ap-nd" name="nextAt" type="date" value="' + esc(a.nextAt) + '"></div></div>' +
+      '<details class="rubricbox"' + (a.stage === 'offer' ? ' open' : '') + '><summary><b>Offer details</b> (lakh per year)</summary><div class="row" style="margin-top:8px"><div class="field"><label for="ap-f">Fixed</label><input id="ap-f" name="fixed" type="number" step="0.1" value="' + esc(a.fixed || '') + '"></div><div class="field"><label for="ap-v">Variable / bonus</label><input id="ap-v" name="variable" type="number" step="0.1" value="' + esc(a.variable || '') + '"></div><div class="field"><label for="ap-s">Stock per year</label><input id="ap-s" name="stockYr" type="number" step="0.1" value="' + esc(a.stockYr || '') + '"></div><div class="field"><label for="ap-j">Joining bonus</label><input id="ap-j" name="joining" type="number" step="0.1" value="' + esc(a.joining || '') + '"></div></div></details>' +
+      '<div class="field"><label for="ap-no">Notes: contacts, interview feedback</label><textarea id="ap-no" name="notes" rows="3">' + esc(a.notes) + '</textarea></div>' +
+      '<div class="actions"><button class="btn primary" type="submit">Save</button>' + (S.apps.some((x) => x.id === a.id) ? '<button class="btn" type="button" id="ap-del">Delete</button>' : '') + '</div></form>';
+    const f = d.querySelector('#appform');
+    f.onsubmit = (e) => {
+      e.preventDefault(); const n = { id: a.id, updated: Date.now() };
+      ['company', 'role', 'level', 'stage', 'source', 'next', 'nextAt', 'notes', 'fixed', 'variable', 'stockYr', 'joining'].forEach((k) => { n[k] = f.elements[k].value.trim(); });
+      const moved = a.stage !== n.stage; S.apps = S.apps.filter((x) => x.id !== n.id).concat([n]); save(); d.close(); refresh(); setTimeout(checkProgress, 1200);
+      if (moved && n.stage === 'offer') { releaseBalloons(8, ['family'], true); showCoachCard('An offer from ' + n.company + '. This is what every early morning was for. Compare it calmly before you answer.'); }
+      else if (moved && n.stage === 'loop') showCoachCard(n.company + ' interviews: ask the recruiter for the loop structure and do one mock of each round this week.');
+      else if (moved && n.stage === 'closed') showCoachCard('A closed door is information, not a verdict. Note what you learned, then on to the next one.');
+    };
+    const del = d.querySelector('#ap-del'); if (del) del.onclick = () => { if (confirm('Delete this application?')) { S.apps = S.apps.filter((x) => x.id !== a.id); save(); d.close(); refresh(); } };
+    if (!d.open) d.showModal();
+  }
+  function appsBoard() {
+    const apps = S.apps || [];
+    const due = followUpsDue();
+    const offers = apps.filter((a) => a.stage === 'offer' && firstYear(a) > 0).sort((a, b) => firstYear(b) - firstYear(a));
+    return (due.length ? '<div class="banner"><b>Follow up today:</b> ' + due.map((a) => esc(a.company) + ' (' + esc(a.next) + ')').join(', ') + '</div>' : '') +
+      '<div class="board">' + APP_STAGES.map(([v, t]) => { const list = apps.filter((a) => a.stage === v); return '<div class="col"><div class="col-h">' + t + ' <span>' + list.length + '</span></div>' +
+        list.map((a) => '<button class="appcard" type="button" data-app="' + a.id + '"><b>' + esc(a.company) + '</b><span>' + esc([a.role, a.level].filter(Boolean).join(' · ')) + '</span>' + (a.next ? '<small class="' + (a.nextAt && a.nextAt <= today() ? 'late' : '') + '">' + esc(a.next) + (a.nextAt ? ' · ' + shortDate(a.nextAt) : '') + '</small>' : '') + '</button>').join('') + '</div>'; }).join('') + '</div>' +
+      '<p class="actions" style="margin-top:12px"><button class="btn primary" type="button" data-app="">Add an application</button></p>' +
+      (offers.length ? '<h3>Offers compared (first year, lakh)</h3><div class="tablewrap"><table class="dtable"><thead><tr><th>Company</th><th class="num">Fixed</th><th class="num">Variable</th><th class="num">Stock/yr</th><th class="num">Joining</th><th class="num">First year</th></tr></thead><tbody>' +
+        offers.map((a, i) => '<tr><td><b>' + esc(a.company) + '</b>' + (i === 0 && offers.length > 1 ? ' <span class="chip st-done">Highest</span>' : '') + '</td><td class="num">' + (a.fixed || 0) + '</td><td class="num">' + (a.variable || 0) + '</td><td class="num">' + (a.stockYr || 0) + '</td><td class="num">' + (a.joining || 0) + '</td><td class="num"><b>' + inr(firstYear(a)) + '</b></td></tr>').join('') + '</tbody></table></div><p class="small muted">First-year total is not everything: compare level, team, growth and how the stock vests.</p>' : '');
+  }
+  document.addEventListener('click', (e) => { const b = e.target.closest('[data-app]'); if (b) { e.preventDefault(); openApp(b.dataset.app); } });
 
   // ---------- Android bridge sync ----------
   let lastRem = '', lastQ = '', lastMo = '';
@@ -1883,13 +2303,13 @@
       S.sessions.forEach((x) => { if (x.date >= wkStart && x.date <= t) weekMin += x.minutes; });
       for (let d = wkStart; d <= t; d = addDays(d, 1)) if (dayInfo(d).status === 'ok') weekComplete++;
       BR.setDayState(JSON.stringify({ date: t, sdDone: i.sdDone, dsaDone: i.dsaDone, status: i.status, rest: S.rest.includes(t), missedYesterday: missedYesterday(),
-        sdNext: sd ? sd.item.title : '', dsaNext: ds ? ds.item.title : '', dayStart: S.settings.dayStart, min: minNow(), name: daughter(), weekMin, weekComplete, streak: streak(),
+        sdNext: sd ? sd.item.title : '', dsaNext: ds ? ds.item.title : '', dayStart: S.settings.dayStart, min: minNow(), name: isSelf() ? '' : who(), pron: pron(), self: isSelf(), weekMin, weekComplete, streak: streak(),
         me: me(), why: (S.profile.why || '').trim(), plan: latestPlan() || '', sdMin: targets(t).sd, dsaMin: targets(t).dsa, skipDays: skipCostDays(),
         sleepAt: ampm(toMin(life().sleep, 30)), sdAt: (() => { const b = buildPlan().weekday.find((x) => x.kind === 'sd'); return b ? ampm(b.s) : ''; })(),
         herAgeAtOffer: herAgeAtOffer(), offerDate: S.profile.targetDate || '' }));
       const mo = JSON.stringify(S.settings.motiv); if (mo !== lastMo) { lastMo = mo; if (BR.setMotivation) BR.setMotivation(mo); }
       const r = JSON.stringify(S.reminders); if (r !== lastRem) { lastRem = r; BR.setReminders(r); }
-      const qo = {}; Object.keys(D.quotes).forEach((k) => { qo[k] = D.quotes[k].map(personal); });
+      const qo = {}; Object.keys(D.quotes).forEach((k) => { qo[k] = D.quotes[famCat(k)].map(personal); });
       const q = JSON.stringify(qo); if (q !== lastQ) { lastQ = q; BR.setQuotes(q); }
     } catch (e) {}
   }
@@ -1898,15 +2318,19 @@
   checkProgress();
   renderChrome();
   const page = document.body.dataset.page;
-  if (S.planApplied && (S.planVersion || 1) < 2) {
+  // First run on a new phone: the two-minute setup comes first.
+  if (!S.setupDone && page !== 'setup' && page !== 'privacy') { location.replace('setup.html'); return; }
+  if (S.planApplied && (S.planVersion || 1) < 3) {
+    const wasV1 = (S.planVersion || 1) < 2;
     applyPlan(true);
-    setTimeout(() => showCoachCard('New: after office I’ll tell you to put the phone down, and a silent check after your bedtime asks if you’re still scrolling. Sleep protects your morning deep work.'), 1500);
+    if (wasV1) setTimeout(() => showCoachCard('New: after office I’ll tell you to put the phone down, and a silent check after your bedtime asks if you’re still scrolling. Sleep protects your morning deep work.'), 1500);
   }
-  if (!S.planApplied) {
+  if (!S.planApplied && S.setupDone) {
     applyPlan(true);
-    setTimeout(() => showCoachCard('I’ve planned your day around your ' + ampm(toMin(life().officeStart, 870)) + ' to ' + ampm(toMin(life().officeEnd, 1410)) + ' office shift: family first in the morning, deep work before office, nothing heavy after it, sleep by ' + ampm(toMin(life().sleep, 30)) + '. Tap to see it.', () => { location.href = 'plan.html'; }), 1500);
+    setTimeout(() => showCoachCard('I’ve planned your day around your ' + ampm(toMin(life().officeStart, 570)) + ' to ' + ampm(toMin(life().officeEnd, 1110)) + ' office shift. Tap to see it.', () => { location.href = 'plan.html'; }), 1500);
   }
-  setTimeout(bedtimeCheck, 600);
+  if (page !== 'setup') setTimeout(bedtimeCheck, 600);
+  if (page === 'setup') initSetup();
   if (page === 'home') initHome();
   else if (page === 'dsa') initList('dsa');
   else if (page === 'sd') initList('sd');

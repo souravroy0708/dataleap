@@ -10,13 +10,18 @@ import java.util.List;
 final class Persona {
     /** What the app knows about today, copied from the web UI's last sync. */
     static final class Ctx {
-        String me = "", her = "", why = "", plan = "", sdNext = "", dsaNext = "", sleepAt = "", sdAt = "", herAgeAtOffer = "", status = "miss";
+        String me = "", her = "", pron = "they", why = "", plan = "", sdNext = "", dsaNext = "", sleepAt = "", sdAt = "", herAgeAtOffer = "", status = "miss";
         int sdMin = 10, dsaMin = 10, minCount = 5, daysLeft = -1, streak = 0, hour = 9, seed = 0;
         double skipDays = -1;
-        boolean missedYesterday, sdDone, dsaDone;
+        boolean missedYesterday, sdDone, dsaDone, self;
 
-        String her() { return her.isEmpty() ? "your daughter" : her; }
+        /** Who you are doing this for: a name, or a phrase like "your parents". Empty when doing it for yourself. */
+        String her() { return her.isEmpty() ? "your family" : her; }
         String Her() { String h = her(); return Character.toUpperCase(h.charAt(0)) + h.substring(1); }
+        boolean plural() { return "they".equals(pron) || her.contains(" and ") || her.contains(","); }
+        String s() { return plural() ? "" : "s"; }
+        String isAre() { return plural() ? "are" : "is"; }
+        String them() { return plural() ? "them" : "she".equals(pron) ? "her" : "he".equals(pron) ? "him" : "them"; }
         String meComma() { return me.isEmpty() ? "" : ", " + me; }
     }
 
@@ -41,7 +46,7 @@ final class Persona {
     static String hook(Ctx c) {
         List<String> o = new ArrayList<String>();
         if (c.missedYesterday) o.add("Yesterday slipped. Never twice: today decides whether this is a habit or a phase.");
-        if (c.skipDays >= 0) o.add("Skip today and your plan finishes about " + days(c.skipDays) + " later. Do it and " + c.her() + " is a day closer to the life you are building.");
+        if (c.skipDays >= 0) o.add("Skip today and your plan finishes about " + days(c.skipDays) + " later. Do it and " + (c.self ? "you are a day closer to the career you want." : c.her() + " " + c.isAre() + " a day closer to the life you are building."));
         if (c.daysLeft >= 0) o.add(c.daysLeft + " days to your offer date. Today is one of them.");
         if (c.streak >= 2) o.add(c.streak + "-day streak. Don't hand it back for a few minutes of scrolling.");
         if (!c.why.isEmpty()) o.add("Your why: \u201C" + c.why + "\u201D");
@@ -79,7 +84,7 @@ final class Persona {
     /** Right after office: protect the night. */
     static String[] night(Ctx c) {
         String title = "Phone down" + c.meComma();
-        String b = "Office is over. No reels, no news feed: dinner, a few minutes with family, sleep by " + (c.sleepAt.isEmpty() ? "12:30" : c.sleepAt) + ".\n\n"
+        String b = "Office is over. No reels, no news feed: dinner, " + (c.self ? "a short walk" : "a few minutes with " + c.her()) + ", sleep by " + (c.sleepAt.isEmpty() ? "12:30" : c.sleepAt) + ".\n\n"
             + "Every hour you scroll tonight is taken from tomorrow" + (c.sdAt.isEmpty() ? "" : "'s " + c.sdAt + " deep work") + "."
             + (c.sdNext.isEmpty() ? "" : " Tomorrow's first task is already waiting: \u201C" + c.sdNext + "\u201D.");
         return new String[]{title, b};
@@ -88,7 +93,7 @@ final class Persona {
     /** Silent check after bedtime: no sound, seen only if the phone is already in hand. */
     static String[] late(Ctx c, String clock) {
         String title = "It's " + clock + ". Still on your phone?";
-        String b = "Put it down and sleep. " + c.Her() + " will be up early, and your " + (c.sdAt.isEmpty() ? "morning" : c.sdAt) + " block needs a clear head."
+        String b = "Put it down and sleep. Your " + (c.sdAt.isEmpty() ? "next deep-work" : c.sdAt) + " block needs a clear head" + (c.self ? "." : ", and " + c.her() + " need" + c.s() + " you rested.")
             + (c.daysLeft >= 0 ? " " + c.daysLeft + " days to go; tired mornings don't win them." : "");
         return new String[]{title, b};
     }
@@ -101,10 +106,13 @@ final class Persona {
     }
 
     static String[] family(Ctx c, boolean morning, String quote) {
-        String title = morning ? "Good morning" + c.meComma() : "Laptop closed. Time with " + c.her();
-        String b = morning
-            ? "Before any app: " + c.her() + " first. Phone in your pocket until " + (c.sdAt.isEmpty() ? "your deep work" : c.sdAt) + ", then the timer, not the feed."
-            : c.Her() + " will remember this hour, not the notifications you missed. Phone in another room.";
+        String title = morning ? "Good morning" + c.meComma() : (c.self ? "Laptop closed. Personal time" : "Laptop closed. Time with " + c.her());
+        String until = c.sdAt.isEmpty() ? "your deep work" : c.sdAt;
+        String b;
+        if (c.self) b = morning ? "Before any app: water, daylight, a plan for the day. Phone in your pocket until " + until + ", then the timer, not the feed."
+                                : "Walk, read, rest. Recovery is part of the plan. Phone in another room.";
+        else b = morning ? "Before any app: " + c.her() + " first. Phone in your pocket until " + until + ", then the timer, not the feed."
+                         : c.Her() + " will remember this time, not the notifications you missed. Phone in another room.";
         if (quote != null && !quote.isEmpty()) b += "\n\n\u201C" + quote + "\u201D";
         return new String[]{title, b};
     }
@@ -114,9 +122,9 @@ final class Persona {
         String track = c.sdDone ? "dsa" : "sd";
         String item = "sd".equals(track) ? c.sdNext : c.dsaNext;
         String title;
-        if (idx == 0 && c.hour < 10) title = "Good morning" + c.meComma() + (c.her.isEmpty() ? "" : ". This one is for " + c.her);
+        if (idx == 0 && c.hour < 10) title = "Good morning" + c.meComma() + (c.self || c.her.isEmpty() ? "" : ". This one is for " + c.her);
         else if (c.missedYesterday) title = "Today is the comeback" + c.meComma();
-        else title = c.her.isEmpty() ? "Before you open another app" : "For " + c.her;
+        else title = c.self || c.her.isEmpty() ? "Before you open another app" : "For " + c.her;
         StringBuilder b = new StringBuilder("\u201C").append(quote == null ? "" : quote).append("\u201D");
         String h = hook(c);
         if (!h.isEmpty()) b.append("\n\n").append(h);

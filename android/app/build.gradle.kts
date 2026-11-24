@@ -5,16 +5,16 @@ plugins { id("com.android.application") }
 val releaseKeystore: String? = System.getenv("DL_KEYSTORE_PATH")
 // Every build gets a higher versionCode: the GitHub run number. Bump appVersion for bigger releases.
 val buildNumber: Int = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()?.plus(10) ?: 2
-val appVersion = "1.9"
+val appVersion = "3.0"
 
 android {
     namespace = "io.github.souravroy0708.dataleap"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.souravroy0708.dataleap"
         minSdk = 29
-        targetSdk = 34
+        targetSdk = 36
         versionCode = buildNumber
         versionName = "$appVersion.$buildNumber"
     }

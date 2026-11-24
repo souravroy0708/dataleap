@@ -286,7 +286,7 @@
   const sdCurriculum = ['S1', 'S4', 'S3', 'S2', 'S5', 'S6', 'S13', 'S12', 'S8', 'S7', 'S9', 'S11'];
   const rubric = ['Scoped it: consumers, freshness, correctness, scale', 'Sized it: events/s, TB/day, rough cost', 'Named trade-offs and what is given up', 'Correct under failure: idempotency, late data, replays, backfills', 'Operable: SLOs, data quality, alerting', 'Platform view: ownership, contracts, multi-team', 'Path from today to the target design'];
 
-  // ---------- Quotes (original lines; {name} = daughter's name from My why) ----------
+  // ---------- Quotes (original lines). Tokens: {name}/{Name} = who you do this for, {them}, {s} = verb ending, {years} ----------
   const quotes = {
     habit: [
       'The scroll will still be there tomorrow. This chance might not.',
@@ -323,20 +323,28 @@
       'Easy builds the reflex. Medium builds the nerve. Both count today.'
     ],
     family: [
-      '{name} will never know about the nights you studied. She will only know the life you gave her.',
-      'She is only small once. Build the future now, so you can be there for all of it later.',
-      'Every concept you master today is a school fee you will never have to worry about.',
-      '{name} deserves a father who did not settle. Be him today.',
-      'Her first school, her first trip, her biggest dream. Start paying for them with this hour.',
-      'You are not studying for an interview. You are building the life {name} grows up in.',
-      '{name} is watching how you handle hard things. Show her.',
+      '{Name} will never know about the mornings you studied. Only the life you built.',
+      'Build the future now, so you can be fully there for {name} later.',
+      'Every concept you master today is a better future for {name}.',
+      '{Name} deserve{s} the version of you that did not settle. Be that today.',
+      'You are not studying for an interview. You are building the life you want for {name}.',
+      '{Name} believe{s} in you. Prove {them} right today.',
       'One day {name} will ask how you did it. Make today part of the answer.',
       'The offer letter is the milestone. A better life for {name} is the point.',
-      'Close the laptop on time tonight. {name} needs you more than the timer does.'
+      'Close the laptop on time tonight. {Name} need{s} you more than the timer does.',
+      'Fifteen minutes now, so the years ahead have more room for {name}.'
+    ],
+    self: [
+      'You promised yourself more than this. Keep that promise today.',
+      'Nobody else will build the career you want. That is good news: it means you can.',
+      'The version of you a year from now is built by what you do this morning.',
+      'You deserve work that stretches you. Earn it one session at a time.',
+      'Close the laptop on time tonight. Rest is part of the plan.',
+      'Be the engineer you would want to hire.'
     ],
     switch: [
-      'You are not starting from zero. You are starting from {years} years. Prepare like it.',
-      '{years} years of building real systems is your edge. Product interviews only test it in a different language.',
+      'You are not starting from zero. You are starting from {years} years of real work. Prepare like it.',
+      '{years} years of building real systems are your edge. Product interviews only test it in a different language.',
       'Service work taught you to deliver. Product interviews ask you to decide. Practise deciding out loud.',
       'The gap is not knowledge. It is interview practice, and that gap closes one session at a time.',
       'Nobody in a Google or Uber loop will ask where you worked. They will ask how you think. Show them.',
@@ -355,7 +363,7 @@
     3: 'Three days in a row. The habit has started.',
     7: 'One full week. Most people never get here.',
     14: 'Two weeks. This is becoming who you are.',
-    21: 'Three weeks without missing. {name} has a father who keeps his word.',
+    21: 'Three weeks without missing. That is what keeping your word looks like.',
     30: 'Thirty days. A month of proof.',
     50: 'Fifty days. Interviewers can feel this kind of preparation.',
     75: 'Seventy-five days. You are not the same engineer you were.',

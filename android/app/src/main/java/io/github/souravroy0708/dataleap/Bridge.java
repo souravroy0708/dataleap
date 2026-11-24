@@ -92,7 +92,7 @@ final class Bridge {
         Motivation.schedule(a);
     }
 
-    @JavascriptInterface public void setDayState(String json) { Store.put(a, Store.K_DAY, json); }
+    @JavascriptInterface public void setDayState(String json) { Store.put(a, Store.K_DAY, json); WidgetProvider.refresh(a); }
 
     @JavascriptInterface public void setQuotes(String json) { Store.put(a, Store.K_QUOTES, json); }
 

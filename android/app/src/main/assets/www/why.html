@@ -26,22 +26,24 @@
     <div class="row">
       <div class="field"><label for="w-me">Your name</label><input id="w-me" name="me" autocomplete="given-name"></div>
       <div class="field" style="flex:0 1 130px"><label for="w-years">Years of experience</label><input id="w-years" name="years" type="number" min="1" max="40"></div>
-      <div class="field"><label for="w-name">Daughter's name</label><input id="w-name" name="name" autocomplete="off"></div>
-      <div class="field" style="flex:0 1 130px"><label for="w-age">Her age now (years)</label><input id="w-age" name="herAge" type="number" min="0" max="25" step="0.5"></div>
+      <div class="field"><label for="w-rel">I am doing this for</label><select id="w-rel" name="relation"><option value="">Choose</option><option value="daughter">My daughter</option><option value="son">My son</option><option value="children">My children</option><option value="parents">My parents</option><option value="mother">My mother</option><option value="father">My father</option><option value="wife">My wife</option><option value="husband">My husband</option><option value="partner">My partner</option><option value="family">My family</option><option value="myself">Myself</option><option value="other">Someone else</option></select></div>
+      <div class="field"><label for="w-name">Their name(s), optional</label><input id="w-name" name="name" autocomplete="off" placeholder="e.g. Riya, or Amma and Appa"></div>
+      <div class="field" style="flex:0 1 150px"><label for="w-age">Age now, for children</label><input id="w-age" name="herAge" type="number" min="0" max="25" step="0.5"></div>
+      <div class="field" style="flex:0 1 150px"><label for="w-pr">Refer to them as</label><select id="w-pr" name="pronoun"><option value="">Automatic</option><option value="she">she / her</option><option value="he">he / him</option><option value="they">they / them</option></select></div>
       <div class="field"><label for="w-date">Offer by</label><input id="w-date" name="targetDate" type="date"></div>
       <div class="field"><label for="w-hours">Prep hours goal</label><input id="w-hours" name="hoursGoal" type="number" min="10"></div>
     </div>
-    <div class="field"><label for="w-why">My why, in one sentence</label><input id="w-why" name="why" placeholder="So she grows up with every door open, and a father who is home for dinner"></div>
+    <div class="field"><label for="w-why">My why, in one sentence</label><input id="w-why" name="why" placeholder="e.g. So the people I love never have to worry, and I do work I am proud of"></div>
     <div class="row">
       <div class="field"><label for="w-role">Target role</label><input id="w-role" name="role"></div>
       <div class="field"><label for="w-co">Target companies</label><input id="w-co" name="companies"></div>
     </div>
-    <div class="field"><label for="w-d">For her (one per line)</label><textarea id="w-d" name="v-daughter" rows="5"></textarea></div>
+    <div class="field"><label for="w-d">For them (one per line)</label><textarea id="w-d" name="v-them" rows="5"></textarea></div>
     <div class="field"><label for="w-f">For our family (one per line)</label><textarea id="w-f" name="v-family" rows="4"></textarea></div>
     <div class="field"><label for="w-m">For me (one per line)</label><textarea id="w-m" name="v-me" rows="4"></textarea></div>
-    <div class="field"><label for="w-l">A letter to her, to read on offer day</label><textarea id="w-l" name="letter" rows="6" placeholder="Write it now, while the work is still ahead of you."></textarea></div>
+    <div class="field"><label for="w-l">A letter to them (or to yourself), to read on offer day</label><textarea id="w-l" name="letter" rows="6" placeholder="Write it now, while the work is still ahead of you."></textarea></div>
     <button class="btn primary" type="submit">Save</button>
-    <p class="small muted" style="margin-top:10px">Your coach uses both names. They appear in quotes, balloons and reminders, and stay on this device. Tap a 🎤 to speak instead of typing.</p>
+    <p class="small muted" style="margin-top:10px">Your coach uses these names in quotes, balloons and reminders. Everything stays on this device. Tap a 🎤 to speak instead of typing.</p>
   </form>
 </div></section>
 </main>

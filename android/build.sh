@@ -3,13 +3,13 @@
 # Needs: JDK 17, aapt, dalvik-exchange (dx), zipalign, apksigner (Ubuntu: apt install openjdk-17-jdk-headless aapt dalvik-exchange zipalign apksigner)
 set -euo pipefail
 cd "$(dirname "$0")"
-JAR=${ANDROID_JAR:-tools/android-34.jar}
+JAR=${ANDROID_JAR:-tools/android-34.jar}   # compile against 34 (aapt v1 cannot read the 36 resource table); target 36 is declared below
 if [ ! -f "$JAR" ]; then mkdir -p tools; curl -fsSL -o "$JAR" https://raw.githubusercontent.com/Sable/android-platforms/master/android-34/android.jar; fi
 WEB=${WEB_DIR:-../docs}
 KS=${KEYSTORE:-keystore/dataleap-release.jks}
 KS_PASS=${KS_PASS:-dataleap-2026}
-VERSION_CODE=${VERSION_CODE:-10}
-VERSION_NAME=${VERSION_NAME:-1.9.10}
+VERSION_CODE=${VERSION_CODE:-12}
+VERSION_NAME=${VERSION_NAME:-3.0.12}
 M=app/src/main
 OUT=app/build
 
@@ -24,7 +24,7 @@ rm -rf "$M/assets/www/course" "$M/assets/www/download"   # never bundle paid cou
 # 2. Resources + manifest (Gradle sets the package from "namespace"; aapt needs it in the manifest)
 sed 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android"#<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.souravroy0708.dataleap"#' "$M/AndroidManifest.xml" > "$OUT/AndroidManifest.xml"
 aapt package -f -m -J "$OUT/gen" -M "$OUT/AndroidManifest.xml" -S "$M/res" -A "$M/assets" -I "$JAR" \
-  --min-sdk-version 29 --target-sdk-version 34 --version-code "$VERSION_CODE" --version-name "$VERSION_NAME" \
+  --min-sdk-version 29 --target-sdk-version 36 --version-code "$VERSION_CODE" --version-name "$VERSION_NAME" \
   -F "$OUT/app.unsigned.apk"
 
 # 3. Self-test of the scheduling maths (plain JVM), then Java -> classes -> dex

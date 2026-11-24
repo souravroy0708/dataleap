@@ -79,6 +79,8 @@ final class Store {
         Persona.Ctx x = new Persona.Ctx();
         x.me = d.optString("me", "");
         x.her = t.optString("name", "");
+        x.pron = d.optString("pron", "they");
+        x.self = d.optBoolean("self", false);
         x.why = d.optString("why", "");
         x.plan = d.optString("plan", "");
         x.sdNext = t.optString("sdNext", "");

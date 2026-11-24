@@ -4,6 +4,24 @@ Daily prep tracker for **staff-level data engineering system design and DSA** in
 
 DataLeap is not a practice platform. DSA questions link to NeetCode (free, with video solutions); system design items link to videos, articles or Exponent; DataLeap tracks the time you spend each day, the status of every question, your notes, and when to revise.
 
+## What is in DataLeap 3.0
+
+- **Mock interview simulator:** a 45-minute system design round in six timed phases, with the interviewer's follow-ups during the deep dive, a staff rubric and an export for AI review.
+- **2-minute recall drill:** spaced repetition on your own notes.
+- **Applications board:** target → referral → applied → screen → interviews → offer, with follow-up dates and an offer comparison.
+- **Home-screen widget:** streak, today's two tasks, next item and days to the offer.
+- **Play-ready:** target API 36, edge-to-edge, predictive back, no restricted alarm permission, AAB from the workflow. See `design/play-store.md` and `design/store-listing.md`.
+
+## For anyone making the switch
+
+DataLeap is for any data engineer moving from a service company to a product company. On first launch a two-minute setup asks (all optional):
+- you: name, years of experience, target role, companies, offer date
+- who you are doing this for: daughter, son, children, parents, mother, father, wife, husband, partner, family, yourself or someone else, with names, age for children and pronouns
+- your day: shift timings (any shift, including night), office days, commute, wake and sleep
+- your pace: hours a week, starting level, rest days, motivating notifications
+
+Every quote, coach line, notification and plan block adapts to those answers. Change them any time on My why, My day and Reminders, or rerun setup. Everything stays on the phone. Publishing on Google Play: see `design/play-store.md`.
+
 ## Daily goal
 
 System design first, DSA second. Every day: 1 system design unit (a concept, a video, a summary, or one part of a design case) and 1 DSA question. A day is complete when both have a session over the minimum time.
@@ -31,6 +49,8 @@ System design first, DSA second. Every day: 1 system design unit (a concept, a v
 dataleap/
 ├── docs/                  GitHub Pages site (static prototype, works today)
 │   ├── career.html        Career kit: story bank, mock interviews, commitment, accountability
+│   ├── setup.html         First-run setup: you, your why, your day, your pace
+│   ├── privacy.html       Privacy policy (needed for Google Play)
 │   ├── plan.html          My day: schedule around office hours and family, priorities, career timeline
 │   ├── index.html         Today: why strip, level, the daily run, timer, history grid, revision queue
 │   ├── dsa.html           DSA questions by topic

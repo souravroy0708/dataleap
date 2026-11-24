@@ -22,7 +22,7 @@ The DataLeap app: the same screens as the website, plus real Android features.
 
 - **Native layer (Java, Android framework only):** `MainActivity`, `Bridge` (exposed to the UI as `window.AndroidBridge`), `Scheduler`, `SchedulePlan` (pure scheduling maths, self-tested), `Motivation` + `MotivationReceiver`, `DataStore` (SQLite), `Voice`, `Notifier`, `ReminderReceiver`, `TimerReceiver`, `ActionReceiver`, `BootReceiver`, `Store`.
 - **UI:** the website from `docs/`, bundled in `app/src/main/assets/www/` and served from a private `https://dataleap.app.local/` origin inside a WebView. External links (NeetCode, Aced, YouTube) open in your browser.
-- minSdk 29 (Android 10), targetSdk 34.
+- minSdk 29 (Android 10), targetSdk 36 (Google Play requirement since August 2026). Edge-to-edge with system-bar insets, predictive back.
 
 ## Build
 

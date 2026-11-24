@@ -4,8 +4,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Exact reminders: the user allows "Alarms and reminders" in Settings; without it reminders may arrive a few minutes late. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- Voice entry: asked only when you tap a mic, on only while the listening sheet is open.
          Audio is never saved or uploaded by DataLeap; only the recognised words are used. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -27,7 +27,8 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/AppTheme"
         android:allowBackup="true"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".MainActivity"
@@ -45,6 +46,12 @@
         <receiver android:name=".ActionReceiver" android:exported="false" />
         <receiver android:name=".TimerReceiver" android:exported="false" />
         <receiver android:name=".MotivationReceiver" android:exported="false" />
+        <receiver android:name=".WidgetProvider" android:exported="true" android:label="DataLeap today">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/dataleap_widget" />
+        </receiver>
         <receiver android:name=".BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

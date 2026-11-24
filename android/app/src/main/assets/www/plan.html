@@ -18,7 +18,7 @@
 <section class="hero"><div class="wrap">
 <span class="kicker"><span class="dot"></span>Your career mentor</span>
 <h1>Your day, built around office and family</h1>
-<p class="lede">You work <span id="lede-hours">2:30 pm to 11:30 pm</span>, so on office days your daughter is asleep when you get home. <strong>Your mornings are the only time you see her awake, and the time your mind is sharpest.</strong> This plan gives the morning to her first, the next hours to deep work, keeps nothing heavy after office, and protects your sleep. Your reminders follow it.</p>
+<p class="lede" id="plan-lede"></p>
 <div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
 </div></section>
 <main>
@@ -32,6 +32,8 @@
       <div class="field"><label for="lf-w">Wake up</label><input id="lf-w" name="wake" type="time"></div>
       <div class="field"><label for="lf-s">Sleep</label><input id="lf-s" name="sleep" type="time"></div>
     </div>
+    <fieldset class="field" style="border:0;padding:0;margin:0 0 14px"><legend style="font-weight:700;font-size:14px;margin-bottom:6px">Office days</legend>
+      <div class="row" style="gap:16px"><label class="inline"><input type="checkbox" name="wd" value="1">Mon</label><label class="inline"><input type="checkbox" name="wd" value="2">Tue</label><label class="inline"><input type="checkbox" name="wd" value="3">Wed</label><label class="inline"><input type="checkbox" name="wd" value="4">Thu</label><label class="inline"><input type="checkbox" name="wd" value="5">Fri</label><label class="inline"><input type="checkbox" name="wd" value="6">Sat</label><label class="inline"><input type="checkbox" name="wd" value="0">Sun</label></div></fieldset>
     <button class="btn primary" type="submit">Plan my day and update reminders</button>
     <p class="small muted" id="applied" style="margin:10px 0 0"></p>
   </form>
@@ -46,8 +48,8 @@
 <section class="sec"><div class="wrap">
   <div class="card"><h2>Your priorities, in this order</h2>
     <ol class="prio-list">
-      <li><b>Sleep and health.</b> Seven hours and a 30-minute walk. Everything else runs on this, and a 9-hour evening shift makes it easy to lose.</li>
-      <li><b>Your daughter and family.</b> Mornings are hers on office days. Weekends are mostly family. This is non-negotiable, and it is also why you are doing all this.</li>
+      <li><b>Sleep and health.</b> Seven hours and a 30-minute walk. Everything else runs on this, and a long shift makes it easy to lose.</li>
+      <li><b>The people you are doing this for.</b> Their time is built into the plan, not squeezed around it. Weekends are mostly theirs. This is non-negotiable, and it is also why you are doing all this.</li>
       <li><b>Your current job.</b> Do it well. It pays for everything, and your next manager will ask about it.</li>
       <li><b>System design.</b> The round that decides staff offers. It gets your best hour, every day.</li>
       <li><b>Data engineering DSA.</b> The gate, not the goal. Thirty minutes a day is enough.</li>

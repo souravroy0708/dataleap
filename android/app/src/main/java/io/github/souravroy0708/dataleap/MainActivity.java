@@ -15,6 +15,11 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.View;
+import android.view.WindowInsets;
+import android.widget.FrameLayout;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -36,7 +41,34 @@ public class MainActivity extends Activity {
         Notifier.ensureChannels(this);
         web = new WebView(this);
         web.setBackgroundColor(0xFF0F1235);
-        setContentView(web);
+        // Edge to edge (required from Android 15/16): keep content clear of the status bar, navigation bar and keyboard.
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(0xFF0F1235);
+        root.addView(web, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                int l, t, r, b;
+                if (Build.VERSION.SDK_INT >= 30) {
+                    android.graphics.Insets i = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
+                    l = i.left; t = i.top; r = i.right; b = i.bottom;
+                } else {
+                    l = insets.getSystemWindowInsetLeft(); t = insets.getSystemWindowInsetTop(); r = insets.getSystemWindowInsetRight(); b = insets.getSystemWindowInsetBottom();
+                }
+                v.setPadding(l, t, r, b);
+                return insets;
+            }
+        });
+        setContentView(root);
+        // Predictive back (Android 13+, default from Android 16): back goes to the previous page, then closes.
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, new OnBackInvokedCallback() {
+                @Override
+                public void onBackInvoked() {
+                    if (web != null && web.canGoBack()) web.goBack(); else finish();
+                }
+            });
+        }
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
