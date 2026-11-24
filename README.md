@@ -12,6 +12,20 @@ DataLeap is not a practice platform. DSA questions link to NeetCode (free, with 
 - **Home-screen widget:** streak, today's two tasks, next item and days to the offer.
 - **Play-ready:** target API 36, edge-to-edge, predictive back, no restricted alarm permission, AAB from the workflow. See `design/play-store.md` and `design/store-listing.md`.
 
+## Private access
+
+DataLeap opens with a 6-digit PIN, asked once per phone. Share the PIN only with the friends you want to use it. To change it, compute a new hash and replace `LOCK_HASH` in `docs/assets/js/app.js`:
+
+```
+node -e "let h=0x811c9dc5;for(const c of 'dataleap-lock::NEWPIN'){h^=c.charCodeAt(0);h=Math.imul(h,0x01000193)>>>0}console.log(h.toString(16))"
+```
+
+The PIN keeps casual users out; it is not encryption. The privacy policy page stays open without it.
+
+## Two goals: career and fitness
+
+The default plan is personal: Staff Data Engineer by October 2027, and 72 → 65 kg with strength and stamina. The day plan puts deep work first, then the gym, then family, around a 2:30 to 11:30 pm shift. The Fitness page has the program (Strength A and B, conditioning, walks), weigh-ins with a trend and finish date, a workout log, nutrition for the shift and its own milestones and reminders. Everything is editable.
+
 ## For anyone making the switch
 
 DataLeap is for any data engineer moving from a service company to a product company. On first launch a two-minute setup asks (all optional):

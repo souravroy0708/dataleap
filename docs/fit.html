@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fitness · DataLeap</title>
+<meta name="description" content="Your second goal: fit, strong and 65 kg.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="fit">
+<header id="top"></header>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>Goal two</span>
+<h1>Fit, strong, 65 kg</h1>
+<p class="lede">Career and health on the same morning routine: deep work while your mind is fresh, then the gym, then family. <strong>Strength three days, conditioning one day, walks in between, and a kitchen that does most of the weight loss.</strong></p>
+<div class="stats-row" id="fitstats"></div>
+<div id="fitpace"></div>
+<div class="quote"><div class="quote-body"><p id="quote-text"></p><button class="btn ghost small" id="quote-next" type="button">Another quote</button></div></div>
+</div></section>
+<main>
+<section class="sec"><div class="wrap cols">
+  <div class="card"><div class="sec-head"><h2>Weight</h2><p class="muted">Weigh in each morning, after the bathroom, before food</p></div>
+    <form id="weighform" class="row" style="margin-bottom:10px"><div class="field" style="flex:0 1 160px"><label for="wkg">Today (kg)</label><input id="wkg" name="kg" type="number" step="0.1" min="30" max="250" required></div><div class="field" style="flex:0 0 auto"><button class="btn primary" type="submit">Log weight</button></div></form>
+    <div id="wchart"></div></div>
+  <div class="card"><div class="sec-head"><h2>Workouts</h2><button class="btn small primary" type="button" data-workout="">Log workout</button></div><div class="tablewrap" id="wolog"></div></div>
+</div></section>
+<section class="sec" id="fooddiary"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Food diary</h2><p class="muted">Breakfast, lunch, dinner, and everything in between</p></div><div id="food"></div></div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Your program</h2><p class="muted">Full body, three strength days, one conditioning day</p></div><div id="program"></div></div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><h2>Eating for a 2:30 to 11:30 shift</h2>
+    <ol class="crack advice">
+      <li><b>A moderate deficit, not a crash</b>For a 35-year-old man around 72 kg who trains, roughly 1,800 to 1,950 kcal a day usually gives 0.4 to 0.6 kg a week. Adjust by the 2-week trend, not by hunger on one day.</li>
+      <li><b>Protein at every meal</b>Aim for about 110 to 130 g a day: dal, paneer, curd, eggs, chicken or fish, soya, and whey if you like. Protein keeps the muscle you are building while the fat comes off.</li>
+      <li><b>The post-office danger zone</b>Getting home after midnight is when the extra calories happen. Eat a proper dinner at the office break, and keep one planned small snack for home: curd, fruit or a glass of milk.</li>
+      <li><b>Roti and rice, measured</b>Keep them, but measure portions for two weeks so you know what you actually eat. Fill half the plate with sabzi and salad.</li>
+      <li><b>Drinks count</b>Sugar in chai, juices and colas adds up fast. Water through the shift; chai with less sugar.</li>
+      <li><b>Sleep is a fat-loss tool</b>Seven hours keeps hunger hormones in check. The 12:30 bedtime in your plan matters for both goals.</li>
+    </ol>
+    <p class="note">General guidance, not medical advice. If you have a health condition or take medication, check with a doctor before changing diet or starting heavy training.</p>
+  </div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <form id="fitform" class="panel"><h2>Your fitness settings</h2>
+    <div class="row">
+      <div class="field"><label for="ff-s">Starting weight (kg)</label><input id="ff-s" name="startKg" type="number" step="0.1"></div>
+      <div class="field"><label for="ff-g">Goal weight (kg)</label><input id="ff-g" name="goalKg" type="number" step="0.1"></div>
+      <div class="field"><label for="ff-d">Goal date</label><input id="ff-d" name="goalDate" type="date"></div>
+      <div class="field"><label for="ff-m">Gym session (min)</label><input id="ff-m" name="gymMin" type="number" min="20" max="120"></div>
+    </div>
+    <fieldset class="field" style="border:0;padding:0;margin:0 0 14px"><legend style="font-weight:700;font-size:14px;margin-bottom:6px">Gym days</legend>
+      <div class="row" style="gap:16px"><label class="inline"><input type="checkbox" name="gd" value="1">Mon</label><label class="inline"><input type="checkbox" name="gd" value="2">Tue</label><label class="inline"><input type="checkbox" name="gd" value="3">Wed</label><label class="inline"><input type="checkbox" name="gd" value="4">Thu</label><label class="inline"><input type="checkbox" name="gd" value="5">Fri</label><label class="inline"><input type="checkbox" name="gd" value="6">Sat</label><label class="inline"><input type="checkbox" name="gd" value="0">Sun</label></div></fieldset>
+    <button class="btn primary" type="submit">Save and update my plan</button>
+  </form>
+</div></section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/library.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/voice.js"></script>
+</body>
+</html>

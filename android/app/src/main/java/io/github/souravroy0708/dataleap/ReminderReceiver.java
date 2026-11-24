@@ -36,6 +36,14 @@ public class ReminderReceiver extends BroadcastReceiver {
             Notifier.life(c, n[0], n[1], id);
             return;
         }
+        if ("gym".equals(focus)) {
+            JSONObject d = Store.day(c);
+            boolean fresh = Store.studyDate(c, System.currentTimeMillis()).equals(d.optString("date"));
+            if (fresh && d.optBoolean("gymDone")) return; // already trained today
+            String[] n = Persona.gym(x);
+            Notifier.life(c, n[0], n[1], id);
+            return;
+        }
         if ("sleep".equals(focus)) { String[] n = Persona.sleep(x); Notifier.life(c, n[0], n[1], id); return; }
         if ("night".equals(focus)) { String[] n = Persona.night(x); Notifier.life(c, n[0], n[1], id); return; }
         if ("late".equals(focus)) {

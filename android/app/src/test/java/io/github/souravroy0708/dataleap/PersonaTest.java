@@ -57,6 +57,12 @@ public final class PersonaTest {
         String sh = ""; for (int s = 0; s < 6; s++) { self.seed = s; sh += Persona.hook(self) + Persona.family(self, true, "")[1] + Persona.night(self)[1] + Persona.late(self, "1 am")[1]; }
         check(sh.contains("career you want") && !sh.contains("your family") && !sh.contains("daughter"), "doing it for yourself: no family wording at all");
         check(!Persona.motivation(self, 0, "q")[0].contains("This one is for"), "self: morning title is not dedicated to anyone else");
+        Persona.Ctx g = new Persona.Ctx(); g.me = "Arjun"; g.her = "Riya"; g.pron = "she"; g.workout = "Strength A"; g.kgNow = 71.4; g.goalKg = 65;
+        boolean gymOk = true; for (int s2 = 0; s2 < 8; s2++) { g.seed = s2; if (!clean(Persona.gym(g))) gymOk = false; }
+        String[] gn = Persona.gym(g);
+        check(gymOk && gn[1].contains("Strength A") && gn[1].contains("71.4 kg now, 65 kg") && gn[0].contains("Arjun"), "gym reminder names the workout and the weight goal");
+        Persona.Ctx g2 = new Persona.Ctx(); g2.self = true; boolean g2ok = true; for (int s2 = 0; s2 < 8; s2++) { g2.seed = s2; if (!clean(Persona.gym(g2)) || Persona.gym(g2)[1].contains("family")) g2ok = false; }
+        check(g2ok, "gym reminder without details or family reads cleanly");
         System.out.println("\nSample morning reminder:\n" + Persona.study(full, "sd", "", "Your years of production fires are your edge.")[0] + "\n" + Persona.study(full, "sd", "", "Your years of production fires are your edge.")[1]);
         full.missedYesterday = false;
         String[] nt = Persona.night(full); System.out.println("\nSample after-office notification:\n" + nt[0] + "\n" + nt[1]);

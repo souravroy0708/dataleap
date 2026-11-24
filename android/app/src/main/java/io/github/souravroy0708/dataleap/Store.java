@@ -81,6 +81,9 @@ final class Store {
         x.her = t.optString("name", "");
         x.pron = d.optString("pron", "they");
         x.self = d.optBoolean("self", false);
+        x.workout = d.optString("workout", "");
+        x.kgNow = d.optDouble("kgNow", 0);
+        x.goalKg = d.optDouble("goalKg", 0);
         x.why = d.optString("why", "");
         x.plan = d.optString("plan", "");
         x.sdNext = t.optString("sdNext", "");

@@ -675,3 +675,47 @@ td.over{color:#B23A1E;font-weight:700}
 .appcard span{font-size:13px;color:var(--tmuted)}
 .appcard small{font-size:12px;color:var(--blue)}
 .appcard small.late{color:#B23A1E;font-weight:700}
+
+/* PIN lock */
+body.locked{overflow:hidden}
+body.locked > *:not(.lock){visibility:hidden}
+.lock{position:fixed;inset:0;z-index:200;background:var(--ink);color:var(--white);display:grid;place-items:center;padding:24px}
+.lock-in{width:min(340px,100%);text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.lock h1{font-size:40px;margin:6px 0 0;color:var(--white)}
+.lock .muted{color:var(--muted);margin:0}
+.brand-mark.big{width:72px;height:72px;border-radius:22px}
+.brand-mark.big svg{width:44px;height:44px}
+.pin{display:flex;gap:12px;margin:14px 0 4px}
+.pin i{width:16px;height:16px;border-radius:50%;border:2px solid var(--muted)}
+.pin i.on{background:var(--haldi);border-color:var(--haldi)}
+.pin.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pin-err{min-height:22px;color:#FF9F87;margin:0;font-size:14px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%}
+.pad button{height:64px;border-radius:18px;border:1px solid var(--line);background:var(--ink-2);color:var(--white);font-family:var(--display);font-size:26px;font-weight:700;cursor:pointer}
+.pad button:active{background:var(--ink-3)}
+.lock-priv{margin-top:10px;font-size:13px;color:var(--muted)}
+
+/* Fitness */
+.fitcard{margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:var(--white);border:1px solid var(--pline);border-left:6px solid var(--mint);border-radius:var(--r-lg);padding:16px 20px}
+.fitcard.done{background:#E9F8F0}
+.fitcard h2{margin:2px 0 4px;font-size:26px}
+.fit-k{margin:0;font-size:13px;font-weight:700;color:var(--mint-2);text-transform:uppercase;letter-spacing:.04em}
+.chart .goal{stroke:var(--mint);stroke-width:2}
+.chart .wline{fill:none;stroke:var(--blue);stroke-width:2.5;stroke-linejoin:round}
+.chart .wdot{fill:var(--blue)}
+.lg-goal{display:inline-block;width:16px;border-top:2px solid var(--mint)}
+
+/* Food diary */
+.meals{display:flex;flex-direction:column;gap:8px}
+.meal{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--white);border:1px solid var(--pline);border-radius:var(--r-md);padding:12px 14px;cursor:pointer;font:inherit;color:var(--tdark)}
+.meal:hover{border-color:var(--tdark)}
+.meal.empty{border-style:dashed;background:var(--paper)}
+.meal.empty .m-b span{color:var(--blue)}
+.m-t{font-family:var(--display);font-weight:800;font-size:16px;min-width:52px;font-variant-numeric:tabular-nums}
+.m-b{flex:1;display:flex;flex-direction:column;gap:2px}
+.m-b b{font-size:15px}
+.m-b span{font-size:14px;color:var(--tmuted);white-space:pre-wrap}
+.m-p{font-weight:700;font-size:13px;color:var(--mint-2);white-space:nowrap}
+em.late{font-style:normal;font-size:11px;font-weight:700;background:#FFE9E3;color:#B23A1E;border-radius:999px;padding:1px 8px;margin-left:6px}
+.late-txt{color:#B23A1E}

@@ -10,6 +10,8 @@ import java.util.List;
 final class Persona {
     /** What the app knows about today, copied from the web UI's last sync. */
     static final class Ctx {
+        String workout = "";
+        double kgNow = 0, goalKg = 0;
         String me = "", her = "", pron = "they", why = "", plan = "", sdNext = "", dsaNext = "", sleepAt = "", sdAt = "", herAgeAtOffer = "", status = "miss";
         int sdMin = 10, dsaMin = 10, minCount = 5, daysLeft = -1, streak = 0, hour = 9, seed = 0;
         double skipDays = -1;
@@ -80,6 +82,22 @@ final class Persona {
         if (quote != null && !quote.isEmpty()) b.append("\n\n\u201C").append(quote).append("\u201D");
         return new String[]{title, b.toString()};
     }
+
+    /** Gym reminder: the second goal, with today's session and the weight goal. */
+    static String[] gym(Ctx c) {
+        String title = "Gym in 15 minutes" + c.meComma();
+        StringBuilder b = new StringBuilder("Today: ").append(c.workout.isEmpty() ? "your workout" : c.workout).append(".");
+        if (c.kgNow > 0 && c.goalKg > 0) b.append(" ").append(trim(c.kgNow)).append(" kg now, ").append(trim(c.goalKg)).append(" kg is the goal.");
+        List<String> o = new ArrayList<String>();
+        o.add("Strength and stamina make the long shift and the deep work easier.");
+        o.add("Two goals, one morning. You already did the hard part: you showed up for the first one.");
+        if (!c.self) o.add("Healthy for " + c.her() + " for decades, not just fit for one interview.");
+        o.add("The weight comes off in the kitchen; the strength is built here. Go.");
+        b.append("\n\n").append(pick(o, c.seed));
+        return new String[]{title, b.toString()};
+    }
+
+    private static String trim(double v) { return v == Math.floor(v) ? String.valueOf((int) v) : String.valueOf(Math.round(v * 10) / 10.0); }
 
     /** Right after office: protect the night. */
     static String[] night(Ctx c) {

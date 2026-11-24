@@ -16,7 +16,7 @@ final class Scheduler {
     static final String ACTION_REMINDER = "io.github.souravroy0708.dataleap.REMINDER";
     static final String ACTION_TIMER = "io.github.souravroy0708.dataleap.TIMER_TARGET";
     private static final int BASE = 1000;
-    private static final int MAX = 12;
+    private static final int MAX = 16;
     private static final int SNOOZE_CODE = 900;
     private static final int TIMER_CODE = 950;
 

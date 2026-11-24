@@ -5,6 +5,7 @@ DataLeap already works for anyone: first-run setup, everything configurable, all
 ## Status in DataLeap 3.0
 
 - Done: target API 36 (manifest and Gradle), edge-to-edge insets, predictive back, `USE_EXACT_ALARM` removed (user-granted `SCHEDULE_EXACT_ALARM` with an in-app prompt), AAB built by the GitHub workflow (`DataLeap-<version>.aab` in the run's artifacts and in each Release), privacy policy page, store listing text (`design/store-listing.md`).
+- **Private access (PIN):** the app opens with a PIN screen. In Play Console → App content → **App access**, choose "All or some functionality is restricted" and give the reviewers the PIN with one line of instructions, or the review will be rejected. The PIN is a gate for friends, not security: anyone who decompiles the APK can bypass it, so never rely on it to protect secrets.
 - Still yours to do: Play Console account, data safety and content rating forms, screenshots, closed test with 12+ testers for 14 days (new personal accounts), then production.
 
 ## Must do before submitting (reference)

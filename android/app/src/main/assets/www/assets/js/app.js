@@ -44,9 +44,11 @@
     rest: [],
     settings: { levelMode: 'auto', level: 1, levelSince: ymd(new Date(Date.now() - 4 * 3600e3)), manual: { sd: 30, dsa: 25, min: 10 }, weekendX: 1.5, dayStart: 4, restPerWeek: 1, maxSession: 30, motiv: { on: true, count: 4, start: '06:00', end: '14:00', weekly: true } },
     profile: {
-      me: '', years: '', companyType: 'service', motive: { relation: '', name: '', age: '', ageAt: 0, pronoun: '' },
-      life: { officeStart: '09:30', officeEnd: '18:30', commute: 30, wake: '06:30', sleep: '23:00', workDays: [1, 2, 3, 4, 5] },
-      why: '', role: 'Staff Data Engineer', companies: '', targetDate: '', hoursGoal: 250, weeklyHours: 8,
+      // Your plan by default. Friends can change everything on My why, My day and Fitness, or rerun setup.
+      me: 'Sourav', years: 10, companyType: 'service', motive: { relation: 'daughter', name: '', age: 2.5, ageAt: Date.now(), pronoun: '' },
+      life: { officeStart: '14:30', officeEnd: '23:30', commute: 30, wake: '07:30', sleep: '00:30', workDays: [1, 2, 3, 4, 5] },
+      why: '', role: 'Staff Data Engineer', companies: 'Google, Uber, Databricks, Visa', targetDate: '2027-10-31', hoursGoal: 450, weeklyHours: 10,
+      fit: { on: true, startKg: 72, goalKg: 65, goalDate: '2027-04-30', gymDays: [1, 2, 4, 5, 6], gymMin: 60, rotation: { 1: 'A', 2: 'B', 4: 'A', 5: 'B', 6: 'C' }, steps: 9000 },
       vision: {},
       letter: ''
     },
@@ -83,7 +85,8 @@
       s.profile.motive = { relation: 'daughter', name: rp.name || '', age: rp.herAge === undefined ? '' : rp.herAge, ageAt: rp.herAgeAt || 0, pronoun: '' };
     }
     if (s.profile.vision.daughter && !s.profile.vision.them) { s.profile.vision.them = s.profile.vision.daughter; delete s.profile.vision.daughter; }
-    if (raw.sessions && raw.sessions.length && s.setupDone === undefined) s.setupDone = true;
+    if (s.setupDone === undefined) s.setupDone = true; // personal build: straight into your plan
+    s.profile.fit = Object.assign(defaults().profile.fit, (raw.profile || {}).fit || {});
     if (raw.planApplied && s.setupDone === undefined) s.setupDone = true;
     s.hit = s.hit || {}; s.fired = s.fired || {};
     return s;
@@ -390,7 +393,7 @@
   }
 
   // ---------- quotes ----------
-  const PAGE_QUOTES = { career: ['switch', 'family'], plan: ['family', 'switch'], home: ['habit', 'family', 'switch'], lib: ['habit', 'sd'], sd: ['sd', 'switch'], dsa: ['dsa'], roadmap: ['habit', 'sd', 'switch'], why: ['family'], progress: ['habit', 'switch'], settings: ['habit'], companies: ['sd'] };
+  const PAGE_QUOTES = { fit: ['habit', 'family'], career: ['switch', 'family'], plan: ['family', 'switch'], home: ['habit', 'family', 'switch'], lib: ['habit', 'sd'], sd: ['sd', 'switch'], dsa: ['dsa'], roadmap: ['habit', 'sd', 'switch'], why: ['family'], progress: ['habit', 'switch'], settings: ['habit'], companies: ['sd'] };
   let quoteShift = 0;
   function quoteFor(page, shift) {
     let cats = PAGE_QUOTES[page] || ['habit'];
@@ -402,7 +405,7 @@
   function randomQuote(cat) { const l = D.quotes[famCat(cat)]; return personal(l[Math.floor(Math.random() * l.length)]); }
 
   // ---------- chrome ----------
-  const NAV = [['index.html', 'Today'], ['plan.html', 'My day'], ['system-design.html', 'System design'], ['dsa.html', 'DSA'], ['library.html', 'Library'], ['career.html', 'Career kit'], ['why.html', 'My why'], ['progress.html', 'Progress'], ['settings.html', 'Reminders']];
+  const NAV = [['index.html', 'Today'], ['plan.html', 'My day'], ['system-design.html', 'System design'], ['dsa.html', 'DSA'], ['library.html', 'Library'], ['fit.html', 'Fitness'], ['career.html', 'Career kit'], ['why.html', 'My why'], ['progress.html', 'Progress'], ['settings.html', 'Reminders']];
   const MARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="8.5" width="7.5" height="7" rx="2" fill="#0F1235"/><rect x="14.5" y="8.5" width="7.5" height="7" rx="2" fill="none" stroke="#0F1235" stroke-width="2.2"/><path d="M9.5 12h5" stroke="#0F1235" stroke-width="2.2"/></svg>';
   const BALLOON_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="9" rx="6.5" ry="7.5" fill="#0F1235"/><path d="M12 16.5l-1.4 2h2.8z" fill="#0F1235"/><path d="M12 18.5c-1 1.6 1 2.4 0 4" stroke="#0F1235" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="9.6" cy="6.4" rx="1.4" ry="2" fill="#FFC21A"/></svg>';
   function renderChrome() {
@@ -423,7 +426,7 @@
       if (qn) qn.onclick = () => { quoteShift++; qt.textContent = quoteFor(page, quoteShift); };
     }
     // Bottom tab bar on phones, like a native app
-    const TABS = [['index.html', 'Today', 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'], ['plan.html', 'My day', 'M7 3v3M17 3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z'], ['system-design.html', 'Learn', 'M4 6l8-3 8 3-8 3-8-3zm0 5l8 3 8-3M4 16l8 3 8-3'], ['career.html', 'Career', 'M9 6V4h6v2M4 7h16v12H4zM4 12h16'], ['progress.html', 'Progress', 'M5 20V10M12 20V4M19 20v-7']];
+    const TABS = [['index.html', 'Today', 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'], ['system-design.html', 'Learn', 'M4 6l8-3 8 3-8 3-8-3zm0 5l8 3 8-3M4 16l8 3 8-3'], ['fit.html', 'Fitness', 'M3 10v4M21 10v4M6 7v10M18 7v10M6 12h12'], ['career.html', 'Career', 'M9 6V4h6v2M4 7h16v12H4zM4 12h16'], ['progress.html', 'Progress', 'M5 20V10M12 20V4M19 20v-7']];
     if (page !== 'setup') {
       const tb = document.createElement('nav'); tb.className = 'tabbar'; tb.setAttribute('aria-label', 'Main');
       tb.innerHTML = TABS.map(([h, l, d]) => '<a href="' + h + '"' + (h === here || (h === 'system-design.html' && ['dsa.html', 'library.html'].includes(here)) ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg><span>' + l + '</span></a>').join('');
@@ -759,6 +762,7 @@
     document.getElementById('banner').innerHTML = banner;
     const exa = document.getElementById('ex-allow'); if (exa) exa.onclick = () => BR.openExactAlarmSettings();
     const exl = document.getElementById('ex-later'); if (exl) exl.onclick = () => { sessionStorage.setItem('dl-exact-dismiss', '1'); renderHome(); };
+    const fcEl = document.getElementById('fitrow'); if (fcEl) fcEl.innerHTML = fitCard();
     const qk = document.getElementById('quick');
     if (qk) { const nd = drillCards().length; qk.innerHTML = '<button class="qa" type="button" data-drill><b>2-minute drill</b><span>' + (nd ? nd + ' card' + (nd > 1 ? 's' : '') + ' due' : 'Recall your notes') + '</span></button><button class="qa" type="button" data-mocksim=""><b>Mock interview</b><span>45 min, system design</span></button><button class="qa" type="button" data-log="sd"><b>Log time</b><span>Studied off the timer?</span></button><a class="qa" href="career.html#applications"><b>Applications</b><span>' + (S.apps || []).filter((a) => !['target', 'closed'].includes(a.stage)).length + ' active</span></a>'; }
     const endTxt = { ok: ['Complete', 'Both done. Close the laptop and go be with family.'], part: ['One to go', 'Even ' + minNow() + ' minutes on the other task completes today.'], miss: ['Not started', 'Start with system design. ' + minNow() + ' minutes is enough to count.'], rest: ['Rest day', 'Streak kept. Back tomorrow.'] }[info.status];
@@ -978,7 +982,7 @@
   }
   function initSettings() {
     const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const FOCUS = { either: 'Either', dsa: 'DSA', sd: 'System design', family: 'Family', sleep: 'Sleep', night: 'Phone down', late: 'Late check (silent)' };
+    const FOCUS = { either: 'Either', dsa: 'DSA', sd: 'System design', family: 'Family', sleep: 'Sleep', night: 'Phone down', late: 'Late check (silent)', gym: 'Gym' };
     function renderRem() {
       document.getElementById('remlist').innerHTML = S.reminders.length ? '<table class="dtable"><thead><tr><th>Time</th><th>Days</th><th>Focus</th><th>Message</th><th>Rules</th><th></th></tr></thead><tbody>' +
         S.reminders.slice().sort((a, b) => a.time.localeCompare(b.time)).map((r) => '<tr><td><b>' + r.time + '</b></td><td>' + (r.days.length === 7 ? 'Every day' : r.days.length === 5 && !r.days.includes(0) && !r.days.includes(6) ? 'Weekdays' : r.days.map((d) => DAYS[d]).join(' ')) + '</td><td>' + FOCUS[r.focus] + '</td><td>' + esc(r.msg) + '</td><td class="small muted">' + [r.skip ? 'Skips when done' : '', r.last ? 'Last call' : ''].filter(Boolean).join(', ') + '</td><td style="white-space:nowrap"><label class="small inline"><input type="checkbox" data-remon="' + r.id + '"' + (r.on ? ' checked' : '') + '> On</label> <button class="linkish small" data-remdel="' + r.id + '">Delete</button></td></tr>').join('') + '</tbody></table>'
@@ -990,7 +994,7 @@
     const rf = document.getElementById('remform');
     rf.onsubmit = (e) => {
       e.preventDefault();
-      if (S.reminders.length >= 12) { toast('Up to 12 reminders. Delete one first.'); return; }
+      if (S.reminders.length >= 16) { toast('Up to 16 reminders. Delete one first.'); return; }
       const days = [...rf.querySelectorAll('input[name=day]:checked')].map((x) => +x.value);
       if (!days.length) { toast('Pick at least one day.'); return; }
       S.reminders.push({ id: 'r' + Date.now(), time: rf.elements.time.value, days, focus: rf.elements.focus.value, msg: rf.elements.msg.value.trim() || 'Time to prep', skip: rf.elements.skip.checked, last: rf.elements.last.checked, on: true });
@@ -1299,6 +1303,13 @@
     { id: 'mockhire', g: 'Career', icon: '✅', t: 'Hire signal', d: 'A “strong hire” in a mock', ok: (c) => c.strongHire, msg: 'Strong hire. Remember exactly how you did that; it is your interview style now.' },
     { id: 'loop1', g: 'Career', icon: '🚪', t: 'In the loop', d: 'Reached interviews at a company', ok: (c) => c.loops >= 1, msg: 'You are in a product-company interview loop. A year ago this was a plan; now it is a calendar invite.' },
     { id: 'offer1', g: 'Career', icon: '🎉', t: 'The offer', d: 'Received an offer', ok: (c) => c.offers >= 1, msg: 'An offer. Every early morning and every skipped scroll led here. Now choose well.' },
+    { id: 'fit1', g: 'Fitness', icon: '💪', t: 'First workout', d: 'Logged your first workout', ok: (c) => c.workouts >= 1, msg: 'First session done. Two goals, one morning routine: this is how both get won.' },
+    { id: 'fit4', g: 'Fitness', icon: '🏋️', t: 'Full gym week', d: 'Every planned workout in one week', ok: (c) => c.bestGymWeek >= c.gymTarget, msg: 'Every workout this week. Consistency in the gym and at the desk come from the same place.' },
+    { id: 'fit25', g: 'Fitness', icon: '🏋️', t: '25 workouts', d: '25 workouts logged', ok: (c) => c.workouts >= 25, msg: 'Twenty-five sessions. Your body is changing even before the scale says so.' },
+    { id: 'kg2', g: 'Fitness', icon: '📉', t: '2 kg down', d: '2 kg below your start', ok: (c) => c.lost >= 2, msg: 'Two kilos down. Keep the protein high and the post-office snacks low.' },
+    { id: 'kg5', g: 'Fitness', icon: '📉', t: '5 kg down', d: '5 kg below your start', ok: (c) => c.lost >= 5, msg: 'Five kilos. People will start noticing before you do.' },
+    { id: 'kggoal', g: 'Fitness', icon: '🏆', t: 'Goal weight', d: 'Reached your goal weight', ok: (c) => c.atGoal, msg: 'Goal weight. Now keep the strength and stamina: the next goal is the offer.' },
+    { id: 'food7', g: 'Fitness', icon: '🥗', t: 'Food diary week', d: '7 days with 3+ food entries', ok: (c) => c.foodDays >= 7, msg: 'A full week written down. Now you know what you actually eat, which is where every good change starts.' },
     { id: 'lvl2', g: 'Levels', icon: '🪜', t: 'Level 2', d: 'Unlocked “build the habit”', ok: (c) => c.level >= 2, quiet: true },
     { id: 'lvl3', g: 'Levels', icon: '🪜', t: 'Level 3', d: 'Unlocked “go deeper”', ok: (c) => c.level >= 3, quiet: true },
     { id: 'lvl4', g: 'Levels', icon: '🪜', t: 'Level 4', d: 'Unlocked “interview pace”', ok: (c) => c.level >= 4, quiet: true },
@@ -1318,6 +1329,10 @@
       sdDone: D.items.filter((i) => i.track === 'sd' && ['done', 'mastered'].includes(st(i.id).status)).length,
       dsaOwn: D.items.filter((i) => i.track === 'dsa' && ['solved', 'mastered'].includes(st(i.id).status)).length,
       scored: scores.length, best: scores.reduce((a, x) => Math.max(a, x.total), 0), staffCases, level: S.settings.level, retros: (S.retros || []).length,
+      foodDays: (() => { const m = {}; (S.meals || []).forEach((x) => { m[x.date] = (m[x.date] || 0) + 1; }); return Object.values(m).filter((n) => n >= 3).length; })(),
+      workouts: (S.workouts || []).filter((w) => w.minutes >= 20).length, gymTarget: fit().gymDays.length || 99,
+      bestGymWeek: (() => { const m = {}; (S.workouts || []).filter((w) => w.minutes >= 20).forEach((w) => { const k = weekStart(w.date); m[k] = (m[k] || 0) + 1; }); return Math.max(0, ...Object.values(m)); })(),
+      lost: (S.weights || []).length ? fit().startKg - weightNow() : 0, atGoal: (S.weights || []).length > 0 && weightNow() <= fit().goalKg,
       stories: (S.stories || []).filter((x) => storyStrength(x) >= 80).length, loops: (S.apps || []).filter((a) => ['loop', 'offer'].includes(a.stage)).length, offers: (S.apps || []).filter((a) => a.stage === 'offer').length, mocks: (S.mocks || []).length, strongHire: (S.mocks || []).some((m) => m.score === 4)
     };
   }
@@ -1449,12 +1464,13 @@
     if (ready - W >= 210) {
       mode = 'late';
       const lunch = ready - 75; let t = W;
-      add(t, t + 75, 'family', famT('Morning with {name}', 'Slow start'), self ? 'No phone for the first 30 minutes: water, a walk, a plan for the day.' : personal('{Name} first. On office days this is your best time together. Phone stays away.')); t += 75;
-      const sdLen = Math.max(30, Math.min(75, lunch - t - 150));
+      const fo = fit().on; const gymLen = fo ? fit().gymMin : 30; const famLen = fo ? 60 : 75;
+      add(t, t + famLen, 'family', famT('Morning with {name}', 'Slow start'), self ? 'No phone for the first 30 minutes: water, a walk, a plan for the day.' : personal('{Name} first. On office days this is your best time together. Phone stays away.')); t += famLen;
+      const sdLen = Math.max(30, Math.min(75, lunch - t - (fo ? 105 + gymLen : 150)));
       add(t, t + sdLen, 'sd', 'Deep work: system design', 'Your sharpest hour goes to the round that decides staff offers. Today’s item is ready on the Today screen.'); t += sdLen;
       add(t, t + 10, 'break', 'Break', 'Water, stretch.'); t += 10;
       add(t, t + 30, 'dsa', 'DSA: one question', 'One data-engineering question, 25 minutes, out loud.'); t += 30;
-      add(t, t + 30, 'health', 'Walk or exercise', 'A long shift needs a body that can carry it.'); t += 30;
+      add(t, t + gymLen, 'health', fo ? 'Gym' : 'Walk or exercise', fo ? 'Your second goal. Strength and stamina make the long shift and the deep work easier.' : 'A long shift needs a body that can carry it.'); t += gymLen;
       add(t, lunch, 'family', famT('Time with {name}', 'Personal time'), self ? 'Read, call a friend, rest. Recovery makes the deep work stick.' : personal('Be fully present. This is the time {they} will remember.'));
       add(lunch, ready - 15, 'family', self ? 'Lunch' : 'Lunch together', 'Eat properly, then get ready.');
       add(ready - 15, ready, 'rev', 'Revision: pinned notes', '15 minutes reading your key notes. Easy, and it compounds.');
@@ -1475,6 +1491,7 @@
       add(O, E, 'office', 'Office', 'Do your job well. It pays for everything else, and your next manager will ask about it.');
       if (back > E) add(E, back, 'life', 'Commute home', 'No study on the road. Call home, decompress.');
       const eveEnd = SL - 40; let t2 = back;
+      if (fit().on) { add(t2, t2 + fit().gymMin, 'health', 'Gym', 'Straight from work, before the sofa wins.'); t2 += fit().gymMin; }
       const needStudy = (sdLen >= 20 ? 0 : 45) + 30 + 15;
       const famLen = Math.max(45, Math.min(120, eveEnd - t2 - needStudy - 40));
       add(t2, t2 + famLen, 'family', famT('Time with {name}', 'Personal time'), self ? 'Walk, cook, rest. Recharge before the evening block.' : personal('Laptop closed. {Name} first; this is your time together.')); t2 += famLen;
@@ -1491,7 +1508,9 @@
     addS(sw + 90, sw + 180, 'sd', 'Full design case or mock interview', '90 minutes, timed, scored with the staff rubric. This is where offers are won.');
     addS(sw + 180, sw + 195, 'break', 'Break', '');
     addS(sw + 195, sw + 240, 'dsa', 'Two DSA questions', 'Interview conditions: 25 minutes each.');
-    addS(sw + 240, sw + 600, 'family', self ? 'Your afternoon' : 'Family afternoon', self ? 'Go outside, see people. The work is done.' : 'Outings, visits, play. Fully present: the work is done.');
+    if (fit().on) addS(sw + 240, sw + 240 + fit().gymMin, 'health', 'Gym', 'Weekend session, then the day is free.');
+    const satFree = sw + 240 + (fit().on ? fit().gymMin : 0);
+    addS(satFree, sw + 600, 'family', self ? 'Your afternoon' : 'Family afternoon', self ? 'Go outside, see people. The work is done.' : 'Outings, visits, play. Fully present: the work is done.');
     const sun = [
       { s: sw, e: sw + 600, kind: 'family', title: self ? 'Rest day' : 'Family day', why: 'Rest is part of the plan. Use your rest day if you want the whole day.' },
       { s: 1080, e: 1110, kind: 'rev', title: 'Weekly retrospective + revision', why: 'Three questions about the week, then 20 minutes of pinned notes.' }
@@ -1521,9 +1540,12 @@
       sleep && r('p-late', sleep.s + 20, all, 'late', 'Silent check if you are still on your phone after bedtime.'),
       off.length && r('p-sat', satSd.s - 5, off.length === 1 ? off : off.filter((d) => d !== 0), 'sd', 'Day off deep work: one full design case or a mock interview.'),
       off.length && r('p-satdsa', satDsa.s, off.length === 1 ? off : off.filter((d) => d !== 0), 'dsa', 'Two DSA questions under interview conditions.'),
-      r('p-sun', sunRev.s, off.length === 1 ? off : [0], 'either', 'Weekly retrospective and 20 minutes of revision.')
+      r('p-sun', sunRev.s, off.length === 1 ? off : [0], 'either', 'Weekly retrospective and 20 minutes of revision.'),
+      ...(fit().on ? (() => { const g = find('health'); const gs = find('health', p.sat); const gd = fit().gymDays;
+        return [g && r('p-gym', g.s - 15, wk.filter((x) => gd.includes(x)), 'gym', 'Gym in 15 minutes.'),
+          gs && off.filter((x) => gd.includes(x)).length && r('p-satgym', gs.s - 15, off.filter((x) => gd.includes(x)), 'gym', 'Weekend gym in 15 minutes.')]; })() : [])
     ].filter(Boolean);
-    return out.slice(0, 12);
+    return out.slice(0, 16);
   }
   function applyPlan(silent) {
     const p = buildPlan();
@@ -1532,15 +1554,16 @@
     const wake = toMin(p.l.wake, 390); const endWin = p.mode === 'late' ? toMin(p.l.officeStart, 570) - 30 : Math.max(wake + 120, firstStudy.e + 120);
     S.settings.motiv = Object.assign({}, S.settings.motiv, { start: toHM(wake + 20), end: toHM(Math.min(endWin, wake + 480)) });
     S.settings.restPerWeek = Math.max(1, S.settings.restPerWeek);
-    S.planApplied = Date.now(); S.planVersion = 3; save(); syncNative();
+    S.planApplied = Date.now(); S.planVersion = 4; save(); syncNative();
     if (!silent) { const sd = p.weekday.find((x) => x.kind === 'sd'); const sl = p.weekday.find((x) => x.kind === 'sleep'); showCoachCard('Done. Your reminders now follow your day: deep work at ' + (sd ? ampm(sd.s) : 'your study time') + ', ' + (isSelf() ? 'personal time protected' : 'time with ' + who() + ' protected') + ', nothing heavy after office, sleep by ' + (sl ? ampm(sl.s) : 'your bedtime') + '.'); }
   }
   function blocksFor(date) {
     const p = buildPlan(); const d = dow(date);
-    if (p.l.workDays.includes(d)) return p.weekday;
+    const relabel = (list) => list.map((b) => (b.kind === 'health' && fit().on && !isGymDay(date) ? Object.assign({}, b, { title: 'Walk and mobility', why: 'Rest day from the gym: an easy walk keeps you moving. Take the family along.' }) : b));
+    if (p.l.workDays.includes(d)) return relabel(p.weekday);
     const off = [0, 1, 2, 3, 4, 5, 6].filter((x) => !p.l.workDays.includes(x));
-    if (off.length === 1) return p.sat.concat(p.sun.filter((x) => x.kind === 'rev'));
-    return d === 0 ? p.sun : p.sat;
+    if (off.length === 1) return relabel(p.sat.concat(p.sun.filter((x) => x.kind === 'rev')));
+    return relabel(d === 0 ? p.sun : p.sat);
   }
   function nowBlock() {
     const now = new Date(); let m = now.getHours() * 60 + now.getMinutes();
@@ -1565,6 +1588,7 @@
     if (cur.kind === 'office') return 'You’re at work until ' + ampm(cur.e) + '. Do it well; it pays for everything else. ' + (i.status === 'ok' ? 'Today’s prep is already done.' : 'If today is still open, the 10-minute version after office is enough. Tomorrow, deep work at ' + ampm(sd.s) + '.');
     if (cur.kind === 'family') return (isSelf() ? 'Personal time. Rest counts too; the laptop can wait' : 'Family time. ' + Cap(who()) + ' first; the laptop can wait') + (next && (next.kind === 'sd' || next.kind === 'dsa') ? ' until ' + ampm(next.s) + '.' : '.');
     if (cur.kind === 'sleep' || cur.kind === 'life' && new Date().getHours() < 5) return 'It’s late. Sleep is part of the plan. Tomorrow’s deep work needs it.';
+    if (cur.kind === 'health' && fit().on) return gymDone(today()) ? 'Workout done. Now go be with ' + (isSelf() ? 'yourself' : who()) + '.' : (isGymDay(today()) ? 'Gym time: ' + workoutFor(today()).name + '. Your second goal matters as much as the first.' : 'Easy walk today. Take the family along.');
     if (cur.kind === 'sd' && !i.sdDone) return 'This is your system design block. Start now; the timer stops by itself at ' + cap() + ' minutes.';
     if (cur.kind === 'dsa' && !i.dsaDone) return 'DSA block: one question, 25 minutes, out loud.';
     return null;
@@ -1915,7 +1939,14 @@
     add('applications.csv', csv(['company', 'role', 'level', 'stage', 'source', 'next_action', 'next_by', 'fixed_lakh', 'variable_lakh', 'stock_per_year_lakh', 'joining_bonus_lakh', 'first_year_total_lakh', 'notes', 'updated'],
       (S.apps || []).map((a) => [a.company, a.role, a.level, (APP_STAGES.find((x) => x[0] === a.stage) || [, a.stage])[1], a.source, a.next, a.nextAt, a.fixed, a.variable, a.stockYr, a.joining, firstYear(a) || '', a.notes, iso(a.updated)])));
 
-    // 12. the guide for Claude
+    // 12. fitness
+    add('workouts.csv', csv(['date', 'weekday', 'workout', 'minutes', 'note'], (S.workouts || []).slice().sort((a, b) => a.at - b.at).map((w) => [w.date, WD[dow(w.date)], w.name, w.minutes, w.note || ''])));
+    add('weight.csv', csv(['date', 'kg', 'start_kg', 'goal_kg', 'goal_date'], (S.weights || []).slice().sort((a, b) => (a.date > b.date ? 1 : -1)).map((w) => [w.date, w.kg, fit().startKg, fit().goalKg, fit().goalDate])));
+
+    add('meals.csv', csv(['date', 'weekday', 'meal', 'label', 'time', 'after_office', 'what_and_how_much', 'protein_g', 'logged_at'],
+      (S.meals || []).slice().sort((a, b) => (a.date === b.date ? mealMin(a) - mealMin(b) : a.date > b.date ? 1 : -1)).map((m) => [m.date, WD[dow(m.date)], slotName(m.slot), m.label || '', m.time || '', afterOffice(m) ? 'yes' : 'no', m.text, m.protein, iso(m.at)])));
+
+    // 13. the guide for Claude
     add('README_for_Claude.md', analysisGuide(), 'text/markdown');
     return files;
   }
@@ -1945,7 +1976,9 @@
       '- `items.csv`: every question, topic, lesson and design case I have touched, with status and time spent. `from_your_experience` marks design cases that match systems I built.',
       '- `notes.csv`: my notes on items (approach, mistakes, key insights).',
       '- `design_scores.csv`: staff-rubric scores (0 to 2 per criterion, 14 max) for full design attempts.',
-      '- `retrospectives.csv`, `mock_interviews.csv`, `stories.csv` (project stories for deep-dive rounds), `milestones.csv`.',
+      '- `retrospectives.csv`, `mock_interviews.csv`, `stories.csv` (project stories for deep-dive rounds), `milestones.csv`, `applications.csv`.',
+      '- Fitness: `workouts.csv`, `weight.csv`, and `meals.csv` (every meal and drink with time and what I ate; `after_office` = eaten after my shift ended; eating after midnight counts toward the previous day).',
+      (S.profile.fit ? 'Fitness goal: ' + fit().startKg + ' kg to ' + fit().goalKg + ' kg by ' + fit().goalDate + ', with strength and stamina; current ' + weightNow() + ' kg. I train ' + fit().gymDays.length + ' days a week.' : ''),
       '',
       '## What I want from you',
       '',
@@ -1958,6 +1991,7 @@
       '5. **Retrospectives:** recurring blockers, whether I acted on the changes I committed to, and mood vs output.',
       '6. **Stories:** which project stories are weakest and what each needs before a deep-dive round.',
       '7. **Next 2 weeks:** a concrete plan (daily topics and minutes) that fixes the biggest gap without hurting family time or sleep.',
+      '8. **Food and fitness:** from meals.csv estimate my daily calories and protein (give ranges, Indian portions), find patterns (late-night eating after office, skipped meals, sugar in chai, weekends), compare with my weight trend and workouts, and give me 5 specific swaps and a simple day of eating that fits my shift and a 0.4 to 0.6 kg a week loss.',
       ''
     ].filter((x) => x !== null).join('\n');
   }
@@ -2293,6 +2327,210 @@
   }
   document.addEventListener('click', (e) => { const b = e.target.closest('[data-app]'); if (b) { e.preventDefault(); openApp(b.dataset.app); } });
 
+  // ---------- fitness: the second goal ----------
+  const PROGRAM = {
+    A: { name: 'Strength A', items: [['Squat (goblet or barbell)', '3 × 8'], ['Bench press or push-ups', '3 × 8–10'], ['Seated or dumbbell row', '3 × 10'], ['Romanian deadlift', '3 × 10'], ['Plank', '3 × 40 s']] },
+    B: { name: 'Strength B', items: [['Trap-bar or regular deadlift', '3 × 5'], ['Overhead press', '3 × 8'], ['Lat pulldown or pull-ups', '3 × 8'], ['Walking lunges', '3 × 10 each leg'], ['Farmer’s carry', '3 × 40 m']] },
+    C: { name: 'Conditioning', items: [['Warm-up: brisk walk or easy bike', '10 min'], ['Intervals on bike or rower: 1 min hard, 2 min easy', '6 rounds'], ['Steady zone-2 cardio (you can still talk)', '15–20 min'], ['Mobility: hips, hamstrings, shoulders', '10 min']] },
+    W: { name: 'Walk and mobility', items: [['Brisk walk, ideally with family', '30–40 min'], ['Mobility and stretching', '10 min']] }
+  };
+  function fit() {
+    return Object.assign({ on: true, startKg: 72, goalKg: 65, goalDate: '2027-04-30', gymDays: [1, 2, 4, 5, 6], gymMin: 60, rotation: { 1: 'A', 2: 'B', 4: 'A', 5: 'B', 6: 'C' }, steps: 9000 }, S.profile.fit || {});
+  }
+  const isGymDay = (date) => fit().on && fit().gymDays.includes(dow(date));
+  function workoutFor(date) { const f = fit(); if (!f.on) return null; return isGymDay(date) ? PROGRAM[f.rotation[dow(date)] || 'A'] : PROGRAM.W; }
+  const workoutsOn = (date) => (S.workouts || []).filter((w) => w.date === date);
+  const gymDone = (date) => workoutsOn(date).some((w) => w.minutes >= 20);
+  function weightNow() { const w = (S.weights || []).slice().sort((a, b) => (a.date > b.date ? 1 : -1)); return w.length ? w[w.length - 1].kg : fit().startKg; }
+  function weightTrend() {
+    const w = (S.weights || []).filter((x) => x.date > addDays(today(), -28)).sort((a, b) => (a.date > b.date ? 1 : -1));
+    if (w.length < 3 || daysBetween(w[0].date, w[w.length - 1].date) < 7) return null;
+    const xs = w.map((x) => daysBetween(w[0].date, x.date)); const ys = w.map((x) => x.kg); const n = xs.length;
+    const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+    const slope = xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0) / xs.reduce((a, x) => a + (x - mx) * (x - mx), 0);
+    return { perWeek: slope * 7, now: my + slope * (xs[n - 1] - mx) };
+  }
+  function fitEta() {
+    const t = weightTrend(); const f = fit(); if (!t || t.perWeek >= -0.05) return null;
+    const weeks = (t.now - f.goalKg) / -t.perWeek; return weeks <= 0 ? today() : addDays(today(), Math.round(weeks * 7));
+  }
+  function weekWorkouts() { const ws = weekStart(today()); return (S.workouts || []).filter((w) => w.date >= ws && w.date <= today() && w.minutes >= 20).length; }
+
+  function openWorkoutLog(prefillType) {
+    const t = today(); const wo = workoutFor(t) || PROGRAM.W;
+    let d = document.getElementById('wodlg'); if (!d) { d = document.createElement('dialog'); d.id = 'wodlg'; document.body.appendChild(d); }
+    const types = [['A', PROGRAM.A.name], ['B', PROGRAM.B.name], ['C', PROGRAM.C.name], ['W', PROGRAM.W.name], ['O', 'Other: sport, swim, yoga']];
+    const curKey = Object.keys(PROGRAM).find((k) => PROGRAM[k] === wo) || 'W';
+    d.innerHTML = '<form class="dlg" id="woform"><div class="dlg-head"><h2>Log workout</h2><button class="btn quiet" type="button" data-close>Close</button></div>' +
+      '<div class="row"><div class="field"><label for="wo-t">Workout</label><select id="wo-t">' + types.map(([k, n]) => '<option value="' + k + '"' + (k === (prefillType || curKey) ? ' selected' : '') + '>' + n + '</option>').join('') + '</select></div>' +
+      '<div class="field" style="flex:0 1 120px"><label for="wo-m">Minutes</label><input id="wo-m" type="number" min="5" max="240" value="' + fit().gymMin + '"></div>' +
+      '<div class="field" style="flex:0 1 150px"><label for="wo-d">Day</label><input id="wo-d" type="date" value="' + t + '"></div></div>' +
+      '<div class="row"><div class="field" style="flex:0 1 160px"><label for="wo-kg">Weight today (kg, optional)</label><input id="wo-kg" type="number" step="0.1" min="30" max="200"></div>' +
+      '<div class="field"><label for="wo-n">Note: weights, how it felt</label><input id="wo-n" placeholder="e.g. Squat 50 kg 3×8, felt strong"></div></div>' +
+      '<div class="actions"><button class="btn primary" type="submit">Save</button></div></form>';
+    d.querySelector('#woform').onsubmit = (e) => {
+      e.preventDefault(); const date = d.querySelector('#wo-d').value || t; const mins = Math.max(5, Math.min(240, +d.querySelector('#wo-m').value || 0));
+      const key = d.querySelector('#wo-t').value; const before = gymDone(date);
+      S.workouts = (S.workouts || []).concat([{ id: 'w' + Date.now(), date, type: key, name: key === 'O' ? 'Other' : PROGRAM[key].name, minutes: mins, note: d.querySelector('#wo-n').value.trim(), at: Date.now() }]);
+      const kg = parseFloat(d.querySelector('#wo-kg').value); if (kg > 30) logWeight(kg, date, true);
+      save(); d.close(); refresh();
+      showCoachCard(!before && mins >= 20 ? 'Workout done. ' + weekWorkouts() + ' this week. A stronger body carries the long shift and the deep work.' : 'Logged ' + mins + ' minutes. Movement counts.');
+      checkProgress();
+    };
+    d.showModal();
+  }
+  function logWeight(kg, date, quiet) {
+    date = date || today(); S.weights = (S.weights || []).filter((w) => w.date !== date).concat([{ date, kg: Math.round(kg * 10) / 10, at: Date.now() }]); save();
+    if (!quiet) { const lost = Math.round((fit().startKg - kg) * 10) / 10; showCoachCard(lost > 0 ? lost + ' kg down from ' + fit().startKg + '. Watch the weekly average, not single days.' : 'Logged. Daily numbers jump with water and salt; the 2-week trend is what counts.'); }
+    checkProgress();
+  }
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-workout]')) { e.preventDefault(); openWorkoutLog(e.target.closest('[data-workout]').dataset.workout || ''); } });
+
+  function fitCard() {
+    const f = fit(); if (!f.on) return '';
+    const t = today(); const wo = workoutFor(t); const done = gymDone(t); const gym = isGymDay(t);
+    const blk = (blocksFor(t) || []).find((b) => b.kind === 'health');
+    return '<article class="fitcard' + (done ? ' done' : '') + '"><div><p class="fit-k">' + (gym ? 'Gym' : 'Move') + (blk ? ' · ' + ampm(blk.s) : '') + '</p><h2>' + esc(wo.name) + '</h2><p class="muted small" style="margin:0">' + (done ? 'Done today. ' : '') + weekWorkouts() + ' of ' + f.gymDays.length + ' workouts this week · ' + weightNow() + ' kg → ' + f.goalKg + ' kg</p></div>' +
+      '<div class="actions"><button class="btn ' + (done ? '' : 'primary') + '" type="button" data-workout="">' + (done ? 'Log another' : 'Log workout') + '</button><button class="btn" type="button" data-addmeal="">Log meal</button><a class="btn quiet" href="fit.html">Plan, weight, food</a></div></article>';
+  }
+
+  function weightChart() {
+    const f = fit(); const w = (S.weights || []).slice().sort((a, b) => (a.date > b.date ? 1 : -1));
+    const start = w.length ? w[0].date : today(); const end = f.goalDate > today() ? f.goalDate : addDays(today(), 30);
+    const span = Math.max(14, daysBetween(start, end)); const W = 420, H = 230, pL = 34, pB = 24, pT = 18;
+    const lo = Math.min(f.goalKg - 1, ...w.map((x) => x.kg)), hi = Math.max(f.startKg + 1, ...w.map((x) => x.kg));
+    const x = (d) => pL + (daysBetween(start, d) / span) * (W - pL - 10); const y = (kg) => H - pB - ((kg - lo) / (hi - lo)) * (H - pB - pT);
+    let g = '';
+    [lo, (lo + hi) / 2, hi].forEach((v) => { g += '<line x1="' + pL + '" x2="' + (W - 6) + '" y1="' + y(v) + '" y2="' + y(v) + '" class="gl"/><text x="' + (pL - 6) + '" y="' + (y(v) + 4) + '" class="ax" text-anchor="end">' + Math.round(v) + '</text>'; });
+    g += '<line x1="' + pL + '" x2="' + (W - 6) + '" y1="' + y(f.goalKg) + '" y2="' + y(f.goalKg) + '" class="goal"/><text x="' + (W - 8) + '" y="' + (y(f.goalKg) - 6) + '" class="ax" text-anchor="end">goal ' + f.goalKg + ' kg</text>';
+    g += '<line x1="' + x(start) + '" y1="' + y(w.length ? w[0].kg : f.startKg) + '" x2="' + x(f.goalDate) + '" y2="' + y(f.goalKg) + '" class="tgt"/>';
+    if (w.length) g += '<polyline points="' + w.map((p) => x(p.date) + ',' + y(p.kg)).join(' ') + '" class="wline"/>' + w.map((p) => '<circle cx="' + x(p.date) + '" cy="' + y(p.kg) + '" r="3.5" class="wdot"><title>' + p.date + ': ' + p.kg + ' kg</title></circle>').join('');
+    g += '<text x="' + pL + '" y="' + (H - 6) + '" class="ax">' + shortDate(start) + '</text><text x="' + (W - 8) + '" y="' + (H - 6) + '" class="ax" text-anchor="end">' + shortDate(end) + '</text>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart" role="img" aria-label="Weight over time with goal">' + g + '</svg>';
+  }
+
+  function renderFit() {
+    const f = fit(); const now = weightNow(); const lost = Math.round((f.startKg - now) * 10) / 10; const toGo = Math.round((now - f.goalKg) * 10) / 10;
+    const eta = fitEta(); const tr = weightTrend();
+    const hs = document.getElementById('fitstats');
+    if (hs) hs.innerHTML = '<div class="stat hl"><b>' + now + '</b><span>kg now</span></div><div class="stat"><b>' + (lost > 0 ? '−' + lost : '0') + '</b><span>kg since ' + f.startKg + '</span></div><div class="stat"><b>' + Math.max(0, toGo) + '</b><span>kg to ' + f.goalKg + '</span></div><div class="stat"><b>' + weekWorkouts() + '/' + f.gymDays.length + '</b><span>workouts this week</span></div>';
+    const pc = document.getElementById('fitpace');
+    if (pc) pc.innerHTML = tr ? '<div class="pace ' + (tr.perWeek <= -0.3 ? 'good' : 'behind') + '"><b>' + (tr.perWeek <= -0.3 ? 'On track.' : tr.perWeek < 0 ? 'Slow but moving.' : 'Not going down yet.') + '</b> Trend: ' + (tr.perWeek > 0 ? '+' : '') + (Math.round(tr.perWeek * 100) / 100) + ' kg a week. ' + (eta ? 'At this pace you reach ' + f.goalKg + ' kg around <b>' + esc(shortDate(eta)) + '</b>.' : 'Aim for 0.4 to 0.6 kg a week: check the late-night eating after office first.') + '</div>'
+      : '<p class="muted" style="margin:14px 0 0">Weigh in on 3 or more mornings over a week and your trend and finish date appear here.</p>';
+    const wf = document.getElementById('weighform');
+    if (wf && !wf.dataset.ready) { wf.dataset.ready = '1'; wf.onsubmit = (e) => { e.preventDefault(); const kg = parseFloat(wf.elements.kg.value); if (kg > 30 && kg < 250) { logWeight(kg, today(), false); wf.reset(); renderFit(); } }; }
+    const ch = document.getElementById('wchart'); if (ch) ch.innerHTML = weightChart() + '<div class="legend"><span><i class="lg-avg" style="border-top-color:var(--blue)"></i>Your weight</span><span><i class="lg-tgt"></i>Planned pace</span><span><i class="lg-goal"></i>Goal</span></div>';
+    const pg = document.getElementById('program');
+    if (pg) {
+      const DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      pg.innerHTML = '<p class="muted">Your week: ' + [1, 2, 3, 4, 5, 6, 0].map((d) => DN[d] + ' ' + (f.gymDays.includes(d) ? '<b>' + PROGRAM[f.rotation[d] || 'A'].name + '</b>' : 'walk')).join(' · ') + '</p><div class="fitgrid">' +
+        ['A', 'B', 'C'].map((k) => '<div class="fit' + (workoutFor(today()) === PROGRAM[k] ? ' now' : '') + '"><b>' + PROGRAM[k].name + '</b>' + (workoutFor(today()) === PROGRAM[k] ? '<span class="chip st-done">Today</span>' : '') + '<ul>' + PROGRAM[k].items.map(([n, r]) => '<li>' + esc(n) + ' <b>' + esc(r) + '</b></li>').join('') + '</ul></div>').join('') + '</div>' +
+        '<p class="small muted" style="margin-top:10px">Start lighter than you think for two weeks and learn the movements. Add a little weight when every rep is clean. Rest 1–2 minutes between sets.</p>';
+    }
+    const wl = document.getElementById('wolog');
+    if (wl) { const ws = (S.workouts || []).slice().sort((a, b) => b.at - a.at).slice(0, 20); wl.innerHTML = ws.length ? '<table class="dtable"><thead><tr><th>Day</th><th>Workout</th><th class="num">Min</th><th>Note</th></tr></thead><tbody>' + ws.map((w) => '<tr><td>' + shortDate(w.date) + '</td><td>' + esc(w.name) + '</td><td class="num">' + w.minutes + '</td><td class="small">' + esc(w.note || '') + '</td></tr>').join('') + '</tbody></table>' : '<p class="muted">No workouts yet. Your first one unlocks a milestone.</p>'; }
+    const ff = document.getElementById('fitform');
+    if (ff && !ff.dataset.ready) {
+      ff.dataset.ready = '1';
+      ff.elements.startKg.value = f.startKg; ff.elements.goalKg.value = f.goalKg; ff.elements.goalDate.value = f.goalDate; ff.elements.gymMin.value = f.gymMin;
+      ff.querySelectorAll('input[name=gd]').forEach((c) => { c.checked = f.gymDays.includes(+c.value); });
+      ff.onsubmit = (e) => {
+        e.preventDefault(); const gd = [...ff.querySelectorAll('input[name=gd]:checked')].map((c) => +c.value);
+        const rot = {}; const seq = ['A', 'B']; let k = 0; gd.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).forEach((d, i, arr) => { rot[d] = i === arr.length - 1 && arr.length >= 4 ? 'C' : seq[k++ % 2]; });
+        S.profile.fit = Object.assign({}, f, { startKg: +ff.elements.startKg.value || f.startKg, goalKg: +ff.elements.goalKg.value || f.goalKg, goalDate: ff.elements.goalDate.value || f.goalDate, gymMin: Math.max(20, Math.min(120, +ff.elements.gymMin.value || 60)), gymDays: gd.length ? gd : f.gymDays, rotation: gd.length ? rot : f.rotation });
+        applyPlan(true); save(); renderFit(); showCoachCard('Saved. Your gym blocks and reminders follow the new days.');
+      };
+    }
+  }
+  function initFit() { refresh = () => { renderFit(); const fd = document.getElementById('food'); if (fd) fd.innerHTML = foodDiary(); }; refresh(); }
+
+  // ---------- food diary: breakfast, lunch, dinner + as many extra entries as you like ----------
+  const MEAL_SLOTS = [['breakfast', 'Breakfast', '08:00'], ['lunch', 'Lunch', '12:30'], ['dinner', 'Dinner', '19:30'], ['snack', 'Snack', ''], ['drink', 'Chai / drink', ''], ['other', 'Other', '']];
+  const slotName = (k) => (MEAL_SLOTS.find((x) => x[0] === k) || [, 'Other'])[1];
+  let foodDay = null;
+  const mealsOn = (date) => (S.meals || []).filter((m) => m.date === date).sort((a, b) => mealMin(a) - mealMin(b));
+  // minutes after the day starts (4 am), so a 12:40 am snack sorts after a 7:30 pm dinner
+  function mealMin(m) { const t = toMin(m.time || '12:00', 720); return (t - S.settings.dayStart * 60 + 1440) % 1440; }
+  function afterOffice(m) {
+    if (!m.time) return false; const l = life(); const t = toMin(m.time, 720); let e = toMin(l.officeEnd, 1110);
+    const rel = (x) => (x - S.settings.dayStart * 60 + 1440) % 1440;
+    return rel(t) >= rel(e);
+  }
+  function openMeal(id, slot, date) {
+    S.meals = S.meals || [];
+    const now = new Date(); const nowHM = pad(now.getHours()) + ':' + pad(now.getMinutes());
+    const def = MEAL_SLOTS.find((x) => x[0] === slot);
+    const m = S.meals.find((x) => x.id === id) || { id: 'm' + Date.now(), date: date || foodDay || today(), slot: slot || 'snack', label: '', time: (def && def[2] && (date || foodDay || today()) !== today()) ? def[2] : nowHM, text: '', protein: '' };
+    let d = document.getElementById('mealdlg'); if (!d) { d = document.createElement('dialog'); d.id = 'mealdlg'; document.body.appendChild(d); }
+    d.innerHTML = '<form class="dlg" id="mealform"><div class="dlg-head"><div><p class="muted small" style="margin:0">Food diary · ' + esc(niceDate(m.date)) + '</p><h2>' + (S.meals.some((x) => x.id === m.id) ? 'Edit entry' : 'What did you eat?') + '</h2></div><button class="btn quiet" type="button" data-close>Close</button></div>' +
+      '<div class="row"><div class="field"><label for="ml-s">Meal</label><select id="ml-s" name="slot">' + MEAL_SLOTS.map(([k, n]) => '<option value="' + k + '"' + (k === m.slot ? ' selected' : '') + '>' + n + '</option>').join('') + '</select></div>' +
+      '<div class="field" style="flex:0 1 130px"><label for="ml-t">Time</label><input id="ml-t" name="time" type="time" value="' + esc(m.time) + '"></div>' +
+      '<div class="field" style="flex:0 1 150px"><label for="ml-d">Day</label><input id="ml-d" name="date" type="date" value="' + esc(m.date) + '"></div></div>' +
+      '<div class="field"><label for="ml-x">What and how much</label><textarea id="ml-x" name="text" rows="3" placeholder="e.g. 2 rotis, dal 1 bowl, paneer sabzi, curd, salad">' + esc(m.text) + '</textarea></div>' +
+      '<div class="row"><div class="field"><label for="ml-l">Label (optional)</label><input id="ml-l" name="label" value="' + esc(m.label) + '" placeholder="e.g. Office break, post-gym, after office"></div>' +
+      '<div class="field" style="flex:0 1 150px"><label for="ml-p">Protein, g (optional)</label><input id="ml-p" name="protein" type="number" min="0" max="300" value="' + esc(m.protein) + '"></div></div>' +
+      '<div class="actions"><button class="btn primary" type="submit">Save</button>' + (S.meals.some((x) => x.id === m.id) ? '<button class="btn" type="button" id="ml-del">Delete</button>' : '') + '</div></form>';
+    const f = d.querySelector('#mealform');
+    f.elements.slot.onchange = () => { const s2 = MEAL_SLOTS.find((x) => x[0] === f.elements.slot.value); if (s2 && s2[2] && !S.meals.some((x) => x.id === m.id) && f.elements.date.value !== today()) f.elements.time.value = s2[2]; };
+    f.onsubmit = (e) => {
+      e.preventDefault();
+      const n = { id: m.id, date: f.elements.date.value || today(), slot: f.elements.slot.value, label: f.elements.label.value.trim(), time: f.elements.time.value, text: f.elements.text.value.trim(), protein: f.elements.protein.value === '' ? '' : Math.max(0, +f.elements.protein.value), at: m.at || Date.now(), updated: Date.now() };
+      if (!n.text) { toast('Write or say what you ate.'); return; }
+      S.meals = S.meals.filter((x) => x.id !== n.id).concat([n]); save(); d.close(); foodDay = n.date; refresh();
+      showCoachCard(afterOffice(n) ? 'Logged. After-office eating is the biggest lever on your weight: next time, a bigger dinner at the office break.' : 'Logged. Writing it down is half of eating well.');
+      checkProgress();
+    };
+    const del = d.querySelector('#ml-del'); if (del) del.onclick = () => { S.meals = S.meals.filter((x) => x.id !== m.id); save(); d.close(); refresh(); };
+    d.showModal();
+  }
+  function foodDiary() {
+    foodDay = foodDay || today(); const list = mealsOn(foodDay);
+    const prot = list.reduce((a, m) => a + (+m.protein || 0), 0); const late = list.filter(afterOffice);
+    const row = (m) => '<button class="meal" type="button" data-meal="' + m.id + '"><span class="m-t">' + esc(m.time || '—') + '</span><span class="m-b"><b>' + esc(m.label || slotName(m.slot)) + (afterOffice(m) ? ' <em class="late">after office</em>' : '') + '</b><span>' + esc(m.text) + '</span></span>' + (m.protein !== '' && m.protein !== undefined ? '<span class="m-p">' + m.protein + ' g</span>' : '') + '</button>';
+    // one timeline: your entries, plus empty breakfast/lunch/dinner slots at their usual times
+    const empties = ['breakfast', 'lunch', 'dinner'].filter((k) => !list.some((m) => m.slot === k)).map((k) => ({ empty: true, slot: k, time: MEAL_SLOTS.find((x) => x[0] === k)[2] }));
+    const all = list.concat(empties).sort((x, y) => mealMin(x) - mealMin(y));
+    const std = all.map((m) => (m.empty ? '<button class="meal empty" type="button" data-addmeal="' + m.slot + '"><span class="m-t">' + m.time + '</span><span class="m-b"><b>' + slotName(m.slot) + '</b><span>Tap to add</span></span></button>' : row(m))).join('');
+    const extra = '';
+    return '<div class="rep-head"><button class="btn small" data-fday="-1" type="button" aria-label="Previous day">‹</button><h3>' + esc(niceDate(foodDay)) + (foodDay === today() ? ' (today)' : '') + '</h3><button class="btn small" data-fday="1" type="button" aria-label="Next day"' + (foodDay >= today() ? ' disabled' : '') + '>›</button></div>' +
+      '<div class="meals">' + std + extra + '</div>' +
+      '<p class="actions" style="margin:12px 0 0"><button class="btn haldi" type="button" data-addmeal="">Add another entry</button></p>' +
+      '<p class="small muted" style="margin:10px 0 0">' + list.length + ' entr' + (list.length === 1 ? 'y' : 'ies') + (prot ? ' · about ' + prot + ' g protein logged (aim 110–130 g)' : '') + (late.length ? ' · <b class="late-txt">' + late.length + ' after office</b>' : '') + '. Eating after midnight counts toward the day before.</p>';
+  }
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-meal]'); if (a) { e.preventDefault(); openMeal(a.dataset.meal); return; }
+    const b = e.target.closest('[data-addmeal]'); if (b) { e.preventDefault(); openMeal(null, b.dataset.addmeal || 'snack', foodDay || today()); return; }
+    const c = e.target.closest('[data-fday]'); if (c) { e.preventDefault(); foodDay = addDays(foodDay || today(), +c.dataset.fday); if (foodDay > today()) foodDay = today(); const el = document.getElementById('food'); if (el) el.innerHTML = foodDiary(); }
+  });
+
+  // ---------- private access: a PIN, asked once per device ----------
+  // Change the PIN: node -e "let h=0x811c9dc5;for(const c of 'dataleap-lock::NEWPIN'){h^=c.charCodeAt(0);h=Math.imul(h,0x01000193)>>>0}console.log(h.toString(16))"
+  const LOCK_HASH = '87b5415';
+  const LOCK_KEY = 'dataleap:unlocked';
+  const lockHash = (pin) => { let h = 0x811c9dc5; for (const c of 'dataleap-lock::' + pin) { h ^= c.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16); };
+  function isUnlocked() { return kvGet(LOCK_KEY) === LOCK_HASH; }
+  function showLock() {
+    document.body.classList.add('locked');
+    const box = document.createElement('div'); box.className = 'lock';
+    box.innerHTML = '<div class="lock-in"><span class="brand-mark big" aria-hidden="true">' + MARK + '</span><h1>DataLeap</h1><p class="muted">Private app. Enter the PIN you were given.</p>' +
+      '<div class="pin" id="pin" aria-live="polite">' + '<i></i>'.repeat(6) + '</div><p class="pin-err" id="pinerr" role="alert"></p>' +
+      '<div class="pad">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map((k) => k === '' ? '<span></span>' : '<button type="button" data-k="' + k + '">' + k + '</button>').join('') + '</div>' +
+      '<a class="lock-priv" href="privacy.html">Privacy policy</a></div>';
+    document.body.appendChild(box);
+    let pin = '';
+    const draw = () => { box.querySelectorAll('#pin i').forEach((d, i) => d.classList.toggle('on', i < pin.length)); };
+    const press = (k) => {
+      if (k === '⌫') pin = pin.slice(0, -1); else if (pin.length < 6) pin += k;
+      draw();
+      if (pin.length === 6) {
+        if (lockHash(pin) === LOCK_HASH) { kvSet(LOCK_KEY, LOCK_HASH); location.reload(); }
+        else { const p2 = box.querySelector('#pin'); p2.classList.remove('shake'); void p2.offsetWidth; p2.classList.add('shake'); box.querySelector('#pinerr').textContent = 'That PIN is not right.'; setTimeout(() => { pin = ''; draw(); }, 400); }
+      }
+    };
+    box.querySelectorAll('[data-k]').forEach((b) => { b.onclick = () => press(b.dataset.k); });
+    document.addEventListener('keydown', (e) => { if (/^\d$/.test(e.key)) press(e.key); if (e.key === 'Backspace') press('⌫'); });
+  }
+
   // ---------- Android bridge sync ----------
   let lastRem = '', lastQ = '', lastMo = '';
   function syncNative() {
@@ -2306,7 +2544,8 @@
         sdNext: sd ? sd.item.title : '', dsaNext: ds ? ds.item.title : '', dayStart: S.settings.dayStart, min: minNow(), name: isSelf() ? '' : who(), pron: pron(), self: isSelf(), weekMin, weekComplete, streak: streak(),
         me: me(), why: (S.profile.why || '').trim(), plan: latestPlan() || '', sdMin: targets(t).sd, dsaMin: targets(t).dsa, skipDays: skipCostDays(),
         sleepAt: ampm(toMin(life().sleep, 30)), sdAt: (() => { const b = buildPlan().weekday.find((x) => x.kind === 'sd'); return b ? ampm(b.s) : ''; })(),
-        herAgeAtOffer: herAgeAtOffer(), offerDate: S.profile.targetDate || '' }));
+        herAgeAtOffer: herAgeAtOffer(), offerDate: S.profile.targetDate || '',
+        gymDay: isGymDay(t), gymDone: gymDone(t), workout: fit().on ? workoutFor(t).name : '', kgNow: weightNow(), goalKg: fit().goalKg, fitOn: fit().on }));
       const mo = JSON.stringify(S.settings.motiv); if (mo !== lastMo) { lastMo = mo; if (BR.setMotivation) BR.setMotivation(mo); }
       const r = JSON.stringify(S.reminders); if (r !== lastRem) { lastRem = r; BR.setReminders(r); }
       const qo = {}; Object.keys(D.quotes).forEach((k) => { qo[k] = D.quotes[famCat(k)].map(personal); });
@@ -2315,12 +2554,13 @@
   }
 
   // ---------- boot ----------
+  const page = document.body.dataset.page;
+  if (page !== 'privacy' && !isUnlocked()) { showLock(); return; }
   checkProgress();
   renderChrome();
-  const page = document.body.dataset.page;
   // First run on a new phone: the two-minute setup comes first.
   if (!S.setupDone && page !== 'setup' && page !== 'privacy') { location.replace('setup.html'); return; }
-  if (S.planApplied && (S.planVersion || 1) < 3) {
+  if (S.planApplied && (S.planVersion || 1) < 4) {
     const wasV1 = (S.planVersion || 1) < 2;
     applyPlan(true);
     if (wasV1) setTimeout(() => showCoachCard('New: after office I’ll tell you to put the phone down, and a silent check after your bedtime asks if you’re still scrolling. Sleep protects your morning deep work.'), 1500);
@@ -2340,6 +2580,7 @@
   else if (page === 'lib') initLib();
   else if (page === 'plan') initPlan();
   else if (page === 'career') initCareer();
+  else if (page === 'fit') initFit();
   tick();
   setInterval(() => { tick(); updateCountdown(); }, 1000);
   setInterval(checkReminders, 20000);
