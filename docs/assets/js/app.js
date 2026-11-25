@@ -393,7 +393,7 @@
   }
 
   // ---------- quotes ----------
-  const PAGE_QUOTES = { fit: ['habit', 'family'], career: ['switch', 'family'], plan: ['family', 'switch'], home: ['habit', 'family', 'switch'], lib: ['habit', 'sd'], sd: ['sd', 'switch'], dsa: ['dsa'], roadmap: ['habit', 'sd', 'switch'], why: ['family'], progress: ['habit', 'switch'], settings: ['habit'], companies: ['sd'] };
+  const PAGE_QUOTES = { data: ['habit'], fit: ['habit', 'family'], career: ['switch', 'family'], plan: ['family', 'switch'], home: ['habit', 'family', 'switch'], lib: ['habit', 'sd'], sd: ['sd', 'switch'], dsa: ['dsa'], roadmap: ['habit', 'sd', 'switch'], why: ['family'], progress: ['habit', 'switch'], settings: ['habit'], companies: ['sd'] };
   let quoteShift = 0;
   function quoteFor(page, shift) {
     let cats = PAGE_QUOTES[page] || ['habit'];
@@ -405,7 +405,7 @@
   function randomQuote(cat) { const l = D.quotes[famCat(cat)]; return personal(l[Math.floor(Math.random() * l.length)]); }
 
   // ---------- chrome ----------
-  const NAV = [['index.html', 'Today'], ['plan.html', 'My day'], ['system-design.html', 'System design'], ['dsa.html', 'DSA'], ['library.html', 'Library'], ['fit.html', 'Fitness'], ['career.html', 'Career kit'], ['why.html', 'My why'], ['progress.html', 'Progress'], ['settings.html', 'Reminders']];
+  const NAV = [['index.html', 'Today'], ['plan.html', 'My day'], ['system-design.html', 'System design'], ['dsa.html', 'DSA'], ['library.html', 'Library'], ['fit.html', 'Fitness'], ['career.html', 'Career kit'], ['data.html', 'Your data'], ['why.html', 'My why'], ['progress.html', 'Progress'], ['settings.html', 'Reminders']];
   const MARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="8.5" width="7.5" height="7" rx="2" fill="#0F1235"/><rect x="14.5" y="8.5" width="7.5" height="7" rx="2" fill="none" stroke="#0F1235" stroke-width="2.2"/><path d="M9.5 12h5" stroke="#0F1235" stroke-width="2.2"/></svg>';
   const BALLOON_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="9" rx="6.5" ry="7.5" fill="#0F1235"/><path d="M12 16.5l-1.4 2h2.8z" fill="#0F1235"/><path d="M12 18.5c-1 1.6 1 2.4 0 4" stroke="#0F1235" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="9.6" cy="6.4" rx="1.4" ry="2" fill="#FFC21A"/></svg>';
   function renderChrome() {
@@ -756,6 +756,7 @@
     else if (late) banner = '<div class="banner"><b>Late, but not too late.</b> ' + minNow() + ' minutes on whatever is left still completes today.</div>';
     const rdue = retroDue();
     if (rdue) banner = '<div class="banner"><b>Your weekly retrospective is ready.</b> Three questions about the week of ' + shortDate(rdue) + ', three minutes. <button class="btn small primary" data-retro="' + rdue + '" type="button">Start</button></div>' + banner;
+    if (S.sessions.length >= 10 && (!S.lastExport || Date.now() - S.lastExport > 28 * 864e5) && (dow(today()) === 0 || !S.lastExport)) banner += '<div class="banner"><b>Monthly review time.</b> Export your data and let your AI assistant find what is working and what is not. <a class="btn small primary" href="data.html">Export</a></div>';
     const fu = followUpsDue();
     if (fu.length) banner = '<div class="banner"><b>Follow up today:</b> ' + fu.map((a) => esc(a.company)).join(', ') + '. <a href="career.html#applications">Open applications</a></div>' + banner;
     if (BR && BR.exactAlarms && !BR.exactAlarms() && !sessionStorage.getItem('dl-exact-dismiss')) banner += '<div class="banner"><b>Reminders may arrive a few minutes late.</b> Allow “Alarms and reminders” so they fire on time. <button class="btn small primary" type="button" id="ex-allow">Allow</button> <button class="btn small quiet" type="button" id="ex-later">Later</button></div>';
@@ -764,7 +765,7 @@
     const exl = document.getElementById('ex-later'); if (exl) exl.onclick = () => { sessionStorage.setItem('dl-exact-dismiss', '1'); renderHome(); };
     const fcEl = document.getElementById('fitrow'); if (fcEl) fcEl.innerHTML = fitCard();
     const qk = document.getElementById('quick');
-    if (qk) { const nd = drillCards().length; qk.innerHTML = '<button class="qa" type="button" data-drill><b>2-minute drill</b><span>' + (nd ? nd + ' card' + (nd > 1 ? 's' : '') + ' due' : 'Recall your notes') + '</span></button><button class="qa" type="button" data-mocksim=""><b>Mock interview</b><span>45 min, system design</span></button><button class="qa" type="button" data-log="sd"><b>Log time</b><span>Studied off the timer?</span></button><a class="qa" href="career.html#applications"><b>Applications</b><span>' + (S.apps || []).filter((a) => !['target', 'closed'].includes(a.stage)).length + ' active</span></a>'; }
+    if (qk) { const nd = drillCards().length; qk.innerHTML = '<button class="qa" type="button" data-drill><b>2-minute drill</b><span>' + (nd ? nd + ' card' + (nd > 1 ? 's' : '') + ' due' : 'Recall your notes') + '</span></button><button class="qa" type="button" data-mocksim=""><b>Mock interview</b><span>45 min, system design</span></button><button class="qa" type="button" data-log="sd"><b>Log time</b><span>Studied off the timer?</span></button><a class="qa" href="data.html"><b>Export for AI</b><span>' + (S.lastExport ? 'Last ' + new Date(S.lastExport).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : 'All your data, one file') + '</span></a>'; }
     const endTxt = { ok: ['Complete', 'Both done. Close the laptop and go be with family.'], part: ['One to go', 'Even ' + minNow() + ' minutes on the other task completes today.'], miss: ['Not started', 'Start with system design. ' + minNow() + ' minutes is enough to count.'], rest: ['Rest day', 'Streak kept. Back tomorrow.'] }[info.status];
     document.getElementById('run').innerHTML = taskNode('sd', info, tg.sd) + '<div class="edge" aria-hidden="true"></div>' + taskNode('dsa', info, tg.dsa) + '<div class="edge" aria-hidden="true"></div>' +
       '<div class="dayend' + (info.status === 'ok' ? ' done' : '') + '"><span class="muted small">Day result</span><strong>' + endTxt[0] + '</strong><span class="small muted">' + endTxt[1] + '</span>' +
@@ -1849,9 +1850,9 @@
   });
   function initCareer() { refresh = renderCareer; renderCareer(); }
 
-  // ---------- export for analysis: CSV files + a guide for Claude ----------
+  // ---------- export for analysis: CSV files + a guide for any AI assistant ----------
   const WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  function csv(header, rows) {
+  function csvRaw(header, rows) {
     const cell = (v) => {
       if (v === null || v === undefined) return '';
       const s = String(v);
@@ -1868,7 +1869,8 @@
     } catch (e) {}
     return '';
   }
-  function buildExport() {
+  function buildExport(rowFilter) {
+    const csv = (h, rows) => csvRaw(h, rowFilter ? rowFilter(h, rows) : rows);
     const files = []; const add = (name, content, mime) => files.push({ name, mime: mime || 'text/csv', content });
     const first = S.sessions.length ? firstDay() : today();
 
@@ -1946,54 +1948,65 @@
     add('meals.csv', csv(['date', 'weekday', 'meal', 'label', 'time', 'after_office', 'what_and_how_much', 'protein_g', 'logged_at'],
       (S.meals || []).slice().sort((a, b) => (a.date === b.date ? mealMin(a) - mealMin(b) : a.date > b.date ? 1 : -1)).map((m) => [m.date, WD[dow(m.date)], slotName(m.slot), m.label || '', m.time || '', afterOffice(m) ? 'yes' : 'no', m.text, m.protein, iso(m.at)])));
 
-    // 13. the guide for Claude
-    add('README_for_Claude.md', analysisGuide(), 'text/markdown');
+    // 13. the guide for the AI assistant
+    add('README_for_AI.md', analysisGuide(), 'text/markdown');
     return files;
   }
-  function analysisGuide() {
-    const r = readiness(); const pc = pace(); const p = S.profile; const c = S.coach;
+  const FILE_DOC = {
+    'daily_overview.csv': 'one row per day with every goal side by side: study minutes and status, sessions inside planned blocks, workout, weight, food entries, protein, after-office eating. Start here to find links between goals.',
+    'sessions.csv': 'every practice session: time of day, track, minutes, whether it counted, item and topic, and `plan_block_at_that_time` (what my plan had scheduled then).',
+    'daily.csv': 'study minutes vs targets per day, status and running streak.',
+    'weekly.csv': 'weekly study totals joined with that week\'s retrospective.',
+    'items.csv': 'every question, topic, lesson and design case touched: status, time spent, rubric scores; `from_your_experience` marks cases matching systems I built.',
+    'notes.csv': 'my notes (approach, mistakes, key insights).',
+    'design_scores.csv': 'staff-rubric scores, 0 to 2 per criterion, 14 max.',
+    'recall_drill.csv': 'spaced-repetition recall of my notes: interval and last grade.',
+    'retrospectives.csv': 'weekly retros: mood, what went well, what got in the way, the change I committed to.',
+    'mock_interviews.csv': 'mock interviews and their verdicts.',
+    'stories.csv': 'project stories for the deep-dive round, with strength scores.',
+    'applications.csv': 'job applications by stage, next actions and offers (lakh per year).',
+    'milestones.csv': 'milestones and when they unlocked.',
+    'workouts.csv': 'workouts: type and minutes.',
+    'weight.csv': 'weigh-ins with start and goal.',
+    'meals.csv': 'everything I ate and drank with time; `after_office` = eaten after my shift; after-midnight food counts toward the previous day.',
+    'profile_and_goals.csv': 'my profile, goals, pace, readiness, shift, sleep and fitness settings.',
+    'day_plan.csv': 'my planned day, block by block.',
+    'reminders.csv': 'the reminders my phone sends.'
+  };
+  const ASKS = {
+    all: ['**Both goals together:** how my study, training, sleep window and eating affect each other (use daily_overview).'],
+    prep: ['**Effort:** weekly trend, consistency, my most and least productive weekdays and hours, and whether I am on pace for my offer date.', '**Balance:** system design vs DSA share (target about 60/40), and topics I avoid.', '**Schedule:** how often I practise inside my planned blocks vs outside them, and what to change in the plan.', '**Quality:** items I keep needing help with, my weakest rubric criteria, mock verdicts and fixes.', '**Retrospectives:** recurring blockers, whether I kept the changes I committed to.'],
+    fit: ['**Food:** estimate my daily calories and protein (ranges, Indian portions), find patterns (after-office eating, sugar in chai, skipped meals, weekends) and give 5 specific swaps and a sample day of eating for my shift.', '**Training:** consistency, progression, and what to change for strength, stamina and fat loss, safely.', '**Weight:** my real trend versus a 0.4 to 0.6 kg a week loss, and what explains the gap.'],
+    career: ['**Pipeline:** where my applications get stuck and what to do this week.', '**Stories:** which project stories are not interview-ready and what each needs.', '**Mocks:** patterns in mock verdicts and the 3 most important fixes.']
+  };
+  function analysisGuide(scope, days, names) {
+    scope = scope || 'all'; names = names || Object.keys(FILE_DOC);
+    const r = readiness(); const pc = pace(); const p = S.profile; const c = S.coach; const f = fit();
     const lastWeeks = []; for (let k = 7; k >= 0; k--) { const w = weekStats(addDays(weekStart(today()), -7 * k)); lastWeeks.push('| ' + w.ws + ' | ' + (Math.round(w.min / 6) / 10) + ' | ' + (Math.round(w.sd / 6) / 10) + ' | ' + (Math.round(w.dsa / 6) / 10) + ' | ' + w.complete + '/7 |'); }
+    const asks = scope === 'all' ? ASKS.prep.concat(ASKS.fit, ASKS.career, ASKS.all) : ASKS[scope];
     return [
-      '# DataLeap export for analysis',
+      '# DataLeap export: ' + EXPORT_SCOPES[scope].label.toLowerCase() + ', ' + (days ? 'last ' + days + ' days' : 'all time'),
       '',
-      'Exported ' + iso(Date.now()) + '. I am ' + (me() || 'a data engineer') + ', with ' + (p.years ? p.years + ' years' : 'several years') + ' in software, preparing to move from a service company to a ' + (p.role || 'Staff Data Engineer') + ' role at ' + (p.companies || 'top product companies') + '.',
-      p.targetDate ? 'Target offer date: ' + p.targetDate + '. Plan: ' + pc.goal + ' prep hours; done so far: ' + (Math.round(pc.doneH * 10) / 10) + ' h. Last-4-week average: ' + (Math.round(pc.avgWeekH * 10) / 10) + ' h a week; needed: ' + (Math.round((pc.needWeekH || 0) * 10) / 10) + ' h a week.' : '',
-      'Office hours ' + life().officeStart + ' to ' + life().officeEnd + ' (' + (life().workDays || [1, 2, 3, 4, 5]).length + ' days a week). I study around my shift' + (isSelf() ? '.' : ' and protect time with ' + who() + '.') + (motive().relation ? ' I am doing this for ' + (isSelf() ? 'myself' : who()) + '.' : ''),
-      'Interview readiness (DataLeap score): ' + r.score + '% (' + r.label + '). ' + r.parts.map((x) => x.label + ' ' + Math.round(x.v * 100) + '%').join('; ') + '.',
-      c && c.gaps ? 'My known gaps, in priority order: ' + c.gaps.map((g) => g.title).join('; ') + '.' : '',
+      'Exported ' + iso(Date.now()) + '. I am ' + (me() || 'a data engineer') + (p.years ? ', ' + p.years + ' years in software' : '') + ', moving from a ' + (p.companyType || 'service') + ' company to a ' + (p.role || 'Staff Data Engineer') + ' role at ' + (p.companies || 'top product companies') + (p.targetDate ? ' by ' + p.targetDate : '') + '.',
+      scope !== 'fit' ? 'Prep: ' + (Math.round(pc.doneH * 10) / 10) + ' of ' + pc.goal + ' hours done; last 4 weeks ' + (Math.round(pc.avgWeekH * 10) / 10) + ' h a week, needed ' + (Math.round((pc.needWeekH || 0) * 10) / 10) + '. Interview readiness ' + r.score + '% (' + r.parts.map((x) => x.label + ' ' + Math.round(x.v * 100) + '%').join('; ') + ').' : '',
+      scope !== 'career' && f.on ? 'Fitness: ' + f.startKg + ' to ' + f.goalKg + ' kg by ' + f.goalDate + ' with strength and stamina; now ' + weightNow() + ' kg; training ' + f.gymDays.length + ' days a week.' : '',
+      'Shift ' + life().officeStart + ' to ' + life().officeEnd + ', ' + life().workDays.length + ' days a week; sleep ' + life().sleep + ' to ' + life().wake + '. ' + (isSelf() ? '' : 'I protect time with ' + who() + '.'),
+      c && c.gaps && scope !== 'fit' ? 'Known gaps, in priority order: ' + c.gaps.map((g) => g.title).join('; ') + '.' : '',
       '',
-      '## Last 8 weeks (hours)',
-      '',
-      '| Week start | Total | System design | DSA | Complete days |',
-      '| --- | --- | --- | --- | --- |',
-      ...lastWeeks,
+      scope === 'fit' ? '' : '## Last 8 weeks of study (hours)\n\n| Week start | Total | System design | DSA | Complete days |\n| --- | --- | --- | --- | --- |\n' + lastWeeks.join('\n'),
       '',
       '## Files',
       '',
-      '- `sessions.csv`: every practice session. `counted` = it met the minimum for that day. `plan_block_at_that_time` = what my day plan had scheduled then (useful to check schedule adherence).',
-      '- `daily.csv`: one row per day: minutes, targets, status (complete, partial, missed, rest) and running streak.',
-      '- `weekly.csv`: one row per week, joined with that week\'s retrospective.',
-      '- `items.csv`: every question, topic, lesson and design case I have touched, with status and time spent. `from_your_experience` marks design cases that match systems I built.',
-      '- `notes.csv`: my notes on items (approach, mistakes, key insights).',
-      '- `design_scores.csv`: staff-rubric scores (0 to 2 per criterion, 14 max) for full design attempts.',
-      '- `retrospectives.csv`, `mock_interviews.csv`, `stories.csv` (project stories for deep-dive rounds), `milestones.csv`, `applications.csv`.',
-      '- Fitness: `workouts.csv`, `weight.csv`, and `meals.csv` (every meal and drink with time and what I ate; `after_office` = eaten after my shift ended; eating after midnight counts toward the previous day).',
-      (S.profile.fit ? 'Fitness goal: ' + fit().startKg + ' kg to ' + fit().goalKg + ' kg by ' + fit().goalDate + ', with strength and stamina; current ' + weightNow() + ' kg. I train ' + fit().gymDays.length + ' days a week.' : ''),
+      ...names.filter((n) => FILE_DOC[n]).map((n) => '- `' + n + '`: ' + FILE_DOC[n]),
       '',
       '## What I want from you',
       '',
-      'Act as a staff data engineer at a top product company coaching me. Be direct and specific; use numbers from the files.',
+      'Act as ' + (scope === 'fit' ? 'a fitness and nutrition coach' : scope === 'all' ? 'a staff data engineer at a top product company and a fitness coach' : 'a staff data engineer at a top product company') + ' coaching me. Be direct and specific, quote numbers from the files, and say when the data is too thin to judge.',
       '',
-      '1. **Effort:** weekly trend, consistency (complete days), my most and least productive weekdays and hours, and whether I am on pace for my offer date.',
-      '2. **Balance:** system design vs DSA share (target about 60/40), and which topics I avoid (little time, many not started).',
-      '3. **Schedule:** how often I practise inside my planned blocks vs outside them, and what that says about my day plan.',
-      '4. **Quality:** items I keep needing help with, rubric criteria I score lowest on, mock interview verdicts and the fixes I noted.',
-      '5. **Retrospectives:** recurring blockers, whether I acted on the changes I committed to, and mood vs output.',
-      '6. **Stories:** which project stories are weakest and what each needs before a deep-dive round.',
-      '7. **Next 2 weeks:** a concrete plan (daily topics and minutes) that fixes the biggest gap without hurting family time or sleep.',
-      '8. **Food and fitness:** from meals.csv estimate my daily calories and protein (give ranges, Indian portions), find patterns (late-night eating after office, skipped meals, sugar in chai, weekends), compare with my weight trend and workouts, and give me 5 specific swaps and a simple day of eating that fits my shift and a 0.4 to 0.6 kg a week loss.',
+      ...asks.map((a, i) => (i + 1) + '. ' + a),
+      (asks.length + 1) + '. **Next 2 weeks:** a concrete day-by-day plan that fixes the biggest gap without hurting family time or sleep.',
       ''
-    ].filter((x) => x !== null).join('\n');
+    ].filter((x) => x !== null).join('\n').replace(/\n{3,}/g, '\n\n');
   }
   // Minimal ZIP writer (stored, no compression) for the website download
   function zipFiles(files) {
@@ -2012,17 +2025,6 @@
     const csize = central.reduce((a, b) => a + b.length, 0);
     const end = new Uint8Array([0x50, 0x4B, 0x05, 0x06, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(csize), ...u32(offset), ...u16(0)]);
     return new Blob([...parts, ...central, end], { type: 'application/zip' });
-  }
-  function exportForAnalysis() {
-    const files = buildExport(); const stamp = today() + '-' + pad(new Date().getHours()) + pad(new Date().getMinutes());
-    if (BR && BR.saveExport) {
-      const n = BR.saveExport('export-' + stamp, JSON.stringify(files));
-      if (n) showCoachCard(n + ' files saved to Downloads/DataLeap/export-' + stamp + '. Open the Claude app, attach them (start with README_for_Claude.md and sessions.csv), and ask for your coaching review.');
-      else toast('Could not save the export.');
-      return;
-    }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(zipFiles(files)); a.download = 'dataleap-export-' + stamp + '.zip'; a.click();
-    toast('Export downloaded: ' + files.length + ' files in one zip.');
   }
   document.addEventListener('click', (e) => { if (e.target.closest('[data-export-ai]')) { e.preventDefault(); exportForAnalysis(); } });
 
@@ -2229,7 +2231,7 @@
       if (exportIt) {
         const md = '# Mock system design interview: ' + c.title + '\n\nPrompt: ' + c.text + '\n\nFollow-ups asked: ' + (c.followUps || []).join(' | ') + '\n\nTotal time: ' + total + ' min. Self-score ' + tot + '/14.\n\n' +
           MOCK_PHASES.map((p) => '## ' + p.t + ' (plan ' + p.min + ' min, used ' + Math.round((MK.used[p.k] || 0) / 60) + ' min)\n\n' + (MK.answers[p.k] || '(no notes)')).join('\n\n') +
-          '\n\n## Ask Claude\n\nAct as a staff data engineer interviewer at a top product company. Grade this answer on the staff rubric (scoping, sizing, trade-offs, correctness under failure, operability, platform view, migration path), say what a strong-hire answer would add, and give me the 3 most important fixes.';
+          '\n\n## Ask your AI assistant\n\nAct as a staff data engineer interviewer at a top product company. Grade this answer on the staff rubric (scoping, sizing, trade-offs, correctness under failure, operability, platform view, migration path), say what a strong-hire answer would add, and give me the 3 most important fixes.';
         if (BR && BR.saveFile) BR.saveFile('mock-' + today() + '.md', 'text/markdown', md); else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' })); a.download = 'mock-' + today() + '.md'; a.click(); }
       }
       MK = null; d.close();
@@ -2503,6 +2505,120 @@
     const c = e.target.closest('[data-fday]'); if (c) { e.preventDefault(); foodDay = addDays(foodDay || today(), +c.dataset.fday); if (foodDay > today()) foodDay = today(); const el = document.getElementById('food'); if (el) el.innerHTML = foodDiary(); }
   });
 
+  // ---------- your data: scoped, ranged exports + one-file AI pack ----------
+  const EXPORT_SCOPES = {
+    all: { label: 'Everything', files: null },
+    prep: { label: 'Interview prep', files: ['daily_overview.csv', 'sessions.csv', 'daily.csv', 'weekly.csv', 'items.csv', 'notes.csv', 'design_scores.csv', 'recall_drill.csv', 'retrospectives.csv', 'mock_interviews.csv', 'day_plan.csv', 'profile_and_goals.csv'] },
+    fit: { label: 'Fitness and food', files: ['daily_overview.csv', 'meals.csv', 'workouts.csv', 'weight.csv', 'day_plan.csv', 'profile_and_goals.csv'] },
+    career: { label: 'Career and job search', files: ['applications.csv', 'stories.csv', 'mock_interviews.csv', 'retrospectives.csv', 'weekly.csv', 'profile_and_goals.csv'] }
+  };
+  const EXPORT_RANGES = [[7, 'Last 7 days'], [30, 'Last 30 days'], [90, 'Last 90 days'], [0, 'All time']];
+  let EX = { scope: 'all', days: 30 };
+  const DATE_COLS = ['study_date', 'date', 'week_start', 'created', 'scored_at', 'saved_at', 'logged_at'];
+
+  function extraFiles(from) {
+    const out = []; const add = (name, content) => out.push({ name, mime: 'text/csv', content });
+    const first = S.sessions.length ? firstDay() : today();
+    // one row per day, every goal side by side: the table that lets an AI find links between them
+    const rows = [];
+    const start = from && from > first ? from : first;
+    const allStart = [first].concat((S.meals || []).map((m) => m.date), (S.workouts || []).map((w) => w.date), (S.weights || []).map((w) => w.date)).sort()[0] || today();
+    for (let d = from ? from : allStart; d <= today(); d = addDays(d, 1)) {
+      const i = dayInfo(d); const ms = (S.meals || []).filter((m) => m.date === d); const ws = (S.workouts || []).filter((w) => w.date === d);
+      const wt = (S.weights || []).find((w) => w.date === d);
+      const inPlan = S.sessions.filter((x) => x.date === d && /Deep work|DSA|Revision|design case|DSA questions/.test(blockAt(x.at))).length;
+      rows.push([d, WD[dow(d)], i.sd, i.dsa, { ok: 'complete', part: 'partial', miss: 'missed', rest: 'rest' }[i.status] || i.status, S.sessions.filter((x) => x.date === d).length, inPlan,
+        ws.reduce((a, w) => a + w.minutes, 0), ws.map((w) => w.name).join('; '), wt ? wt.kg : '', ms.length, ms.reduce((a, m) => a + (+m.protein || 0), 0) || '', ms.filter(afterOffice).length]);
+    }
+    add('daily_overview.csv', csvRaw(['date', 'weekday', 'system_design_min', 'dsa_min', 'study_day_status', 'study_sessions', 'sessions_in_planned_blocks', 'workout_min', 'workouts', 'weight_kg', 'food_entries', 'protein_g_logged', 'food_after_office'], rows));
+    // profile and goals
+    const p = S.profile; const l = life(); const f = fit(); const r = readiness(); const pc = pace(); const DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const kv = [['name', p.me], ['years_experience', p.years], ['current_company_type', p.companyType], ['target_role', p.role], ['target_companies', p.companies], ['offer_target_date', p.targetDate],
+      ['prep_hours_goal', p.hoursGoal], ['prep_hours_done', Math.round(pc.doneH * 10) / 10], ['prep_hours_per_week_last_4_weeks', Math.round(pc.avgWeekH * 10) / 10], ['prep_hours_per_week_needed', Math.round((pc.needWeekH || 0) * 10) / 10],
+      ['interview_readiness_pct', r.score], ['readiness_label', r.label], ['habit_level', S.settings.level], ['current_streak_days', streak()],
+      ['doing_it_for', isSelf() ? 'myself' : who()], ['my_why', p.why], ['office_hours', l.officeStart + '-' + l.officeEnd], ['office_days', l.workDays.map((x) => DN[x]).join(' ')], ['commute_min', l.commute], ['wake', l.wake], ['sleep', l.sleep],
+      ['fitness_start_kg', f.startKg], ['fitness_goal_kg', f.goalKg], ['fitness_goal_date', f.goalDate], ['weight_now_kg', weightNow()], ['gym_days', f.gymDays.map((x) => DN[x] + ' ' + (PROGRAM[f.rotation[x]] || PROGRAM.A).name).join('; ')], ['gym_session_min', f.gymMin],
+      ['known_gaps', S.coach && S.coach.gaps ? S.coach.gaps.map((g) => g.title).join('; ') : '']];
+    add('profile_and_goals.csv', csvRaw(['key', 'value'], kv));
+    // the day plan
+    const pb = buildPlan(); const fmt = (m) => toHM(m);
+    const planRows = [].concat(pb.weekday.map((b) => ['office day', fmt(b.s), fmt(b.e), b.title, b.kind]), pb.sat.map((b) => ['day off (Saturday)', fmt(b.s), fmt(b.e), b.title, b.kind]), pb.sun.map((b) => ['Sunday', fmt(b.s), fmt(b.e), b.title, b.kind]));
+    add('day_plan.csv', csvRaw(['day_type', 'start', 'end', 'block', 'kind'], planRows));
+    add('reminders.csv', csvRaw(['time', 'days', 'focus', 'message', 'on'], (S.reminders || []).map((x) => [x.time, x.days.map((d) => DN[d]).join(' '), x.focus, x.msg, x.on ? 'yes' : 'no'])));
+    add('recall_drill.csv', csvRaw(['item_id', 'item', 'interval_days', 'next_due', 'last_grade'], Object.keys(S.drill || {}).map((id) => [id, (byId[id] || {}).title || '', S.drill[id].iv, S.drill[id].due, ['missed', 'partly', 'got it'][S.drill[id].last] || ''])));
+    return out;
+  }
+  function buildExportScoped(scope, days) {
+    const from = days ? addDays(today(), -(days - 1)) : '';
+    const keepRow = (h, r) => { if (!from) return true; const k = h.findIndex((c) => DATE_COLS.includes(c)); if (k < 0) return true; const v = String(r[k] || ''); return !v || v.slice(0, 10) >= from; };
+    // reuse the full export, with date filtering applied to every table that has a date column
+    const files = buildExport((h, rows) => rows.filter((r) => keepRow(h, r))).filter((f) => f.name !== 'README_for_AI.md').concat(extraFiles(from));
+    const want = EXPORT_SCOPES[scope].files;
+    const chosen = want ? files.filter((f) => want.includes(f.name)) : files;
+    chosen.unshift({ name: 'README_for_AI.md', mime: 'text/markdown', content: analysisGuide(scope, days, chosen.map((f) => f.name)) });
+    return chosen;
+  }
+  function rowsIn(f) { return f.name.endsWith('.csv') ? Math.max(0, f.content.split('\r\n').filter(Boolean).length - 1) : null; }
+  function aiPack(files) {
+    const head = files[0].content;
+    return head + '\n\n---\n\n# Data\n\nEach table below is CSV. Read all of them before answering.\n\n' +
+      files.slice(1).map((f) => '## ' + f.name + ' (' + rowsIn(f) + ' rows)\n\n```csv\n' + f.content.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').trim() + '\n```').join('\n\n') + '\n';
+  }
+  function stampNow() { const n = new Date(); return today() + '-' + pad(n.getHours()) + pad(n.getMinutes()); }
+  function shareAiPack(scope, days) {
+    const files = buildExportScoped(scope, days); const md = aiPack(files);
+    const name = 'dataleap-ai-pack-' + scope + '-' + (days ? days + 'd' : 'all') + '-' + stampNow() + '.md';
+    S.lastExport = Date.now(); save();
+    if (BR && BR.shareFile) { BR.shareFile(name, 'text/markdown', md); return; }
+    const blob = new Blob([md], { type: 'text/markdown' });
+    try { const file = new File([blob], name, { type: 'text/markdown' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: 'DataLeap AI pack' }).catch(() => {}); return; } } catch (e) {}
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); toast('AI pack downloaded. Attach it in your AI tool.');
+  }
+  function saveAllFiles(scope, days) {
+    const files = buildExportScoped(scope, days); const stamp = stampNow(); S.lastExport = Date.now(); save();
+    if (BR && BR.saveExport) { const n = BR.saveExport('export-' + scope + '-' + stamp, JSON.stringify(files)); if (!n) toast('Could not save the export.'); return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(zipFiles(files)); a.download = 'dataleap-' + scope + '-' + stamp + '.zip'; a.click(); toast(files.length + ' files in one zip.');
+  }
+  // the old one-button export now means: everything, all time, as separate files
+  function exportForAnalysis() { saveAllFiles('all', 0); }
+
+  const PROMPTS = [
+    ['all', 'Monthly coaching review', 'Follow the README. Act as a staff data engineer at a top product company and as a fitness coach. Give me: what went well this month, my 3 biggest problems with numbers from the data, how my career and fitness goals affect each other (sleep, late eating, study days), and a concrete plan for the next 4 weeks that protects family time.'],
+    ['prep', 'Am I on track for staff interviews?', 'Using sessions, items, design scores and mock interviews: rate my readiness for staff data engineer loops at Google, Uber and Databricks, list the topics I avoid, the rubric criteria I score lowest on, and give me a 14-day plan with daily topics and minutes.'],
+    ['prep', 'Fix my schedule', 'Using daily_overview, sessions (hour and plan_block_at_that_time) and day_plan: when do I actually study versus when I planned to? Which days and hours fail most, and what should I change in my plan?'],
+    ['fit', 'Food and weight review', 'Using meals, weight and workouts: estimate my daily calories and protein (ranges, Indian portions), find patterns like after-office eating and sugar, compare them with my weight trend, and give me 5 specific swaps and a sample day of eating for my shift.'],
+    ['fit', 'Am I training enough?', 'Using workouts and weight: how consistent is my training, am I progressing, and what should I change in my program for strength, stamina and fat loss? Keep it safe for a 35-year-old beginner-intermediate.'],
+    ['career', 'Job search check', 'Using applications, stories and mock interviews: where is my pipeline stuck, which stories are not interview-ready, and what should I do this week to get more interview loops?']
+  ];
+  function renderData() {
+    const inv = [['Practice sessions', S.sessions.length], ['Notes', Object.values(S.items).reduce((a, s) => a + (s.notes || []).length, 0)], ['Items touched', Object.keys(S.items).length], ['Design scores', D.items.reduce((a, i) => a + (st(i.id).scores || []).length, 0)],
+      ['Retrospectives', (S.retros || []).length], ['Mock interviews', (S.mocks || []).length], ['Stories', (S.stories || []).length], ['Applications', (S.apps || []).length],
+      ['Workouts', (S.workouts || []).length], ['Weigh-ins', (S.weights || []).length], ['Food entries', (S.meals || []).length], ['Milestones', Object.keys(S.ach || {}).length]];
+    const iv = document.getElementById('inventory');
+    if (iv) iv.innerHTML = inv.map(([l, n]) => '<div class="stat"><b>' + n + '</b><span>' + l + '</span></div>').join('');
+    const box = document.getElementById('exportbox'); if (!box) return;
+    const files = buildExportScoped(EX.scope, EX.days); const size = files.reduce((a, f) => a + f.content.length, 0);
+    box.innerHTML = '<div class="field"><label>What to export</label><div class="picks">' + Object.entries(EXPORT_SCOPES).map(([k, v]) => '<label class="pick"><input type="radio" name="exs" value="' + k + '"' + (EX.scope === k ? ' checked' : '') + '><span>' + v.label + '</span></label>').join('') + '</div></div>' +
+      '<div class="field"><label>Time range</label><div class="picks">' + EXPORT_RANGES.map(([d, l]) => '<label class="pick"><input type="radio" name="exr" value="' + d + '"' + (EX.days === d ? ' checked' : '') + '><span>' + l + '</span></label>').join('') + '</div></div>' +
+      '<div class="actions"><button class="btn haldi" type="button" id="ex-share">' + (BR ? 'Share AI pack' : 'Download AI pack') + '</button><button class="btn" type="button" id="ex-files">' + (BR ? 'Save as separate files' : 'Download all files (zip)') + '</button></div>' +
+      '<p class="small muted">The AI pack is one file with instructions, your summary and every table: attach it in any AI tool you like (Claude, ChatGPT, Gemini, Grok and others) and ask away. ' + files.length + ' files, about ' + Math.max(1, Math.round(size / 1024)) + ' KB.' + (S.lastExport ? ' Last export ' + new Date(S.lastExport).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + '.' : '') + '</p>' +
+      '<details class="rubricbox"><summary>What is inside</summary><table class="dtable"><tbody>' + files.map((f) => '<tr><td><code>' + f.name + '</code></td><td class="num">' + (rowsIn(f) === null ? 'guide' : rowsIn(f) + ' rows') + '</td></tr>').join('') + '</tbody></table></details>';
+    box.querySelectorAll('input[name=exs]').forEach((x) => { x.onchange = () => { EX.scope = x.value; renderData(); }; });
+    box.querySelectorAll('input[name=exr]').forEach((x) => { x.onchange = () => { EX.days = +x.value; renderData(); }; });
+    document.getElementById('ex-share').onclick = () => shareAiPack(EX.scope, EX.days);
+    document.getElementById('ex-files').onclick = () => saveAllFiles(EX.scope, EX.days);
+    const pl = document.getElementById('prompts');
+    if (pl) {
+      pl.innerHTML = PROMPTS.map(([sc, t, body], k) => '<div class="promptcard"><div><b>' + esc(t) + '</b><span class="chip">' + EXPORT_SCOPES[sc].label + '</span></div><p>' + esc(body) + '</p><div class="actions"><button class="btn small" type="button" data-copyp="' + k + '">Copy prompt</button><button class="btn small primary" type="button" data-sharep="' + k + '">Export ' + EXPORT_SCOPES[sc].label.toLowerCase() + '</button></div></div>').join('');
+      pl.querySelectorAll('[data-copyp]').forEach((b) => { b.onclick = () => { const txt = PROMPTS[+b.dataset.copyp][2]; if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast('Prompt copied. Paste it with your AI pack in any AI tool.'), () => toast('Could not copy.')); }; });
+      pl.querySelectorAll('[data-sharep]').forEach((b) => { b.onclick = () => shareAiPack(PROMPTS[+b.dataset.sharep][0], EX.days); });
+    }
+    const bk = document.getElementById('bk-export'); if (bk) bk.onclick = () => { const json = JSON.stringify(S, null, 2); const name = 'dataleap-backup-' + today() + '.json'; if (BR && BR.saveFile) { BR.saveFile(name, 'application/json', json); return; } const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' })); a.download = name; a.click(); };
+    const bi = document.getElementById('bk-import');
+    if (bi) bi.onchange = (e) => { const fl = e.target.files[0]; if (!fl) return; const rd = new FileReader(); rd.onload = () => { try { const d = JSON.parse(rd.result); if (!d.sessions || !d.items) throw 0; if (!confirm('Replace all data on this phone with this backup?')) return; S = load(JSON.stringify(d)); save(); toast('Backup restored'); setTimeout(() => location.reload(), 500); } catch (er) { toast('That file is not a DataLeap backup.'); } }; rd.readAsText(fl); };
+  }
+  function initData() { refresh = renderData; renderData(); }
+
   // ---------- private access: a PIN, asked once per device ----------
   // Change the PIN: node -e "let h=0x811c9dc5;for(const c of 'dataleap-lock::NEWPIN'){h^=c.charCodeAt(0);h=Math.imul(h,0x01000193)>>>0}console.log(h.toString(16))"
   const LOCK_HASH = '87b5415';
@@ -2581,6 +2697,7 @@
   else if (page === 'plan') initPlan();
   else if (page === 'career') initCareer();
   else if (page === 'fit') initFit();
+  else if (page === 'data') initData();
   tick();
   setInterval(() => { tick(); updateCountdown(); }, 1000);
   setInterval(checkReminders, 20000);

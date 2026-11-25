@@ -719,3 +719,13 @@ body.locked > *:not(.lock){visibility:hidden}
 .m-p{font-weight:700;font-size:13px;color:var(--mint-2);white-space:nowrap}
 em.late{font-style:normal;font-size:11px;font-weight:700;background:#FFE9E3;color:#B23A1E;border-radius:999px;padding:1px 8px;margin-left:6px}
 .late-txt{color:#B23A1E}
+
+/* Your data */
+.inv{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:900px){.inv{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.prompts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.promptcard{background:var(--paper);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.promptcard > div:first-child{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.promptcard b{font-family:var(--display);font-size:18px;line-height:1.2}
+.promptcard p{margin:0;font-size:14px;color:var(--tmuted)}
+@media (max-width:900px){.prompts{grid-template-columns:1fr}}

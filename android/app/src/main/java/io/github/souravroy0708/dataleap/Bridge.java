@@ -41,6 +41,33 @@ final class Bridge {
     @JavascriptInterface public void kvDel(String k) { DataStore.get(a).kvDel(k); }
     @JavascriptInterface public void dbReset() { DataStore.get(a).reset(); }
 
+    /** Saves one file to Downloads/DataLeap/ and opens the share sheet with it, straight into whichever AI app the user picks. */
+    @JavascriptInterface public void shareFile(final String name, final String mime, final String content) {
+        try {
+            ContentResolver cr = a.getContentResolver();
+            ContentValues v = new ContentValues();
+            v.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+            v.put(MediaStore.MediaColumns.MIME_TYPE, mime);
+            v.put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/DataLeap");
+            final Uri uri = cr.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
+            if (uri == null) return;
+            OutputStream os = cr.openOutputStream(uri);
+            os.write(content.getBytes(StandardCharsets.UTF_8));
+            os.close();
+            ui(new Runnable() { public void run() {
+                Intent send = new Intent(Intent.ACTION_SEND).setType(mime).putExtra(Intent.EXTRA_STREAM, uri)
+                    .putExtra(Intent.EXTRA_SUBJECT, name).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                Intent chooser = Intent.createChooser(send, "Send your DataLeap data to");
+                chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                try { a.startActivity(chooser); } catch (Exception e) {
+                    Toast.makeText(a, "Saved to Downloads/DataLeap/" + name, Toast.LENGTH_LONG).show();
+                }
+            } });
+        } catch (Exception e) {
+            ui(new Runnable() { public void run() { Toast.makeText(a, "Could not export", Toast.LENGTH_SHORT).show(); } });
+        }
+    }
+
     /** Saves several files at once into Downloads/DataLeap/<folder>/. Returns how many were written. */
     @JavascriptInterface public int saveExport(String folder, String filesJson) {
         int n = 0;

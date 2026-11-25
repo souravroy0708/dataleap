@@ -12,6 +12,16 @@ DataLeap is not a practice platform. DSA questions link to NeetCode (free, with 
 - **Home-screen widget:** streak, today's two tasks, next item and days to the offer.
 - **Play-ready:** target API 36, edge-to-edge, predictive back, no restricted alarm permission, AAB from the workflow. See `design/play-store.md` and `design/store-listing.md`.
 
+## Your data: export everything for AI analysis
+
+The **Your data** page (header menu, and the "Export for AI" quick action on Today) exports everything DataLeap tracks:
+
+- **Focus:** everything, interview prep, fitness and food, or career and job search. **Range:** 7, 30 or 90 days, or all time.
+- **Share AI pack:** one Markdown file with a guide written for the AI (who you are, your goals, pace and readiness, what every column means, and what to analyse) followed by every table as CSV. In the Android app it opens the share sheet, so you can send it straight to the AI app you use (Claude, ChatGPT, Gemini, Grok or any other); it is also saved in Downloads/DataLeap.
+- **Separate files:** up to 19 CSV files plus the guide (a zip on the website).
+- Tables: daily_overview (all goals per day), sessions, daily, weekly, items, notes, design_scores, recall_drill, retrospectives, mock_interviews, stories, applications, milestones, workouts, weight, meals, profile_and_goals, day_plan, reminders.
+- A prompt library with copy buttons, a monthly "review time" nudge on Today, and full JSON backup and restore.
+
 ## Private access
 
 DataLeap opens with a 6-digit PIN, asked once per phone. Share the PIN only with the friends you want to use it. To change it, compute a new hash and replace `LOCK_HASH` in `docs/assets/js/app.js`:

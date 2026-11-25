@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your data · DataLeap</title>
+<meta name="description" content="Export everything you track for deeper analysis with AI.">
+<meta name="theme-color" content="#0F1235">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/mukta-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="data">
+<header id="top"></header>
+<section class="hero"><div class="wrap">
+<span class="kicker"><span class="dot"></span>Your data</span>
+<h1>Everything you track, ready for analysis</h1>
+<p class="lede">Interview prep, fitness, food, retrospectives, mocks, stories and applications. <strong>Export it in one tap and let an AI coach find what is working, what is not, and what to change.</strong> All of it is stored only in the database on this phone.</p>
+<div class="stats-row inv" id="inventory"></div>
+
+</div></section>
+<main>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Export for AI analysis</h2><p class="muted">One file for any AI tool: Claude, ChatGPT, Gemini, Grok</p></div><div id="exportbox"></div></div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="card"><div class="sec-head"><h2>Ask better questions</h2><p class="muted">Copy a prompt, attach your AI pack, send</p></div><div class="prompts" id="prompts"></div></div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="panel"><h2>Full backup</h2>
+  <p>A complete copy of everything (JSON) to keep safe or move to a new phone. Back up before changing phones: uninstalling deletes the database.</p>
+  <div class="actions"><button class="btn primary" id="bk-export" type="button">Export full backup</button><label class="btn" for="bk-import" style="margin:0">Restore a backup</label><input id="bk-import" type="file" accept="application/json" hidden></div></div>
+</div></section>
+</main>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/library.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/voice.js"></script>
+</body>
+</html>
