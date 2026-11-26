@@ -4,7 +4,7 @@ plugins { id("com.android.application") }
 // Without them the build falls back to the debug key, which cannot update an installed release build.
 val releaseKeystore: String? = System.getenv("DL_KEYSTORE_PATH")
 // Every build gets a higher versionCode: the GitHub run number. Bump appVersion for bigger releases.
-val buildNumber: Int = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()?.plus(10) ?: 2
+val buildNumber: Int = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()?.plus(100) ?: 2   // +100 keeps CI builds above any locally built APK
 val appVersion = "3.3"
 
 android {

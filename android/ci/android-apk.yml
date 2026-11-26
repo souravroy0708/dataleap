@@ -43,7 +43,7 @@ jobs:
       - name: Version
         run: |
           APP=$(grep -oP 'val appVersion = "\K[^"]+' android/app/build.gradle.kts)
-          echo "V=$APP.$(( ${{ github.run_number }} + 10 ))" >> "$GITHUB_ENV"
+          echo "V=$APP.$(( ${{ github.run_number }} + 100 ))" >> "$GITHUB_ENV"
 
       - name: Self-test (reminder and motivation scheduling)
         run: |
